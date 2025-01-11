@@ -6,9 +6,11 @@
 
 ### Env Build
 conda create -n codec_eval python==3.10 -y
+
 conda activate codec_eval
 
 git clone https://github.com/wuzhiyue111/Codec-Evaluation.git
+
 cd Codec-Evaluation
 
 bash env_build.sh
