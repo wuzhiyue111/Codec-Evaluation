@@ -10,7 +10,7 @@ import sys
 import torch
 from huggingface_hub import snapshot_download
 
-from audiocodecs.codec import Codec
+from codec_evaluation.codecs.codec import Codec
 
 
 __all__ = ["WavTokenizer"]
