@@ -6,7 +6,7 @@
 
 import torch
 
-from audiocodecs.codec import Codec
+from codec_evaluation.codecs.codec import Codec
 
 
 __all__ = ["Mimi"]

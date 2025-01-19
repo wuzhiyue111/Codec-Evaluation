@@ -9,7 +9,7 @@ import sys
 
 import torch
 
-from audiocodecs.codec import Codec
+from codec_evaluation.codecs.codec import Codec
 
 
 __all__ = ["SemantiCodec"]
@@ -36,9 +36,9 @@ class SemantiCodec(Codec):
             root_dir = os.path.dirname(os.path.realpath(__file__))
             sys_path = [x for x in sys.path]
             sys.path = [x for x in sys.path if root_dir not in x]
-            import semanticodec
-
+            
             global semanticodec
+            import semanticodec
 
             sys.path = sys_path
         except ImportError:
