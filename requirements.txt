@@ -1,0 +1,9 @@
+beartype
+descript-audio-codec
+huggingface_hub
+speechtokenizer
+tensorboard
+torch
+torchaudio
+transformers
+vocos

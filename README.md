@@ -1,10 +1,12 @@
 # Codec-Evaluation
 
-### Purpose
-1. 如何判断codebook学习的好坏
-2. 集合所有 codec 现有的评测指标
+## Purpose
 
-### Env Build
+1. how to evaluate the quality of codebook
+2. collect all existing metrics
+
+## Env Build
+
 conda create -n codec_eval python==3.10 -y
 
 conda activate codec_eval
@@ -15,7 +17,13 @@ cd Codec-Evaluation
 
 bash env_build.sh
 
-### Road Map
-- [ ] 不同 codec 的封装
-- [ ] 不同数据集的清洗
-- [ ] Codec 评测指标规则的制定
+## Road Map
+
+- [ ] multi codec deploy
+    - multi codec deploy reference: https://github.com/lucadellalib/audiocodecs
+- [ ] clean different dataset in marble benchmark
+- [ ] define the evaluation metrics of codec, codebooks
+
+
+
+
