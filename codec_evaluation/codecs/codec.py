@@ -19,7 +19,7 @@ __all__ = ["Codec"]
 # C: vocabulary size (assuming that each codebook has the same number of tokens)
 # K: number of codebooks
 class Codec(torch.nn.Module, ABC):
-    _MODES = ["encode", "decode", "reconstruct"]
+    _MODES = ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]
 
     def __init__(self, sample_rate, orig_sample_rate, mode="reconstruct"):
         super().__init__()
@@ -40,8 +40,14 @@ class Codec(torch.nn.Module, ABC):
             toks = self.sig_to_toks(input, length)
             sig = self.toks_to_sig(toks, length)
             return sig
-
-    def sig_to_toks(self, sig, length=None):
+        if self.mode == "unquantized_emb":
+            unquantized_emb = self.sig_to_unquantized_emb(input, length)
+            return unquantized_emb
+        if self.mode == "quantized_emb":
+            quantized_emb = self.sig_to_quantized_emb(input, length)
+            return quantized_emb
+        
+    def process_audio(self, sig, length=None):
         # sig: [B, T]
         sig = torchaudio.functional.resample(
             sig,
@@ -50,6 +56,18 @@ class Codec(torch.nn.Module, ABC):
         )
         if length is None:
             length = torch.ones(len(sig), device=sig.device)
+        return sig, length
+
+    def sig_to_unquantized_emb(self, sig, length=None):
+        sig, length = self.process_audio(sig, length)
+        return self._sig_to_unquantized_emb(sig, length)
+    
+    def sig_to_quantized_emb(self, sig, length=None):
+        sig, length = self.process_audio(sig, length)
+        return self._sig_to_quantized_emb(sig, length)
+
+    def sig_to_toks(self, sig, length=None):
+        sig, length = self.process_audio(sig, length)
         return self._sig_to_toks(sig, length)
 
     def toks_to_sig(self, toks, length=None):
@@ -76,4 +94,14 @@ class Codec(torch.nn.Module, ABC):
     @abstractmethod
     def _toks_to_sig(self, toks, length):
         # toks: [B, N, K]
+        raise NotImplementedError
+    
+    @abstractmethod
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig: [B, T]
+        raise NotImplementedError
+    
+    @abstractmethod
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig: [B, T]
         raise NotImplementedError

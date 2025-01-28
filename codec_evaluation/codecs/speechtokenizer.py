@@ -47,7 +47,7 @@ class SpeechTokenizer(Codec):
             config_path, checkpoint_path
         )
 
-        if mode == "encode":
+        if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
         elif mode == "decode":
             self.model.encoder = None
@@ -86,6 +86,17 @@ class SpeechTokenizer(Codec):
         sig = self.model.decode(toks)[:, 0]  # [B, T]
         return sig
 
+    # override
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig: [B, T]
+        # TODO: 这里还没写
+        pass
+
+    # override
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig: [B, T]
+        # TODO: 这里还没写
+        pass
 
 # Test
 if __name__ == "__main__":
@@ -96,7 +107,8 @@ if __name__ == "__main__":
     batch_size = 2
     num_codebooks = 8
 
-    for mode in ["encode", "decode", "reconstruct"]:
+    # TODO: 需要测试
+    for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
             SpeechTokenizer(
                 sample_rate,

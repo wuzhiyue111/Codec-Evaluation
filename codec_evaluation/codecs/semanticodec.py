@@ -61,7 +61,7 @@ class SemantiCodec(Codec):
             cache_path=_CACHE_DIR,
         ).to("cpu")
 
-        if mode == "encode":
+        if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
 
     # override
@@ -100,6 +100,18 @@ class SemantiCodec(Codec):
         # toks: [B, N, K]
         sig = self._decode(toks)[:, 0]  # [B, T]
         return sig
+    
+    # override
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig: [B, T]
+        toks = self._sig_to_toks(sig, length)
+        unquantized_feats = self._token_to_quantized_feature(toks)
+        return unquantized_feats
+    
+    # override # TODO: 还没写
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig: [B, T]
+        pass
 
     # See https://github.com/haoheliu/SemantiCodec-inference/blob/8dc464c3385d2389a695ed3f718f4a0caf3ed33f/semanticodec/main.py
     def _token_to_quantized_feature(self, tokens):
@@ -201,7 +213,8 @@ if __name__ == "__main__":
     sample_rate = 10000
     batch_size = 2
 
-    for mode in ["encode", "decode", "reconstruct"]:
+    # TODO: 需要测试
+    for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = SemantiCodec(sample_rate, mode=mode).eval().to(device)
         input = (
             torch.zeros(batch_size, 10, 2).long()
