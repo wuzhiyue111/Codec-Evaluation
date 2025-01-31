@@ -83,10 +83,10 @@ class DAC(Codec):
             sig[:, None], n_quantizers =  self.num_codebooks
         )   # [B, K, N]
         toks = toks.movedim(-1, -2) # [B, N, K]
-        qfeats, _, _ = self.model.quantizer.from_codes(
+        quantized_feats, _, _ = self.model.quantizer.from_codes(
             toks.movedim(-1, -2)   # [B, K, N]
         )
-        return qfeats
+        return quantized_feats
 
     # override
     def _sig_to_toks(self, sig, length):
