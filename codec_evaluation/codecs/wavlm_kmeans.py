@@ -26,8 +26,10 @@ class WavLMKmeans(Codec):
             layer_ids=layer_ids,
         )
         # 删除decoder, 节约显存开销
-        if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
+        if mode == "encode" or mode == "unquantized_emb":
             self.model.dequantizer = None
+            self.model.vocoder = None
+        elif mode == "quantized_emb":
             self.model.vocoder = None
         elif mode == "decode":
             self.model.encoder = None
@@ -45,30 +47,28 @@ class WavLMKmeans(Codec):
     # override 
     def _sig_to_unquantized_emb(self, sig, length):
         # sig：[B, T]
-        unquantized_feats = self.model.encoder(sig)
+        unquantized_feats = self.model.sig_to_feats(sig)
         return unquantized_feats
 
     # override
     def _sig_to_quantized_emb(self, sig, length):
         # sig：[B, T]
-        feats = self.model.sig_to_feats(sig)
-        toks = self.model.feats_to_toks(feats)  # [B, N, K]
-        qfeats = self.model.toks_to_qfeats(toks)
-        quantized_feats = self.model.qfeats_to_feats(qfeats)
+        toks = self._sig_to_toks(feats)  # [B, N, K]
+        quantized_feats = self.model.toks_to_qfeats(toks)
         return quantized_feats
 
     # override
     def _sig_to_toks(self, sig, length):
         # sig: [B, T]
-        feats = self.model.sig_to_feats(sig)
-        toks = self.model.feats_to_toks(feats)  # [B, N, K]
+        unquantized_feats = self._sig_to_unquantized_emb(sig, length)
+        toks = self.model.feats_to_toks(unquantized_feats)  # [B, N, K]
         return toks
 
     # override
     def _toks_to_sig(self, toks, length):
         # toks: [B, N, K]
-        qfeats = self.model.toks_to_qfeats(toks)
-        feats = self.model.qfeats_to_feats(qfeats)
+        quantized_feats = self.model.toks_to_qfeats(toks)
+        feats = self.model.qfeats_to_feats(quantized_feats)
         sig = self.model.feats_to_sig(feats)[:, 0]  # [B, T]
         return sig
 
