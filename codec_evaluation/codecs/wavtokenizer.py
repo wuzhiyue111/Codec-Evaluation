@@ -63,7 +63,8 @@ class WavTokenizer(Codec):
             config_path, checkpoint_path
         )
 
-        if mode == "encode":
+        # 删除decoder, 节约显存开销
+        if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.feature_extractor.encodec.decoder = None
             self.model.head = None
         elif mode == "decode":
@@ -77,6 +78,19 @@ class WavTokenizer(Codec):
         return embs
 
     # override
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig: [B, T]
+        unquantized_feats = self.model.sig_to_feats(sig)
+        return unquantized_feats
+
+    # override
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig：[B, T]
+        toks = self._sig_to_toks(sig, length)
+        quantized_feats = self.model.codes_to_features(toks.movedim(-1, 0))
+        return quantized_feats
+
+    # override
     def _sig_to_toks(self, sig, length):
         # sig: [B, T]
         _, toks = self.model.encode(sig, bandwidth_id=0)
@@ -86,12 +100,11 @@ class WavTokenizer(Codec):
     # override
     def _toks_to_sig(self, toks, length):
         # toks: [B, N, K]
-        feats = self.model.codes_to_features(toks.movedim(-1, 0))
+        quantized_feats = self.model.codes_to_features(toks.movedim(-1, 0))
         sig = self.model.decode(
-            feats, bandwidth_id=torch.tensor(0, device=toks.device)
+            quantized_feats, bandwidth_id=torch.tensor(0, device=toks.device)
         )  # [B, T]
         return sig
-
 
 # Test
 if __name__ == "__main__":
@@ -101,7 +114,8 @@ if __name__ == "__main__":
     sample_rate = 10000
     batch_size = 2
 
-    for mode in ["encode", "decode", "reconstruct"]:
+    # 需要Test
+    for mode in ["encode", "decode", "reconstruct", "unquantized_feats", "quantized_feats"]:
         codec = WavTokenizer(sample_rate, mode=mode).eval().to(device)
         input = (
             torch.zeros(batch_size, 10, 1).long()
