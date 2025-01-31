@@ -25,7 +25,8 @@ class WavLMKmeans(Codec):
             model="discrete_wavlm_large",
             layer_ids=layer_ids,
         )
-        if mode == "encode":
+        # 删除decoder, 节约显存开销
+        if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.dequantizer = None
             self.model.vocoder = None
         elif mode == "decode":
@@ -40,6 +41,21 @@ class WavLMKmeans(Codec):
         embs = self.model.toks_to_qfeats(toks)  # [C, H, K]
         embs = embs.movedim(-1, 0)  # [K, C, H]
         return embs
+
+    # override 
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig：[B, T]
+        unquantized_feats = self.model.encoder(sig)
+        return unquantized_feats
+
+    # override
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig：[B, T]
+        feats = self.model.sig_to_feats(sig)
+        toks = self.model.feats_to_toks(feats)  # [B, N, K]
+        qfeats = self.model.toks_to_qfeats(toks)
+        quantized_feats = self.model.qfeats_to_feats(qfeats)
+        return quantized_feats
 
     # override
     def _sig_to_toks(self, sig, length):
@@ -56,7 +72,6 @@ class WavLMKmeans(Codec):
         sig = self.model.feats_to_sig(feats)[:, 0]  # [B, T]
         return sig
 
-
 # Test
 if __name__ == "__main__":
     import torchaudio
@@ -66,7 +81,8 @@ if __name__ == "__main__":
     batch_size = 2
     layer_ids = [6]
 
-    for mode in ["encode", "decode", "reconstruct"]:
+    # 需要Test
+    for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
             WavLMKmeans(sample_rate, mode=mode, layer_ids=layer_ids).eval().to(device)
         )
