@@ -29,7 +29,8 @@ class Mimi(Codec):
         self.vocab_size = 2048
 
         self.model = MimiModel.from_pretrained("kyutai/mimi")
-        if mode == "encode":
+        # 删除decoder, 节约显存开销
+        if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
             self.model.decoder_transformer = None
         elif mode == "decode":
@@ -46,21 +47,42 @@ class Mimi(Codec):
         embs = torch.stack(embs)  # [K, C, H]
         return embs
 
-    # override
-    def _sig_to_toks(self, sig, length):
+    def process_sig(self, sig, length):
         # sig: [B, T]
         abs_lens = sig.shape[-1] * length
         max_len = abs_lens.max().long().item()
         padding_mask = (
-            torch.arange(
-                max_len,
-                device=length.device,
-                dtype=length.dtype,
-            )[None]
+            torch.arange(max_len, device=length.device, dtype=length.dtype)[None, :]
             < abs_lens[:, None]
         )
+        return sig[:, None], padding_mask[:, None]
+
+    # override
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig: [B, T]
+        sig, padding_mask = self.process_sig(sig, length)
+        unquantized_feats = self.model.encoder(sig, padding_mask)
+        return unquantized_feats
+
+    # override
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig: [B, T]
+        sig, padding_mask = self.process_sig(sig, length)
         output = self.model.encode(
-            sig[:, None], padding_mask[:, None], num_quantizers=self.num_codebooks
+            sig, padding_mask, num_quantizers=self.num_codebooks
+        )
+        toks = output.audio_codes.movedim(-1, -2)  # [B, N, K]
+        quantized_feats = self.model.quantizer.from_codes(
+            toks.movedim(-1, -2)    # [B, K, N]
+        )
+        return quantized_feats
+    
+    # override
+    def _sig_to_toks(self, sig, length):
+        # sig: [B, T]
+        sig, padding_mask = self.process_sig(sig, length)
+        output = self.model.encode(
+            sig, padding_mask, num_quantizers=self.num_codebooks
         )
         toks = output.audio_codes.movedim(-1, -2)  # [B, N, K]
         return toks
@@ -82,7 +104,8 @@ if __name__ == "__main__":
     batch_size = 2
     num_codebooks = 8
 
-    for mode in ["encode", "decode", "reconstruct"]:
+    # 需要Test
+    for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
             Mimi(sample_rate, mode=mode, num_codebooks=num_codebooks).eval().to(device)
         )
