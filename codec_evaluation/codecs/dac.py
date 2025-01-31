@@ -84,7 +84,7 @@ class DAC(Codec):
         )   # [B, K, N]
         toks = toks.movedim(-1, -2) # [B, N, K]
         qfeats, _, _ = self.model.quantizer.from_codes(
-            toks, movedim(-1, -2)   # [B, K, N]
+            toks.movedim(-1, -2)   # [B, K, N]
         )
         return qfeats
 
