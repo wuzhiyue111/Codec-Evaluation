@@ -66,17 +66,41 @@ class Encodec(Codec):
         embs = torch.stack(embs)  # [K, C, H]
         return embs
 
-    # override
-    def _sig_to_toks(self, sig, length):
-        # sig: [B, T]
+    def process_sig(self, sig, length):
         abs_lens = sig.shape[-1] * length
         max_len = abs_lens.max().long().item()
         padding_mask = (
-            torch.arange(max_len, device=length.device, dtype=length.dtype)[None]
+            torch.arange(max_len, device = length.device, dtype = length.dtype)[None, :]
             < abs_lens[:, None]
         )
+        return sig[:, None], padding_mask[:, None]
+
+    #override
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig：[B, T]
+        sig, padding_mask = self.process_sig(sig, length)
+        unquantized_feats = self.model.encoder(sig, padding_mask)
+        return unquantized_feats
+
+    # override
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig：[B, T]
+        sig, padding_mask = self.process_sig(sig, length)
         output = self.model.encode(
-            sig[:, None], padding_mask[:, None], bandwidth=self.bandwidth
+            sig, padding_mask, bandwidth = self.bandwidth
+        )
+        toks = output.audio_codes[0].movedim(-1, -2)    # [B, N, K]
+        if self.vocos is not None:
+            bandwidth_id = [1.5, 3.0, 6.0, 12.0].index(self.bandwidth)
+            quantized_feats = self.vocos.codes_to_features(toks.long().movedim(-1, 0))
+            return quantized_feats
+
+    # override
+    def _sig_to_toks(self, sig, length):
+        # sig: [B, T]
+        sig, padding_mask = self.process_sig(sig, length)
+        output = self.model.encode(
+            sig, padding_mask, bandwidth=self.bandwidth
         )
         toks = output.audio_codes[0].movedim(-1, -2)  # [B, N, K]
         return toks
@@ -95,7 +119,6 @@ class Encodec(Codec):
         sig = output.audio_values[:, 0]  # [B, T]
         return sig
 
-
 # Test
 if __name__ == "__main__":
     import torchaudio
@@ -105,7 +128,8 @@ if __name__ == "__main__":
     batch_size = 2
     num_codebooks = 8
 
-    for mode in ["encode", "decode", "reconstruct"]:
+    # 需要Test
+    for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         for use_vocos in [False, True]:
             codec = (
                 Encodec(
