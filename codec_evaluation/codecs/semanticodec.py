@@ -61,7 +61,8 @@ class SemantiCodec(Codec):
             cache_path=_CACHE_DIR,
         ).to("cpu")
 
-        if mode == "encode":
+        # 删除decoder, 节约显存开销
+        if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
 
     # override
@@ -89,6 +90,19 @@ class SemantiCodec(Codec):
         embs = embs.movedim(0, 1)  # [K, C, H]
         return embs
 
+    # override
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig: [B, T]
+        unquantized_feats = self.model.encoder(sig)
+        return unquantized_feats
+    
+    # override
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig: [B, T]
+        toks = self._sig_to_toks(sig, length)
+        quantized_feats = self._token_to_quantized_feature(toks)
+        return quantized_feats
+        
     # override
     def _sig_to_toks(self, sig, length):
         # sig: [B, T]
@@ -201,7 +215,8 @@ if __name__ == "__main__":
     sample_rate = 10000
     batch_size = 2
 
-    for mode in ["encode", "decode", "reconstruct"]:
+    # 需要Test
+    for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = SemantiCodec(sample_rate, mode=mode).eval().to(device)
         input = (
             torch.zeros(batch_size, 10, 2).long()
