@@ -70,11 +70,11 @@ class Codec(torch.nn.Module, ABC):
         )
         return sig, length
 
-    def sig_to_unquantized_emb(self, sig, length = None)
+    def sig_to_unquantized_emb(self, sig, length = None):
         sig, length = self.process_audio(sig, length)
         return self._sig_to_unquantized_emb(sig, length)
 
-    def sig_to_quantized_emb(self, sig, length = None)
+    def sig_to_quantized_emb(self, sig, length = None):
         sig, length = self.process_audio(sig, length)
         return self._sig_to_quantized_emb(sig, length)
 
