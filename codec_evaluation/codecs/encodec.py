@@ -52,7 +52,8 @@ class Encodec(Codec):
 
             self.vocos = Vocos.from_pretrained(f"charactr/vocos-encodec-{tag}khz")
             self.model.decoder = None
-        if mode == "encode":
+        # 删除decoder, 节约显存开销
+        if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
             self.vocos = None
         elif mode == "decode":
