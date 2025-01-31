@@ -73,7 +73,7 @@ class DAC(Codec):
     # oberride
     def _sig_to_unquantized_emb(self, sig, length):
         # sig：[B, T]
-        unquantized_feats = self.model.encoder(sig)
+        unquantized_feats = self.model.sig_to_feats(sig)
         return unquantized_feats
 
     # override
