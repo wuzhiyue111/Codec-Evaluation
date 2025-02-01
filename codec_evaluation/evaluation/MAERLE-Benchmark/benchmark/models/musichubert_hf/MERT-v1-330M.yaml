@@ -1,0 +1,9 @@
+name: MERT-v1-330M
+pre_trained_model_type: hubert
+pre_trained_folder: null
+token_rate: 75
+target_sr: 24000
+num_features: 1024
+n_tranformer_layer: 24
+processor_normalize: false
+huggingface_model_name: m-a-p/MERT-v1-330M
