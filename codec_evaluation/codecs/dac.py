@@ -42,7 +42,7 @@ class DAC(Codec):
         model_path = str(dac.utils.download(model_type=f"{tag}khz"))
         self.model = dac.DAC.load(model_path)
 
-        if mode == "encode":
+        if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb": # 删除decoder，省显存
             self.model.decoder = None
         elif mode == "decode":
             self.model.encoder = None
@@ -86,6 +86,24 @@ class DAC(Codec):
         )
         sig = self.model.decode(qfeats)[:, 0]  # [B, T]
         return sig
+    
+    # override
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig: [B, T]
+        _, toks, *_ = self.model.encode(
+            sig[:, None], n_quantizers=self.num_codebooks
+        )  # [B, K, N]
+        toks = toks.movedim(-1, -2)  # [B, N, K]
+        qfeats, _, _ = self.model.quantizer.from_codes(
+            toks.movedim(-1, -2)  # [B, K, N]
+        )
+        return qfeats
+    
+    # override
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig: [B, T]
+        unquantized_feats = self.model.encoder(sig)
+        return unquantized_feats
 
 
 # Test
@@ -96,8 +114,8 @@ if __name__ == "__main__":
     sample_rate = 10000
     batch_size = 2
     num_codebooks = 8
-
-    for mode in ["encode", "decode", "reconstruct"]:
+    # TODO: 需要测试
+    for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
             DAC(
                 sample_rate,

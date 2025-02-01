@@ -25,8 +25,10 @@ class WavLMKmeans(Codec):
             model="discrete_wavlm_large",
             layer_ids=layer_ids,
         )
-        if mode == "encode":
+        if mode == "encode" or mode == "unquantized_emb":
             self.model.dequantizer = None
+            self.model.vocoder = None
+        elif mode == "quantized_emb":
             self.model.vocoder = None
         elif mode == "decode":
             self.model.encoder = None
@@ -44,17 +46,30 @@ class WavLMKmeans(Codec):
     # override
     def _sig_to_toks(self, sig, length):
         # sig: [B, T]
-        feats = self.model.sig_to_feats(sig)
-        toks = self.model.feats_to_toks(feats)  # [B, N, K]
+        unquantized_feats = self._sig_to_unquantized_emb(sig, length)
+        toks = self.model.feats_to_toks(unquantized_feats)  # [B, N, K]
         return toks
 
     # override
     def _toks_to_sig(self, toks, length):
         # toks: [B, N, K]
-        qfeats = self.model.toks_to_qfeats(toks)
-        feats = self.model.qfeats_to_feats(qfeats)
+        quantized_feats = self.model.toks_to_qfeats(toks)
+        feats = self.model.qfeats_to_feats(quantized_feats)
         sig = self.model.feats_to_sig(feats)[:, 0]  # [B, T]
         return sig
+
+    # override
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig: [B, T]
+        unquantized_feats = self.model.sig_to_feats(sig)
+        return unquantized_feats
+    
+    # override
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig: [B, T]
+        toks = self._sig_to_toks(sig, length)
+        quantized_feats = self.model.toks_to_qfeats(toks)
+        return quantized_feats
 
 
 # Test
@@ -66,7 +81,8 @@ if __name__ == "__main__":
     batch_size = 2
     layer_ids = [6]
 
-    for mode in ["encode", "decode", "reconstruct"]:
+    # TODO: 需要测试
+    for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
             WavLMKmeans(sample_rate, mode=mode, layer_ids=layer_ids).eval().to(device)
         )
