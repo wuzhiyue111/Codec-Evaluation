@@ -6,6 +6,8 @@
 
 import os
 import sys
+sys.path.append('/home/ch/Codec-Evaluation')
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 
 import torch
 
@@ -52,7 +54,8 @@ class Encodec(Codec):
 
             self.vocos = Vocos.from_pretrained(f"charactr/vocos-encodec-{tag}khz")
             self.model.decoder = None
-        if mode == "encode":
+        # 删除decoder, 节约显存开销
+        if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
             self.vocos = None
         elif mode == "decode":
@@ -70,10 +73,36 @@ class Encodec(Codec):
         abs_lens = sig.shape[-1] * length
         max_len = abs_lens.max().long().item()
         padding_mask = (
-            torch.arange(max_len, device=length.device, dtype=length.dtype)[None]
+            torch.arange(max_len, device = length.device, dtype = length.dtype)[None, :]
             < abs_lens[:, None]
         )
         return sig[:, None], padding_mask[:, None]
+
+    #override
+    # TODO：需要debug，4090debug启动就闪退，需要修理一下
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig：[B, T]
+        sig, padding_mask = self.process_sig(sig, length)
+        # 传递 sig 和 padding_mask 为字典形式，符合 transformers 模型的输入要求
+        input_data = {"input_ids": sig, "attention_mask": padding_mask}
+        output = self.model.encoder(input_data)
+        unquantized_feats = output.get("hidden_states")
+        if unquantized_feats is None:
+            raise ValueError("unquantized_feats not found in encoder output")
+        return unquantized_feats
+
+    # override
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig：[B, T]
+        sig, padding_mask = self.process_sig(sig, length)
+        output = self.model.encode(
+            sig, padding_mask, bandwidth = self.bandwidth
+        )
+        toks = output.audio_codes[0].movedim(-1, -2)    # [B, N, K]
+        if self.vocos is not None:
+            bandwidth_id = [1.5, 3.0, 6.0, 12.0].index(self.bandwidth)
+            quantized_feats = self.vocos.codes_to_features(toks.long().movedim(-1, 0))
+            return quantized_feats
 
     # override
     def _sig_to_toks(self, sig, length):
@@ -99,23 +128,6 @@ class Encodec(Codec):
         sig = output.audio_values[:, 0]  # [B, T]
         return sig
 
-    # override
-    def _sig_to_unquantized_emb(self, sig, length):
-        # sig: [B, T]
-        sig, padding_mask = self.process_sig(sig, length)
-        # TODO: 这里还没写
-        unquantized_feats = self.model.encoder(sig, padding_mask)
-        return unquantized_feats
-
-    # override
-    def _sig_to_quantized_emb(self, sig, length):
-        # sig: [B, T]
-        sig, padding_mask = self.process_sig(sig, length)
-        # TODO: 这里还没写
-        quantized_feats = self.model.quantizer(sig, padding_mask)
-        return quantized_feats
-
-
 # Test
 if __name__ == "__main__":
     import torchaudio
@@ -124,7 +136,9 @@ if __name__ == "__main__":
     sample_rate = 10000
     batch_size = 2
     num_codebooks = 8
-    # TODO: 需要测试
+
+    # 需要Test
+    # encodec：sig to unquantized emb有一点bug，但是4090的debug突然不好使了，在处理，其他输出正常；
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         for use_vocos in [False, True]:
             codec = (
@@ -143,13 +157,20 @@ if __name__ == "__main__":
                 else torch.randn(batch_size, sample_rate)
             ).to(device)
             with torch.no_grad():
+                # output = codec(input)
+                # print(output.shape)
+
                 output = codec(input)
-                print(output.shape)
+                if output is not None:
+                    print(output.shape)
+                else:
+                    print("错误：codec 输出为 None。")
+
                 embs = codec.embs()
                 print(embs.shape)
 
-    sig, sample_rate = torchaudio.load("example.wav")
+    sig, sample_rate = torchaudio.load("/home/ch/Codec-Evaluation/example_audio/encodec/vctk_p225_012.wav")
     codec = Encodec(sample_rate, num_codebooks=num_codebooks).eval()
     with torch.no_grad():
         rec_sig = codec(sig)
-    torchaudio.save("reconstruction.wav", rec_sig, sample_rate)
+    torchaudio.save("/home/ch/Codec-Evaluation/reconstruction_audio/encodec/vctk_reconstruction.wav", rec_sig, sample_rate)
