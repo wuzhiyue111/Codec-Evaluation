@@ -117,6 +117,7 @@ if __name__ == "__main__":
     num_codebooks = 8
 
     # TODO：需要Test
+    # dac：访问github超时；
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
             DAC(
