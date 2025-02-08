@@ -6,6 +6,7 @@
 
 import os
 import sys
+sys.path.append("/home/ch/Codec-Evaluation")
 
 import torch
 from huggingface_hub import snapshot_download
@@ -47,6 +48,7 @@ class SpeechTokenizer(Codec):
             config_path, checkpoint_path
         )
 
+        # 删除decoder, 节约显存开销
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
         elif mode == "decode":
@@ -73,6 +75,19 @@ class SpeechTokenizer(Codec):
         return embs
 
     # override
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig：[B, T]
+        unquantized_feats = self.model.encoder(sig)
+        return unquantized_feats
+
+    # override
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig：[B, T]
+        toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]
+        quantized_feats = self.model.quantizer(toks)
+        return quantized_feats
+
+    # override
     def _sig_to_toks(self, sig, length):
         # sig: [B, T]
         toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]
@@ -86,18 +101,6 @@ class SpeechTokenizer(Codec):
         sig = self.model.decode(toks)[:, 0]  # [B, T]
         return sig
 
-    # override
-    def _sig_to_unquantized_emb(self, sig, length):
-        # sig: [B, T]
-        # TODO: 这里还没写
-        pass
-
-    # override
-    def _sig_to_quantized_emb(self, sig, length):
-        # sig: [B, T]
-        # TODO: 这里还没写
-        pass
-
 # Test
 if __name__ == "__main__":
     import torchaudio
@@ -107,7 +110,8 @@ if __name__ == "__main__":
     batch_size = 2
     num_codebooks = 8
 
-    # TODO: 需要测试
+    # 需要Test
+    # hf-mirror超时问题
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
             SpeechTokenizer(
@@ -129,8 +133,8 @@ if __name__ == "__main__":
             embs = codec.embs()
             print(embs.shape)
 
-    sig, sample_rate = torchaudio.load("example.wav")
+    sig, sample_rate = torchaudio.load("/home/ch/Codec-Evaluation/example_audio/speechtokenizer/vctk_p225_016.wav")
     codec = SpeechTokenizer(sample_rate, num_codebooks=num_codebooks).eval()
     with torch.no_grad():
         rec_sig = codec(sig)
-    torchaudio.save("reconstruction.wav", rec_sig, sample_rate)
+    torchaudio.save("/home/ch/Codec-Evaluation/reconstruction_audio/speechtokenizer/vctk_reconstruction.wav", rec_sig, sample_rate)
