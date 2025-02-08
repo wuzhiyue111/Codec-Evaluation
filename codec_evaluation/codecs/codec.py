@@ -4,6 +4,7 @@
 
 """Codec interface."""
 
+# abc.ABC/abc.abstractmethod，用于定义抽象基类的模块。帮助创建必须被子类实现的方法
 from abc import ABC, abstractmethod
 
 import torch
@@ -30,6 +31,8 @@ class Codec(torch.nn.Module, ABC):
         self.mode = mode
 
     def forward(self, input, length=None):
+        # id是否合理？
+        # backgorund：tts -》id
         if self.mode == "encode":
             toks = self.sig_to_toks(input, length)
             return toks
@@ -59,14 +62,17 @@ class Codec(torch.nn.Module, ABC):
         return sig, length
 
     def sig_to_unquantized_emb(self, sig, length=None):
+        # sig: [B, T]
         sig, length = self.process_audio(sig, length)
         return self._sig_to_unquantized_emb(sig, length)
     
     def sig_to_quantized_emb(self, sig, length=None):
+        # sig: [B, T]
         sig, length = self.process_audio(sig, length)
         return self._sig_to_quantized_emb(sig, length)
 
     def sig_to_toks(self, sig, length=None):
+        # sig: [B, T]
         sig, length = self.process_audio(sig, length)
         return self._sig_to_toks(sig, length)
 
