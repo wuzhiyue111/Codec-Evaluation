@@ -211,7 +211,6 @@ class SemantiCodec(Codec):
             device=tokens.device,
         )
         
-# Test
 if __name__ == "__main__":
     import torchaudio
 
@@ -219,7 +218,6 @@ if __name__ == "__main__":
     sample_rate = 10000
     batch_size = 2
 
-    # 需要Test
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = SemantiCodec(sample_rate, mode=mode).eval().to(device)
         input = (
