@@ -6,8 +6,9 @@
 
 import os
 import sys
-sys.path.append('/home/ch/Codec-Evaluation')
-
+import codec_evaluation
+path_root = codec_evaluation.__path__[0]
+sys.path.append(path_root)
 import torch
 from huggingface_hub import snapshot_download
 
@@ -71,6 +72,7 @@ class WavTokenizer(Codec):
         elif mode == "decode":
             self.model.feature_extractor.encodec.encoder = None
 
+
     # override
     @torch.no_grad()
     def embs(self):
@@ -81,7 +83,9 @@ class WavTokenizer(Codec):
     # override
     def _sig_to_unquantized_emb(self, sig, length):
         # sig: [B, T]
-        unquantized_feats = self.model.sig_to_feats(sig)
+        if sig.dim() == 2:
+            sig = sig.unsqueeze(1)
+        unquantized_feats = self.model.feature_extractor.encodec.encoder(sig)
         return unquantized_feats
 
     # override
@@ -95,7 +99,11 @@ class WavTokenizer(Codec):
     def _sig_to_toks(self, sig, length):
         # sig: [B, T]
         _, toks = self.model.encode(sig, bandwidth_id=0)
+        #import pdb; pdb.set_trace()
+        #print("toks.shape (before moving dim):", toks.shape)  # 打印维度信息([1, 2, 96])
         toks = toks.movedim(0, -1)  # [B, N, K]
+        #import pdb; pdb.set_trace()
+        #print("toks.shape (after moving dim):", toks.shape) #([2, 96, 1])
         return toks
 
     # override
@@ -115,9 +123,8 @@ if __name__ == "__main__":
     sample_rate = 10000
     batch_size = 2
 
-    # 需要Test
-    # wavtokenizer：github超时
-    for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
+    # Test通过
+    for mode in ["encode", "decode", "reconstruct", "quantized_emb", "unquantized_emb"]:
         codec = WavTokenizer(sample_rate, mode=mode).eval().to(device)
         input = (
             torch.zeros(batch_size, 10, 1).long()
@@ -126,12 +133,15 @@ if __name__ == "__main__":
         ).to(device)
         with torch.no_grad():
             output = codec(input)
-            print(output.shape)
+            if output is not None:
+                print("codec(input):" + str(output.shape))
+            else:
+                print("错误：codec 输出为 None。")
             embs = codec.embs()
-            print(embs.shape)
+            print("emb.shape:" + str(embs.shape))
 
-    sig, sample_rate = torchaudio.load("/home/ch/Codec-Evaluation/example_audio/wavtokenizer/vctk_p225_018.wav")
+    sig, sample_rate = torchaudio.load("example.wav")
     codec = WavTokenizer(sample_rate).eval()
     with torch.no_grad():
         rec_sig = codec(sig)
-    torchaudio.save("/home/ch/Codec-Evaluation/reconstruction_audio/wavtokenizer/vctk_reconstruction.wav", rec_sig, sample_rate)
+    torchaudio.save("reconstruct.wav", rec_sig, sample_rate)
