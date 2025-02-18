@@ -4,9 +4,10 @@
 
 """Mimi (see https://kyutai.org/Moshi.pdf)."""
 import sys
-sys.path.append('/home/ch/Codec-Evaluation')
-
 import torch
+import codec_evaluation
+path_root = codec_evaluation.__path__[0]
+sys.path.append(path_root)
 
 from codec_evaluation.codecs.codec import Codec
 
@@ -31,6 +32,7 @@ class Mimi(Codec):
         self.vocab_size = 2048
 
         self.model = MimiModel.from_pretrained("kyutai/mimi")
+        
         # 删除decoder, 节约显存开销
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
@@ -63,10 +65,11 @@ class Mimi(Codec):
     def _sig_to_unquantized_emb(self, sig, length):
         # sig: [B, T]
         sig, padding_mask = self.process_sig(sig, length)
-        unquantized_feats = self.model.encoder(sig, padding_mask)
+        unquantized_feats = self.model.encoder(sig)
         return unquantized_feats
 
     # override
+    # 修改了MimiSplitResidualVectorQuantizer方法，添加了forward函数
     def _sig_to_quantized_emb(self, sig, length):
         # sig: [B, T]
         sig, padding_mask = self.process_sig(sig, length)
@@ -74,7 +77,7 @@ class Mimi(Codec):
             sig, padding_mask, num_quantizers=self.num_codebooks
         )
         toks = output.audio_codes.movedim(-1, -2)  # [B, N, K]
-        quantized_feats = self.model.quantizer.from_codes(
+        quantized_feats = self.model.quantizer(
             toks.movedim(-1, -2)    # [B, K, N]
         )
         return quantized_feats
@@ -107,7 +110,6 @@ if __name__ == "__main__":
     num_codebooks = 8
 
     # 需要Test
-    # mini：hf-mirror超时问题
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
             Mimi(sample_rate, mode=mode, num_codebooks=num_codebooks).eval().to(device)
@@ -119,12 +121,15 @@ if __name__ == "__main__":
         ).to(device)
         with torch.no_grad():
             output = codec(input)
-            print(output.shape)
+            if output is not None:
+                print("codec(input):" + str(output.shape))
+            else:
+                print("错误：codec 输出为 None。")
             embs = codec.embs()
-            print(embs.shape)
+            print("emb.shape:" + str(embs.shape))
 
-    sig, sample_rate = torchaudio.load("/home/ch/Codec-Evaluation/example_audio/mimi/vctk_p225_013.wav")
+    sig, sample_rate = torchaudio.load("example.wav")
     codec = Mimi(sample_rate, num_codebooks=num_codebooks).eval()
     with torch.no_grad():
         rec_sig = codec(sig)
-    torchaudio.save("/home/ch/Codec-Evaluation/reconstruction_audio/mimi/vctk_reconstruction.wav", rec_sig, sample_rate)
+    torchaudio.save("reconstruct.wav", rec_sig, sample_rate)
