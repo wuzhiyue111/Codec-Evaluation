@@ -114,7 +114,6 @@ class SpeechTokenizer(Codec):
         sig = self.model.decode(toks)[:, 0]  # [B, T]
         return sig
 
-# Test
 if __name__ == "__main__":
     import torchaudio
 
@@ -123,7 +122,6 @@ if __name__ == "__main__":
     batch_size = 2
     num_codebooks = 8
 
-    # 需要Test
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
             SpeechTokenizer(
