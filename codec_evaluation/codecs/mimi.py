@@ -100,7 +100,6 @@ class Mimi(Codec):
         return sig
 
 
-# Test
 if __name__ == "__main__":
     import torchaudio
 
@@ -108,8 +107,7 @@ if __name__ == "__main__":
     sample_rate = 10000
     batch_size = 2
     num_codebooks = 8
-
-    # 需要Test
+    
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
             Mimi(sample_rate, mode=mode, num_codebooks=num_codebooks).eval().to(device)
