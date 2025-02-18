@@ -115,7 +115,7 @@ class WavTokenizer(Codec):
         )  # [B, T]
         return sig
 
-# Test
+
 if __name__ == "__main__":
     import torchaudio
 
@@ -123,7 +123,6 @@ if __name__ == "__main__":
     sample_rate = 10000
     batch_size = 2
 
-    # Test通过
     for mode in ["encode", "decode", "reconstruct", "quantized_emb", "unquantized_emb"]:
         codec = WavTokenizer(sample_rate, mode=mode).eval().to(device)
         input = (
