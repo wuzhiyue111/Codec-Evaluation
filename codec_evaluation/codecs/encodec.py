@@ -79,7 +79,6 @@ class Encodec(Codec):
         return sig[:, None], padding_mask[:, None]
 
     #override
-    # TODO：需要debug
     def _sig_to_unquantized_emb(self, sig, length):
         # sig：[B, T]
         sig, padding_mask = self.process_sig(sig, length)
@@ -132,9 +131,7 @@ class Encodec(Codec):
         sig = output.audio_values[:, 0]  # [B, T]
         return sig
 
-# Test
 if __name__ == "__main__":
-    # import pdb; pdb.set_trace()
     import torchaudio
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -142,7 +139,6 @@ if __name__ == "__main__":
     batch_size = 2
     num_codebooks = 8
 
-    # 需要Test
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         # import pdb; pdb.set_trace()
         for use_vocos in [False, True]:
