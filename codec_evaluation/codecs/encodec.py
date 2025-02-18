@@ -6,8 +6,9 @@
 
 import os
 import sys
-sys.path.append('/home/ch/Codec-Evaluation')
-os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+import codec_evaluation
+path_root = codec_evaluation.__path__[0]
+sys.path.append(path_root)
 
 import torch
 
@@ -47,7 +48,6 @@ class Encodec(Codec):
                 sys_path = [x for x in sys.path]
                 sys.path = [x for x in sys.path if root_dir not in x]
                 from vocos import Vocos
-
                 sys.path = sys_path
             except ImportError:
                 raise ImportError("`pip install vocos` to use this module")
@@ -79,16 +79,11 @@ class Encodec(Codec):
         return sig[:, None], padding_mask[:, None]
 
     #override
-    # TODO：需要debug，4090debug启动就闪退，需要修理一下
+    # TODO：需要debug
     def _sig_to_unquantized_emb(self, sig, length):
         # sig：[B, T]
         sig, padding_mask = self.process_sig(sig, length)
-        # 传递 sig 和 padding_mask 为字典形式，符合 transformers 模型的输入要求
-        input_data = {"input_ids": sig, "attention_mask": padding_mask}
-        output = self.model.encoder(input_data)
-        unquantized_feats = output.get("hidden_states")
-        if unquantized_feats is None:
-            raise ValueError("unquantized_feats not found in encoder output")
+        unquantized_feats = self.model.encoder(sig)
         return unquantized_feats
 
     # override
@@ -96,13 +91,22 @@ class Encodec(Codec):
         # sig：[B, T]
         sig, padding_mask = self.process_sig(sig, length)
         output = self.model.encode(
-            sig, padding_mask, bandwidth = self.bandwidth
+            sig, padding_mask, bandwidth=self.bandwidth
         )
         toks = output.audio_codes[0].movedim(-1, -2)    # [B, N, K]
+
+        # 初始化 quantized_feats 变量
+        quantized_feats = None
+    
         if self.vocos is not None:
             bandwidth_id = [1.5, 3.0, 6.0, 12.0].index(self.bandwidth)
-            quantized_feats = self.vocos.codes_to_features(toks.long().movedim(-1, 0))
-            return quantized_feats
+            quantized_feats = self.vocos.codes_to_features(toks.long().movedim(-1, 0), bandwidth_id)
+        else:
+            # 如果 self.vocos 为 None，执行默认的处理方式
+            quantized_feats = toks
+
+        return quantized_feats
+
 
     # override
     def _sig_to_toks(self, sig, length):
@@ -130,6 +134,7 @@ class Encodec(Codec):
 
 # Test
 if __name__ == "__main__":
+    # import pdb; pdb.set_trace()
     import torchaudio
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -138,8 +143,8 @@ if __name__ == "__main__":
     num_codebooks = 8
 
     # 需要Test
-    # encodec：sig to unquantized emb有一点bug，但是4090的debug突然不好使了，在处理，其他输出正常；
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
+        # import pdb; pdb.set_trace()
         for use_vocos in [False, True]:
             codec = (
                 Encodec(
@@ -157,20 +162,16 @@ if __name__ == "__main__":
                 else torch.randn(batch_size, sample_rate)
             ).to(device)
             with torch.no_grad():
-                # output = codec(input)
-                # print(output.shape)
-
                 output = codec(input)
                 if output is not None:
-                    print(output.shape)
+                    print("codec(input):" + str(output.shape))
                 else:
                     print("错误：codec 输出为 None。")
-
                 embs = codec.embs()
-                print(embs.shape)
+                print("emb.shape:" + str(embs.shape))
 
-    sig, sample_rate = torchaudio.load("/home/ch/Codec-Evaluation/example_audio/encodec/vctk_p225_012.wav")
+    sig, sample_rate = torchaudio.load("example.wav")
     codec = Encodec(sample_rate, num_codebooks=num_codebooks).eval()
     with torch.no_grad():
         rec_sig = codec(sig)
-    torchaudio.save("/home/ch/Codec-Evaluation/reconstruction_audio/encodec/vctk_reconstruction.wav", rec_sig, sample_rate)
+    torchaudio.save("reconstruct.wav", rec_sig, sample_rate)
