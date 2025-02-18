@@ -6,6 +6,10 @@
 
 import os
 import sys
+import torch.nn.functional as F
+import codec_evaluation
+path_root = codec_evaluation.__path__[0]
+sys.path.append(path_root)
 
 import torch
 from huggingface_hub import snapshot_download
@@ -47,6 +51,7 @@ class SpeechTokenizer(Codec):
             config_path, checkpoint_path
         )
 
+        # 删除decoder, 节约显存开销
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
         elif mode == "decode":
@@ -73,6 +78,29 @@ class SpeechTokenizer(Codec):
         return embs
 
     # override
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig：[B, T]
+        if sig.dim() == 2:
+            sig = sig.unsqueeze(1)
+        # encoder -> B, C, T = x.shape 
+        unquantized_feats = self.model.encoder(sig)
+        return unquantized_feats
+
+    # override
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig: [B, T]
+        toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]   torch.Size([8, 2, 50])
+        toks = toks.movedim(-3, -1)  # [B, N, K]    torch.Size([2, 50, 8])
+        # RuntimeError: mat1 and mat2 shapes cannot be multiplied (16x50 and 1024x1024)
+        # core_vq:x.pow(2).sum(1, keepdim=True) - 2 * (x @ embed) + embed.pow(2).sum(0, keepdim=True)   embed是float()
+        repeats = (1024 + toks.shape[1] - 1) // toks.shape[1]  # 确保拼接后长度至少为 1024
+        toks = torch.cat([toks] * repeats, dim=1)
+        toks = toks[:, :1024, :]
+        # return tuple
+        quantized_feats = self.model.quantizer(toks.float())[0]
+        return quantized_feats
+
+    # override
     def _sig_to_toks(self, sig, length):
         # sig: [B, T]
         toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]
@@ -86,19 +114,6 @@ class SpeechTokenizer(Codec):
         sig = self.model.decode(toks)[:, 0]  # [B, T]
         return sig
 
-    # override
-    def _sig_to_unquantized_emb(self, sig, length):
-        # sig: [B, T]
-        # TODO: 这里还没写
-        pass
-
-    # override
-    def _sig_to_quantized_emb(self, sig, length):
-        # sig: [B, T]
-        # TODO: 这里还没写
-        pass
-
-# Test
 if __name__ == "__main__":
     import torchaudio
 
@@ -107,7 +122,6 @@ if __name__ == "__main__":
     batch_size = 2
     num_codebooks = 8
 
-    # TODO: 需要测试
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
             SpeechTokenizer(
@@ -125,12 +139,15 @@ if __name__ == "__main__":
         ).to(device)
         with torch.no_grad():
             output = codec(input)
-            print(output.shape)
+            if output is not None:
+                print("codec(input):" + str(output.shape))
+            else:
+                print("错误：codec 输出为 None。")
             embs = codec.embs()
-            print(embs.shape)
+            print("emb.shape:" + str(embs.shape))
 
     sig, sample_rate = torchaudio.load("example.wav")
     codec = SpeechTokenizer(sample_rate, num_codebooks=num_codebooks).eval()
     with torch.no_grad():
         rec_sig = codec(sig)
-    torchaudio.save("reconstruction.wav", rec_sig, sample_rate)
+    torchaudio.save("reconstruct.wav", rec_sig, sample_rate)

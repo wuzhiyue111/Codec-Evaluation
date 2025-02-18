@@ -6,6 +6,11 @@
 
 import os
 import sys
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+import codec_evaluation
+root_path = codec_evaluation.__path__[0]
+sys.path.append(root_path)
+
 
 import torch
 
@@ -45,7 +50,6 @@ class SemantiCodec(Codec):
             raise ImportError(
                 "`pip install git+https://github.com/haoheliu/SemantiCodec-inference.git` to use this module"
             )
-
         super().__init__(sample_rate, 16000, mode)
         self.token_rate = token_rate
         self.semantic_vocab_size = semantic_vocab_size
@@ -61,6 +65,7 @@ class SemantiCodec(Codec):
             cache_path=_CACHE_DIR,
         ).to("cpu")
 
+        # 删除decoder, 节约显存开销
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
 
@@ -90,6 +95,20 @@ class SemantiCodec(Codec):
         return embs
 
     # override
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig: [B, T]
+        toks = self._sig_to_toks(sig, length)
+        unquantized_feats = self.model.encoder.unquant(toks)
+        return unquantized_feats
+    
+    # override
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig: [B, T]
+        toks = self._sig_to_toks(sig, length)
+        quantized_feats = self._token_to_quantized_feature(toks)
+        return quantized_feats
+        
+    # override
     def _sig_to_toks(self, sig, length):
         # sig: [B, T]
         toks = self._encode(sig)  # [B, N, K]
@@ -100,18 +119,6 @@ class SemantiCodec(Codec):
         # toks: [B, N, K]
         sig = self._decode(toks)[:, 0]  # [B, T]
         return sig
-    
-    # override
-    def _sig_to_unquantized_emb(self, sig, length):
-        # sig: [B, T]
-        toks = self._sig_to_toks(sig, length)
-        unquantized_feats = self._token_to_quantized_feature(toks)
-        return unquantized_feats
-    
-    # override # TODO: 还没写
-    def _sig_to_quantized_emb(self, sig, length):
-        # sig: [B, T]
-        pass
 
     # See https://github.com/haoheliu/SemantiCodec-inference/blob/8dc464c3385d2389a695ed3f718f4a0caf3ed33f/semanticodec/main.py
     def _token_to_quantized_feature(self, tokens):
@@ -203,9 +210,7 @@ class SemantiCodec(Codec):
             output[..., : int(trim_duration * semanticodec.main.SAMPLE_RATE)],
             device=tokens.device,
         )
-
-
-# Test
+        
 if __name__ == "__main__":
     import torchaudio
 
@@ -213,7 +218,6 @@ if __name__ == "__main__":
     sample_rate = 10000
     batch_size = 2
 
-    # TODO: 需要测试
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = SemantiCodec(sample_rate, mode=mode).eval().to(device)
         input = (
@@ -223,12 +227,15 @@ if __name__ == "__main__":
         ).to(device)
         with torch.no_grad():
             output = codec(input)
-            print(output.shape)
+            if output is not None:
+                print("codec(input):" + str(output.shape))
+            else:
+                print("错误：codec 输出为 None。")
             embs = codec.embs()
-            print(embs.shape)
+            print("emb.shape:" + str(embs.shape))
 
     sig, sample_rate = torchaudio.load("example.wav")
     codec = SemantiCodec(sample_rate).eval()
     with torch.no_grad():
         rec_sig = codec(sig)
-    torchaudio.save("reconstruction.wav", rec_sig, sample_rate)
+    torchaudio.save("reconstruct", rec_sig, sample_rate)

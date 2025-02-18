@@ -3,6 +3,8 @@
 # ==============================================================================
 
 """WavLM + K-means (see https://arxiv.org/abs/2312.09747)."""
+import sys
+sys.path.append("/home/ch/Codec-Evaluation")
 
 import torch
 
@@ -25,6 +27,7 @@ class WavLMKmeans(Codec):
             model="discrete_wavlm_large",
             layer_ids=layer_ids,
         )
+        # 删除decoder, 节约显存开销
         if mode == "encode" or mode == "unquantized_emb":
             self.model.dequantizer = None
             self.model.vocoder = None
@@ -43,6 +46,19 @@ class WavLMKmeans(Codec):
         embs = embs.movedim(-1, 0)  # [K, C, H]
         return embs
 
+    # override 
+    def _sig_to_unquantized_emb(self, sig, length):
+        # sig：[B, T]
+        unquantized_feats = self.model.sig_to_feats(sig)
+        return unquantized_feats
+
+    # override
+    def _sig_to_quantized_emb(self, sig, length):
+        # sig：[B, T]
+        toks = self._sig_to_toks(sig)  # [B, N, K]
+        quantized_feats = self.model.toks_to_qfeats(toks)
+        return quantized_feats
+
     # override
     def _sig_to_toks(self, sig, length):
         # sig: [B, T]
@@ -58,20 +74,6 @@ class WavLMKmeans(Codec):
         sig = self.model.feats_to_sig(feats)[:, 0]  # [B, T]
         return sig
 
-    # override
-    def _sig_to_unquantized_emb(self, sig, length):
-        # sig: [B, T]
-        unquantized_feats = self.model.sig_to_feats(sig)
-        return unquantized_feats
-    
-    # override
-    def _sig_to_quantized_emb(self, sig, length):
-        # sig: [B, T]
-        toks = self._sig_to_toks(sig, length)
-        quantized_feats = self.model.toks_to_qfeats(toks)
-        return quantized_feats
-
-
 # Test
 if __name__ == "__main__":
     import torchaudio
@@ -81,7 +83,8 @@ if __name__ == "__main__":
     batch_size = 2
     layer_ids = [6]
 
-    # TODO: 需要测试
+    # 需要Test
+    # wavlm_kmeans:github超时
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
             WavLMKmeans(sample_rate, mode=mode, layer_ids=layer_ids).eval().to(device)
@@ -97,8 +100,8 @@ if __name__ == "__main__":
             embs = codec.embs()
             print(embs.shape)
 
-    sig, sample_rate = torchaudio.load("example.wav")
+    sig, sample_rate = torchaudio.load("/home/ch/Codec-Evaluation/example_audio/wavlm_kmeans/vctk_p225_017.wav")
     codec = WavLMKmeans(sample_rate, layer_ids=layer_ids).eval()
     with torch.no_grad():
         rec_sig = codec(sig)
-    torchaudio.save("reconstruction.wav", rec_sig, sample_rate)
+    torchaudio.save("/home/ch/Codec-Evaluation/reconstruction_audio/wavlm_kmeans/vctk_reconstruction.wav", rec_sig, sample_rate)
