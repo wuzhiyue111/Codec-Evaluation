@@ -6,7 +6,11 @@
 
 import os
 import sys
-sys.path.append('/home/ch/Codec-Evaluation')
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+import codec_evaluation
+root_path = codec_evaluation.__path__[0]
+sys.path.append(root_path)
+
 
 import torch
 
@@ -46,7 +50,6 @@ class SemantiCodec(Codec):
             raise ImportError(
                 "`pip install git+https://github.com/haoheliu/SemantiCodec-inference.git` to use this module"
             )
-
         super().__init__(sample_rate, 16000, mode)
         self.token_rate = token_rate
         self.semantic_vocab_size = semantic_vocab_size
@@ -94,7 +97,8 @@ class SemantiCodec(Codec):
     # override
     def _sig_to_unquantized_emb(self, sig, length):
         # sig: [B, T]
-        unquantized_feats = self.model.sig_to_feats(sig)
+        toks = self._sig_to_toks(sig, length)
+        unquantized_feats = self.model.encoder.unquant(toks)
         return unquantized_feats
     
     # override
@@ -206,8 +210,7 @@ class SemantiCodec(Codec):
             output[..., : int(trim_duration * semanticodec.main.SAMPLE_RATE)],
             device=tokens.device,
         )
-
-
+        
 # Test
 if __name__ == "__main__":
     import torchaudio
@@ -217,7 +220,6 @@ if __name__ == "__main__":
     batch_size = 2
 
     # 需要Test
-    # semanticodec：github超时问题
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = SemantiCodec(sample_rate, mode=mode).eval().to(device)
         input = (
@@ -227,12 +229,15 @@ if __name__ == "__main__":
         ).to(device)
         with torch.no_grad():
             output = codec(input)
-            print(output.shape)
+            if output is not None:
+                print("codec(input):" + str(output.shape))
+            else:
+                print("错误：codec 输出为 None。")
             embs = codec.embs()
-            print(embs.shape)
+            print("emb.shape:" + str(embs.shape))
 
-    sig, sample_rate = torchaudio.load("/home/ch/Codec-Evaluation/example_audio/semanticodec/vctk_p225_014.wav")
+    sig, sample_rate = torchaudio.load("example.wav")
     codec = SemantiCodec(sample_rate).eval()
     with torch.no_grad():
         rec_sig = codec(sig)
-    torchaudio.save("/home/ch/Codec-Evaluation/reconstruction_audio/semanticodec/vctk_reconstruction.wav", rec_sig, sample_rate)
+    torchaudio.save("reconstruct", rec_sig, sample_rate)
