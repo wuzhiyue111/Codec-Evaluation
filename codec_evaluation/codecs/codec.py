@@ -26,6 +26,11 @@ class Codec(torch.nn.Module, ABC):
             sample_rate: sample rate of the input signal
             orig_sample_rate: original sample rate of the codec
             mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
+                encode: encode the audio to id tokens
+                decode: decode the id tokens to audio
+                reconstruct: encode -> decode
+                unquantized_emb: encode -> unquantized embedding
+                quantized_emb: encode + quantizer -> quantized embedding
             need_resample: Boolean, mode == 'reconstruct' or 'deocde' default True, whether to resample the audio after decoding
         """
         super().__init__()
