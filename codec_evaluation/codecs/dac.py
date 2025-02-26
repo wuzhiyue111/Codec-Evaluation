@@ -6,11 +6,11 @@
 
 import os
 import sys
+import torch
+import torchaudio.transforms as T   
 import codec_evaluation
 path_root = codec_evaluation.__path__[0]
 sys.path.append(path_root)
-
-import torch
 
 from codec_evaluation.codecs.codec import Codec
 
@@ -19,13 +19,20 @@ __all__ = ["DAC"]
 
 
 class DAC(Codec):
-    def __init__(
-        self,
+    def __init__(self,
         sample_rate,
         orig_sample_rate=24000,
         mode="reconstruct",
         num_codebooks=8,
+        need_resample=True,
     ):
+        """
+            sample_rate: sample rate of the input signal
+            orig_sample_rate: original sample rate of the codec
+            mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
+            num_codebooks: number of codebooks
+            need_resample: Boolean, whether to resample the audio after decoding
+        """
         try:
             # Workaround to avoid name collisions with installed modules
             root_dir = os.path.dirname(os.path.realpath(__file__))
@@ -39,13 +46,15 @@ class DAC(Codec):
 
         super().__init__(sample_rate, orig_sample_rate, mode)
         self.num_codebooks = num_codebooks
+        self.need_resample = need_resample
         self.vocab_size = 1024
 
         tag = int(orig_sample_rate / 1000)
         model_path = str(dac.utils.download(model_type=f"{tag}khz"))
         self.model = dac.DAC.load(model_path)
+        self.dim = self.model.latent_dim
 
-        # 删除decoder, 节约显存开销
+        # Delete the decoder to save memory overhead.
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
         elif mode == "decode":
@@ -59,7 +68,7 @@ class DAC(Codec):
         toks = torch.arange(self.vocab_size, device=device)
         toks = (
             toks[:, None, None].expand(-1, self.num_codebooks, -1).clone()
-        )  # [C, K, 1] = [1024, 8, 1]
+        )  # [C, K, 1] 
         with torch.no_grad():
             z_q, z_p, _ = self.model.quantizer.from_codes(toks)
         z_ps = z_p.split(z_p.shape[1] // toks.shape[1], dim=1)  # [C, D, 1] * K
@@ -70,52 +79,56 @@ class DAC(Codec):
         assert (z_q == sum(z_qs)).all()
         # Embeddings pre-projections: size = 8
         # Embeddings post-projections: size = 1024
-        # embs = [K, C, H, 1],[..., 0] 表示取最后一个维度的第一个元素，即去掉维度为 1 的部分
         embs = torch.stack(z_qs)[..., 0]  # [K, C, H]
         return embs
 
     # override
+    """
+        sig: [B, T]
+        unquantized_feats: [B, D, N]    
+    """
     def _sig_to_unquantized_emb(self, sig, length):
-        # sig：[B, T]
-        # import pdb;pdb.set_trace()
-        # print(sig)
-        # RuntimeError: Given groups=1, weight of size [64, 1, 7], expected input[1, 2, 24000] to have 1 channels, but got 2 channels instead
-        sig = sig.unsqueeze(1)
-        # import pdb; pdb.set_trace()
-        # print(sig.shape)
-        unquantized_feats = self.model.encoder(sig)
-        # import pdb; pdb.set_trace()
-        # print(unquantized_feats.shape)
+        if sig.dim() == 2:
+            sig = sig.unsqueeze(1)
+        unquantized_feats = self.model.encoder(sig)     
         return unquantized_feats
 
     # override
+    """
+        sig: [B, T]
+        quantized_feats: [B, D, N]   
+    """
     def _sig_to_quantized_emb(self, sig, length):
-        # sig：[B, T]
         _, toks, *_ = self.model.encode(
             sig[:, None], n_quantizers = self.num_codebooks
         )   # [B, K, N]
-        quantized_feats, _, _ = self.model.quantizer.from_codes(toks)   
+        quantized_feats, _, _ = self.model.quantizer.from_codes(toks)  
         return quantized_feats
 
     # override
+    """
+        sig: [B, T]
+        toks: [B, N, K] 
+    """
     def _sig_to_toks(self, sig, length):
-        # sig: [B, T]
         _, toks, *_ = self.model.encode(
             sig[:, None], n_quantizers=self.num_codebooks
         )  # [B, K, N]
-        toks = toks.movedim(-1, -2)  # [B, N, K]
+        toks = toks.movedim(-1, -2)
         return toks
 
     # override
+    """
+        toks: [B, N, K] 
+        sig: [B, T]
+    """
     def _toks_to_sig(self, toks, length):
-        # toks: [B, N, K]
         qfeats, _, _ = self.model.quantizer.from_codes(
             toks.movedim(-1, -2)  # [B, K, N]
         )
-        sig = self.model.decode(qfeats)[:, 0]  # [B, T]
+        sig = self.model.decode(qfeats)[:, 0] 
         return sig
 
-# Test
 if __name__ == "__main__":
     import torchaudio
 
@@ -124,7 +137,6 @@ if __name__ == "__main__":
     batch_size = 2
     num_codebooks = 8
 
-    # Test通过
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
             DAC(
@@ -142,15 +154,13 @@ if __name__ == "__main__":
         ).to(device)
         with torch.no_grad():
             output = codec(input)
-            if output is not None:
-                print("codec(input):" + str(output.shape))
-            else:
-                print("错误：codec 输出为 None。")
+            print(output.shape)
             embs = codec.embs()
-            print("emb.shape[codebook, vocab_size, emb_post_projections]:" + str(embs.shape))
+            print(embs.shape)
 
     sig, sample_rate = torchaudio.load("example.wav")
-    codec = DAC(sample_rate, num_codebooks=num_codebooks).eval()
+    codec = DAC(sample_rate, num_codebooks=num_codebooks, need_resample=False).eval()
     with torch.no_grad():
         rec_sig = codec(sig)
-    torchaudio.save("reconstruct.wav", rec_sig, sample_rate)
+    torchaudio.save("reconstruction.wav", rec_sig, codec.orig_sample_rate)
+    

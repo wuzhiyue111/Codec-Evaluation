@@ -6,14 +6,14 @@
 
 import os
 import sys
+import torch
 import torch.nn.functional as F
 import codec_evaluation
 path_root = codec_evaluation.__path__[0]
 sys.path.append(path_root)
 
-import torch
-from huggingface_hub import snapshot_download
 
+from huggingface_hub import snapshot_download
 from codec_evaluation.codecs.codec import Codec
 
 
@@ -26,7 +26,14 @@ class SpeechTokenizer(Codec):
         sample_rate,
         mode="reconstruct",
         num_codebooks=8,
+        need_resample=True,
     ):
+        """
+            sample_rate: The sample rate of the input signal.
+            mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
+            num_codebooks: The number of codebooks.
+            need_resample: Whether to resample the audio after decoding.
+        """
         try:
             # Workaround to avoid name collisions with installed modules
             root_dir = os.path.dirname(os.path.realpath(__file__))
@@ -40,7 +47,6 @@ class SpeechTokenizer(Codec):
 
         super().__init__(sample_rate, 16000, mode)
         self.num_codebooks = num_codebooks
-
         source = "fnlp/SpeechTokenizer"
         path = snapshot_download(repo_id=source)
         config_path = os.path.join(path, "speechtokenizer_hubert_avg", "config.json")
@@ -50,8 +56,10 @@ class SpeechTokenizer(Codec):
         self.model = speechtokenizer.SpeechTokenizer.load_from_checkpoint(
             config_path, checkpoint_path
         )
+        self.need_resample = need_resample
+        self.dim = self.model.encoder.dimension
 
-        # 删除decoder, 节约显存开销
+        # Delete the decoder to save memory overhead.
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
         elif mode == "decode":
@@ -74,44 +82,49 @@ class SpeechTokenizer(Codec):
             quantized = layer.decode(indices)  # [C, H, 1]
             embs.append(quantized)
         assert (self.model.quantizer.decode(toks) == sum(embs)).all()
-        embs = torch.stack(embs)[..., 0]  # [K, C, H]
+        embs = torch.stack(embs)[..., 0]  # [K, C, H] 
         return embs
 
     # override
+    """
+        sig: [B, T]
+        unquantized_feats: [B, D, N] 
+    """
     def _sig_to_unquantized_emb(self, sig, length):
-        # sig：[B, T]
         if sig.dim() == 2:
             sig = sig.unsqueeze(1)
-        # encoder -> B, C, T = x.shape 
         unquantized_feats = self.model.encoder(sig)
         return unquantized_feats
 
     # override
+    """
+        sig: [B, T]
+        quantized_feats: [B, D, N]   
+    """
     def _sig_to_quantized_emb(self, sig, length):
-        # sig: [B, T]
-        toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]   torch.Size([8, 2, 50])
-        toks = toks.movedim(-3, -1)  # [B, N, K]    torch.Size([2, 50, 8])
-        # RuntimeError: mat1 and mat2 shapes cannot be multiplied (16x50 and 1024x1024)
-        # core_vq:x.pow(2).sum(1, keepdim=True) - 2 * (x @ embed) + embed.pow(2).sum(0, keepdim=True)   embed是float()
-        repeats = (1024 + toks.shape[1] - 1) // toks.shape[1]  # 确保拼接后长度至少为 1024
-        toks = torch.cat([toks] * repeats, dim=1)
-        toks = toks[:, :1024, :]
-        # return tuple
-        quantized_feats = self.model.quantizer(toks.float())[0]
+        toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]   
+        toks = toks.movedim(-3, -1)  # [B, N, K]    
+        quantized_feats = self.model.quantizer.deocde(toks.movedim(-1, 0))
         return quantized_feats
 
     # override
+    """
+        sig: [B, T]
+        toks: [B, N, K] 
+    """
     def _sig_to_toks(self, sig, length):
-        # sig: [B, T]
         toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]
-        toks = toks.movedim(-3, -1)  # [B, N, K]
+        toks = toks.movedim(-3, -1)  
         return toks
 
     # override
+    """
+        toks: [B, N, K]
+        sig: [B, T] 
+    """
     def _toks_to_sig(self, toks, length):
-        # toks: [B, N, K]
         toks = toks.movedim(-1, -3)  # [K, B, N]
-        sig = self.model.decode(toks)[:, 0]  # [B, T]
+        sig = self.model.decode(toks)[:, 0]  
         return sig
 
 if __name__ == "__main__":
@@ -139,15 +152,12 @@ if __name__ == "__main__":
         ).to(device)
         with torch.no_grad():
             output = codec(input)
-            if output is not None:
-                print("codec(input):" + str(output.shape))
-            else:
-                print("错误：codec 输出为 None。")
+            print(output.shape)
             embs = codec.embs()
-            print("emb.shape:" + str(embs.shape))
+            print(embs.shape)
 
     sig, sample_rate = torchaudio.load("example.wav")
-    codec = SpeechTokenizer(sample_rate, num_codebooks=num_codebooks).eval()
+    codec = SpeechTokenizer(sample_rate, num_codebooks=num_codebooks, need_resample=False).eval()
     with torch.no_grad():
         rec_sig = codec(sig)
-    torchaudio.save("reconstruct.wav", rec_sig, sample_rate)
+    torchaudio.save("reconstruction.wav", rec_sig, codec.orig_sample_rate)

@@ -6,11 +6,10 @@
 
 import os
 import sys
+import torch
 import codec_evaluation
 path_root = codec_evaluation.__path__[0]
 sys.path.append(path_root)
-
-import torch
 
 from codec_evaluation.codecs.codec import Codec
 
@@ -26,7 +25,16 @@ class Encodec(Codec):
         mode="reconstruct",
         num_codebooks=8,
         use_vocos=False,
+        need_resample=True,
     ):
+        """
+            sample_rate: sample rate of the input signal
+            orig_sample_rate: original sample rate of the codec
+            mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
+            num_codebooks: number of codebooks
+            use_vocos: Boolean, whether to use Vocos to post-process the audio after decoding
+            need_resample: Boolean, whether to resample the audio after decoding
+        """
         try:
             from transformers import EncodecModel as EncodecModelHF
         except ImportError:
@@ -35,11 +43,14 @@ class Encodec(Codec):
         super().__init__(sample_rate, orig_sample_rate, mode)
         self.num_codebooks = num_codebooks
         self.use_vocos = use_vocos
+        self.need_resample = need_resample
         self.vocab_size = 1024
 
         tag = int(orig_sample_rate / 1000)
         self.bandwidth = (num_codebooks * 75) / 100
         self.model = EncodecModelHF.from_pretrained(f"facebook/encodec_{tag}khz")
+        self.dim = self.model.config.hidden_size
+        
         self.vocos = None
         if use_vocos:
             try:
@@ -54,7 +65,7 @@ class Encodec(Codec):
 
             self.vocos = Vocos.from_pretrained(f"charactr/vocos-encodec-{tag}khz")
             self.model.decoder = None
-        # 删除decoder, 节约显存开销
+        # Delete the decoder to save memory overhead.
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
             self.vocos = None
@@ -66,10 +77,11 @@ class Encodec(Codec):
     def embs(self):
         layers = self.model.quantizer.layers[: self.num_codebooks]
         embs = [layer.codebook.embed for layer in layers]
-        embs = torch.stack(embs)  # [K, C, H]
+        embs = torch.stack(embs)  # [K, C, H] 
         return embs
 
     def process_sig(self, sig, length):
+        # sig: [B, T]
         abs_lens = sig.shape[-1] * length
         max_len = abs_lens.max().long().item()
         padding_mask = (
@@ -79,56 +91,61 @@ class Encodec(Codec):
         return sig[:, None], padding_mask[:, None]
 
     #override
+    """
+        sig: [B, T]
+        unquantized_feats: [B, D, N] 
+    """
     def _sig_to_unquantized_emb(self, sig, length):
-        # sig：[B, T]
         sig, padding_mask = self.process_sig(sig, length)
         unquantized_feats = self.model.encoder(sig)
         return unquantized_feats
 
     # override
+    """
+        sig: [B, T]
+        quantized_feats: [B, D, N] 
+    """
     def _sig_to_quantized_emb(self, sig, length):
-        # sig：[B, T]
         sig, padding_mask = self.process_sig(sig, length)
         output = self.model.encode(
             sig, padding_mask, bandwidth=self.bandwidth
         )
         toks = output.audio_codes[0].movedim(-1, -2)    # [B, N, K]
-
-        # 初始化 quantized_feats 变量
         quantized_feats = None
-    
         if self.vocos is not None:
-            bandwidth_id = [1.5, 3.0, 6.0, 12.0].index(self.bandwidth)
-            quantized_feats = self.vocos.codes_to_features(toks.long().movedim(-1, 0), bandwidth_id)
+            quantized_feats = self.vocos.codes_to_features(toks.long().movedim(-1, 0))
         else:
-            # 如果 self.vocos 为 None，执行默认的处理方式
-            quantized_feats = toks
-
+            quantized_feats = self.model.quantizer.decode(toks.movedim(-1, 0))
         return quantized_feats
 
-
     # override
+    """
+        sig: [B, T]
+        toks: [B, N, K] 
+    """
     def _sig_to_toks(self, sig, length):
-        # sig: [B, T]
         sig, padding_mask = self.process_sig(sig, length)
         output = self.model.encode(
             sig, padding_mask, bandwidth=self.bandwidth
         )
-        toks = output.audio_codes[0].movedim(-1, -2)  # [B, N, K]
+        toks = output.audio_codes[0].movedim(-1, -2)  
         return toks
 
     # override
+    """
+        toks: [B, N, K]
+        sig: [B, T]
+    """
     def _toks_to_sig(self, toks, length):
-        # toks: [B, N, K]
         if self.vocos is not None:
             bandwidth_id = [1.5, 3.0, 6.0, 12.0].index(self.bandwidth)
             feats = self.vocos.codes_to_features(toks.long().movedim(-1, 0))
             sig = self.vocos.decode(
                 feats, bandwidth_id=torch.tensor(bandwidth_id, device=toks.device)
-            )  # [B, T]
+            )  # [B, T] 
             return sig
         output = self.model.decode(toks[None].movedim(-1, -2), [None])
-        sig = output.audio_values[:, 0]  # [B, T]
+        sig = output.audio_values[:, 0]  
         return sig
 
 if __name__ == "__main__":
@@ -140,8 +157,7 @@ if __name__ == "__main__":
     num_codebooks = 8
 
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
-        # import pdb; pdb.set_trace()
-        for use_vocos in [False, True]:
+        for use_vocos in [True, False]:
             codec = (
                 Encodec(
                     sample_rate,
@@ -159,15 +175,12 @@ if __name__ == "__main__":
             ).to(device)
             with torch.no_grad():
                 output = codec(input)
-                if output is not None:
-                    print("codec(input):" + str(output.shape))
-                else:
-                    print("错误：codec 输出为 None。")
+                print(output.shape)
                 embs = codec.embs()
-                print("emb.shape:" + str(embs.shape))
+                print(embs.shape)
 
     sig, sample_rate = torchaudio.load("example.wav")
-    codec = Encodec(sample_rate, num_codebooks=num_codebooks).eval()
+    codec = Encodec(sample_rate, num_codebooks=num_codebooks, need_resample=False).eval()
     with torch.no_grad():
         rec_sig = codec(sig)
-    torchaudio.save("reconstruct.wav", rec_sig, sample_rate)
+    torchaudio.save("reconstruction.wav", rec_sig, codec.orig_sample_rate)
