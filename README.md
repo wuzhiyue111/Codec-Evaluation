@@ -28,6 +28,90 @@ bash env_build.sh
     - test ID sensitive in same semantic
     - 
 
+## Probe Experiment
 
+<table border="1" >
+    
+   <thead>
+        <tr>
+            <th rowspan="2">Codec</th>
+            <th colspan="7">Dataset</th>
+        </tr>
+        <tr>
+            <th>emomusic</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+	<tbody>
+        <tr>
+            <td align=center>DAC</td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+        </tr>
+        <tr>
+            <td align=center>Encodec</td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+        </tr>
+        <tr>
+            <td align=center>Semanticodec</td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+        </tr>
+        <tr>
+            <td align=center>Wavtokenizer</td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+        </tr>
+        <tr>
+            <td align=center>Mimi</td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+        </tr>
+        <tr>
+            <td align=center>Speechtokenizer</td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+        </tr>
+        <tr>
+            <td align=center>Wavlm_kmeans</td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+        </tr>
+    </tbody>
+</table>
 
 
