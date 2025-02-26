@@ -6,13 +6,10 @@
 
 import os
 import sys
-os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+import torch
 import codec_evaluation
 root_path = codec_evaluation.__path__[0]
 sys.path.append(root_path)
-
-
-import torch
 
 from codec_evaluation.codecs.codec import Codec
 
@@ -35,7 +32,17 @@ class SemantiCodec(Codec):
         semantic_vocab_size=8192,
         ddim_sample_step=50,
         cfg_scale=2.0,
+        need_resample=True,
     ):
+        """"
+            sample_rate: sample rate of the input signal
+            mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
+            token_rate: token rate of the codec
+            semantic_vocab_size: semantic vocab size of the codec
+            ddim_sample_step: number of steps for DDIM sampling
+            cfg_scale: classifier free guidance scale
+            need_resample: Boolean, whether to resample the audio after decoding
+        """
         try:
             # Workaround to avoid name collisions with installed modules
             root_dir = os.path.dirname(os.path.realpath(__file__))
@@ -54,9 +61,9 @@ class SemantiCodec(Codec):
         self.token_rate = token_rate
         self.semantic_vocab_size = semantic_vocab_size
         self.cfg_scale = cfg_scale
+        self.need_resample = need_resample
         self.num_codebooks = 2
         self.acoustic_vocab_size = 8192
-
         self.model = semanticodec.SemantiCodec(
             token_rate=token_rate,
             semantic_vocab_size=semantic_vocab_size,
@@ -64,8 +71,9 @@ class SemantiCodec(Codec):
             cfg_scale=cfg_scale,
             cache_path=_CACHE_DIR,
         ).to("cpu")
-
-        # 删除decoder, 节约显存开销
+        self.dim = self.model.encoder.feature_dimension
+        
+        # Delete the decoder to save memory overhead.
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
 
@@ -95,29 +103,41 @@ class SemantiCodec(Codec):
         return embs
 
     # override
+    """
+        sig: [B, T]
+        unquantized_feats: [B, N, C, D]  C:token type(acoustic and semantic)
+    """
     def _sig_to_unquantized_emb(self, sig, length):
-        # sig: [B, T]
         toks = self._sig_to_toks(sig, length)
         unquantized_feats = self.model.encoder.unquant(toks)
         return unquantized_feats
     
     # override
+    """
+        sig: [B, T]
+        quantized_feats: [B, N, D]  D:cat acoustic_feature and semantic_feature dim 
+    """
     def _sig_to_quantized_emb(self, sig, length):
-        # sig: [B, T]
         toks = self._sig_to_toks(sig, length)
         quantized_feats = self._token_to_quantized_feature(toks)
         return quantized_feats
         
     # override
+    """
+        sig: [B, T]
+        toks: [B, N, K] 
+    """
     def _sig_to_toks(self, sig, length):
-        # sig: [B, T]
-        toks = self._encode(sig)  # [B, N, K]
+        toks = self._encode(sig)  
         return toks
 
     # override
+    """
+        toks: [B, N, K]
+        sig: [B, T]
+    """
     def _toks_to_sig(self, toks, length):
-        # toks: [B, N, K]
-        sig = self._decode(toks)[:, 0]  # [B, T]
+        sig = self._decode(toks)[:, 0]  
         return sig
 
     # See https://github.com/haoheliu/SemantiCodec-inference/blob/8dc464c3385d2389a695ed3f718f4a0caf3ed33f/semanticodec/main.py
@@ -149,7 +169,6 @@ class SemantiCodec(Codec):
             semanticodec.main.SAMPLE_RATE * semanticodec.main.SEGMENT_DURATION
         )
         # Pad audio to the multiplication of 10.24 seconds for easier segmentations
-
         if waveform.shape[1] % segment_sample_length < segment_sample_length:
             diff = int(
                 segment_sample_length - waveform.shape[1] % segment_sample_length
@@ -227,15 +246,12 @@ if __name__ == "__main__":
         ).to(device)
         with torch.no_grad():
             output = codec(input)
-            if output is not None:
-                print("codec(input):" + str(output.shape))
-            else:
-                print("错误：codec 输出为 None。")
+            print(output.shape)
             embs = codec.embs()
-            print("emb.shape:" + str(embs.shape))
+            print(embs.shape)
 
     sig, sample_rate = torchaudio.load("example.wav")
-    codec = SemantiCodec(sample_rate).eval()
+    codec = SemantiCodec(sample_rate, need_resample=False).eval()
     with torch.no_grad():
         rec_sig = codec(sig)
-    torchaudio.save("reconstruct", rec_sig, sample_rate)
+    torchaudio.save("reconstruction.wav", rec_sig, codec.orig_sample_rate)

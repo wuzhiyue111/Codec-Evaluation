@@ -6,12 +6,12 @@
 
 import os
 import sys
+import torch
 import codec_evaluation
 path_root = codec_evaluation.__path__[0]
 sys.path.append(path_root)
-import torch
-from huggingface_hub import snapshot_download
 
+from huggingface_hub import snapshot_download
 from codec_evaluation.codecs.codec import Codec
 
 
@@ -35,11 +35,20 @@ class WavTokenizer(Codec):
     def __init__(
         self,
         sample_rate,
+        need_resample=True,
         mode="reconstruct",
         source="novateur/WavTokenizer-large-unify-40token",
         config="wavtokenizer_smalldata_frame40_3s_nq1_code4096_dim512_kmeans200_attn.yaml",
         checkpoint="wavtokenizer_large_unify_600_24k.ckpt",
     ):
+        """
+            sample_rate: sample rate of the input signal
+            need_resample: Boolean, whether to resample the audio after decoding
+            mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
+            source: source of the model
+            config: config of the model
+            checkpoint: checkpoint of the model
+        """
         try:
             # Workaround to avoid name collisions with installed modules
             root_dir = os.path.dirname(os.path.realpath(__file__))
@@ -54,6 +63,7 @@ class WavTokenizer(Codec):
             )
 
         super().__init__(sample_rate, 24000, mode)
+        self.need_resample = need_resample
         self.num_codebooks = 1
         self.vocab_size = 4096
 
@@ -64,57 +74,64 @@ class WavTokenizer(Codec):
         self.model = wavtokenizer.WavTokenizer.from_pretrained0802(
             config_path, checkpoint_path
         )
+        self.dim = self.model.feature_extractor.encodec.encoder.dimension
 
-        # 删除decoder, 节约显存开销
+        # Delete the decoder to save memory overhead.
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.feature_extractor.encodec.decoder = None
             self.model.head = None
         elif mode == "decode":
             self.model.feature_extractor.encodec.encoder = None
 
-
     # override
     @torch.no_grad()
     def embs(self):
         embs = self.model.feature_extractor.encodec.quantizer.vq.layers[0].codebook
-        embs = embs[None]  # [K, C, H]
+        embs = embs[None]  # [K, C, H] 
         return embs
 
     # override
+    """
+        sig: [B, T]
+        unquantized_feats: [B, D, N]  
+    """
     def _sig_to_unquantized_emb(self, sig, length):
-        # sig: [B, T]
         if sig.dim() == 2:
             sig = sig.unsqueeze(1)
         unquantized_feats = self.model.feature_extractor.encodec.encoder(sig)
         return unquantized_feats
 
     # override
+    """
+        sig: [B, T]
+        quantized_feats: [B, D, N] 
+    """
     def _sig_to_quantized_emb(self, sig, length):
-        # sig：[B, T]
         toks = self._sig_to_toks(sig, length)
-        quantized_feats = self.model.codes_to_features(toks.movedim(-1, 0))
+        quantized_feats = self.model.codes_to_features(toks.movedim(-1, 0))    
         return quantized_feats
 
     # override
+    """
+        sig: [B, T]
+        toks: [B, N, K] 
+    """
     def _sig_to_toks(self, sig, length):
-        # sig: [B, T]
         _, toks = self.model.encode(sig, bandwidth_id=0)
-        #import pdb; pdb.set_trace()
-        #print("toks.shape (before moving dim):", toks.shape)  # 打印维度信息([1, 2, 96])
-        toks = toks.movedim(0, -1)  # [B, N, K]
-        #import pdb; pdb.set_trace()
-        #print("toks.shape (after moving dim):", toks.shape) #([2, 96, 1])
+        toks = toks.movedim(0, -1)  
         return toks
 
     # override
+    """
+        toks: [B, N, K]
+        sig: [B, T] 
+    """
     def _toks_to_sig(self, toks, length):
-        # toks: [B, N, K]
         quantized_feats = self.model.codes_to_features(toks.movedim(-1, 0))
         sig = self.model.decode(
             quantized_feats, bandwidth_id=torch.tensor(0, device=toks.device)
-        )  # [B, T]
+        )  
         return sig
-
 
 if __name__ == "__main__":
     import torchaudio
@@ -123,7 +140,7 @@ if __name__ == "__main__":
     sample_rate = 10000
     batch_size = 2
 
-    for mode in ["encode", "decode", "reconstruct", "quantized_emb", "unquantized_emb"]:
+    for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = WavTokenizer(sample_rate, mode=mode).eval().to(device)
         input = (
             torch.zeros(batch_size, 10, 1).long()
@@ -132,15 +149,12 @@ if __name__ == "__main__":
         ).to(device)
         with torch.no_grad():
             output = codec(input)
-            if output is not None:
-                print("codec(input):" + str(output.shape))
-            else:
-                print("错误：codec 输出为 None。")
+            print(output.shape)
             embs = codec.embs()
-            print("emb.shape:" + str(embs.shape))
+            print(embs.shape)
 
     sig, sample_rate = torchaudio.load("example.wav")
-    codec = WavTokenizer(sample_rate).eval()
+    codec = WavTokenizer(sample_rate, need_resample=False).eval()
     with torch.no_grad():
         rec_sig = codec(sig)
-    torchaudio.save("reconstruct.wav", rec_sig, sample_rate)
+    torchaudio.save("reconstruction.wav", rec_sig, codec.orig_sample_rate)

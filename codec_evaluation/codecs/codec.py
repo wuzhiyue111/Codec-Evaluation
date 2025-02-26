@@ -4,7 +4,6 @@
 
 """Codec interface."""
 
-# abc.ABC/abc.abstractmethod，用于定义抽象基类的模块。帮助创建必须被子类实现的方法
 from abc import ABC, abstractmethod
 
 import torch
@@ -22,17 +21,22 @@ __all__ = ["Codec"]
 class Codec(torch.nn.Module, ABC):
     _MODES = ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]
 
-    def __init__(self, sample_rate, orig_sample_rate, mode="reconstruct"):
+    def __init__(self, sample_rate, orig_sample_rate, mode="reconstruct", need_resample=True):
+        """
+            sample_rate: sample rate of the input signal
+            orig_sample_rate: original sample rate of the codec
+            mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
+            need_resample: Boolean, mode == 'reconstruct' or 'deocde' default True, whether to resample the audio after decoding
+        """
         super().__init__()
         if mode not in self._MODES:
             raise ValueError(f"`mode` ({mode}) must be one of {self._MODES}")
         self.sample_rate = sample_rate
         self.orig_sample_rate = orig_sample_rate
         self.mode = mode
+        self.need_resample = need_resample
 
     def forward(self, input, length=None):
-        # id是否合理？
-        # backgorund：tts -》id
         if self.mode == "encode":
             toks = self.sig_to_toks(input, length)
             return toks
@@ -60,19 +64,19 @@ class Codec(torch.nn.Module, ABC):
         if length is None:
             length = torch.ones(len(sig), device=sig.device)
         return sig, length
-
+    
     def sig_to_unquantized_emb(self, sig, length=None):
-        # sig: [B, T]
+        # sig:[B, T]
         sig, length = self.process_audio(sig, length)
         return self._sig_to_unquantized_emb(sig, length)
     
     def sig_to_quantized_emb(self, sig, length=None):
-        # sig: [B, T]
+        # sig:[B, T]
         sig, length = self.process_audio(sig, length)
         return self._sig_to_quantized_emb(sig, length)
 
     def sig_to_toks(self, sig, length=None):
-        # sig: [B, T]
+        # sig:[B, T]
         sig, length = self.process_audio(sig, length)
         return self._sig_to_toks(sig, length)
 
@@ -81,11 +85,12 @@ class Codec(torch.nn.Module, ABC):
         if length is None:
             length = torch.ones(len(toks), device=toks.device)
         sig = self._toks_to_sig(toks, length)
-        sig = torchaudio.functional.resample(
-            sig,
-            self.orig_sample_rate,
-            self.sample_rate,
-        )
+        if self.need_resample:
+            sig = torchaudio.functional.resample(
+                sig,
+                self.orig_sample_rate,
+                self.sample_rate,
+            )
         return sig
 
     @abstractmethod
