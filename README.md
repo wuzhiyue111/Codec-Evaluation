@@ -34,82 +34,173 @@ bash env_build.sh
     
    <thead>
         <tr>
-            <th rowspan="2">Codec</th>
+            <th rowspan="3">Codec</th>
+	    <th rowspan="3">Mode</th>
             <th colspan="7">Dataset</th>
         </tr>
         <tr>
-            <th>emomusic</th>
-            <th></th>
-            <th></th>
+            <th colspan="3">emomusic</th>
             <th></th>
             <th></th>
             <th></th>
             <th></th>
         </tr>
+	<tr>
+	    <td align=center>R2</td>
+	    <td align=center>Arousal_R2</td>
+            <td align=center>Valence_R2</td>
+	    <td align=center> </td>
+            <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
     </thead>
-	<tbody>
+    <tbody>
         <tr>
-            <td align=center>DAC</td>
+            <td align=center rowspan="2">DAC</td>
+            <td align=center>unquantized_emb</td>
+            <td align=center>0.3438</td>
+            <td align=center>0.4886</td>
+            <td align=center>0.2207</td>
             <td align=center> </td>
             <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+            <td align=center>quantized_emb</td>
+            <td align=center>0.4045</td>
+            <td align=center>0.5730</td>
+            <td align=center>0.2533</td>
             <td align=center> </td>
             <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
         </tr>
         <tr>
-            <td align=center>Encodec</td>
+            <td align=center rowspan="2">Encodec</td>
+            <td align=center>unquantized_emb</td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+            <td align=center>quantized_emb</td>
             <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
         </tr>
         <tr>
-            <td align=center>Semanticodec</td>
+            <td align=center rowspan="2">Semanticodec</td>
+            <td align=center>unquantized_emb</td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+            <td align=center>quantized_emb</td>
             <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
         </tr>
         <tr>
-            <td align=center>Wavtokenizer</td>
+            <td align=center rowspan="2">Wavtokenizer</td>
+            <td align=center>unquantized_emb</td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+            <td align=center>quantized_emb</td>
             <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
         </tr>
         <tr>
-            <td align=center>Mimi</td>
+            <td align=center rowspan="2">Mimi</td>
+            <td align=center>unquantized_emb</td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+            <td align=center>quantized_emb</td>
             <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
         </tr>
         <tr>
-            <td align=center>Speechtokenizer</td>
+            <td align=center rowspan="2">Speechtokenizer</td>
+            <td align=center>unquantized_emb</td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+            <td align=center>quantized_emb</td>
             <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
         </tr>
         <tr>
-            <td align=center>Wavlm_kmeans</td>
+            <td align=center rowspan="2">Wavlm_kmeans</td>
+            <td align=center>unquantized_emb</td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
             <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+            <td align=center>quantized_emb</td>
             <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+            <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
         </tr>
     </tbody>
 </table>
