@@ -8,6 +8,7 @@ import os
 import sys
 import torch
 import codec_evaluation
+
 root_path = codec_evaluation.__path__[0]
 sys.path.append(root_path)
 
@@ -37,17 +38,23 @@ class WavTokenizer(Codec):
         sample_rate,
         need_resample=True,
         mode="reconstruct",
+        model_ckpt_dir=None,
         source="novateur/WavTokenizer-large-unify-40token",
         config="wavtokenizer_smalldata_frame40_3s_nq1_code4096_dim512_kmeans200_attn.yaml",
         checkpoint="wavtokenizer_large_unify_600_24k.ckpt",
     ):
         """
-            sample_rate: sample rate of the input signal
-            need_resample: Boolean, whether to resample the audio after decoding
-            mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
-            source: source of the model
-            config: config of the model
-            checkpoint: checkpoint of the model
+        sample_rate: sample rate of the input signal
+        need_resample: Boolean, whether to resample the audio after decoding
+        mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
+            encode: encode the audio to id tokens
+            decode: decode the id tokens to audio
+            reconstruct: encode -> decode
+            unquantized_emb: encode -> unquantized embedding
+            quantized_emb: encode + quantizer -> quantized embedding
+        source: source of the model
+        config: config of the model
+        checkpoint: checkpoint of the model
         """
         try:
             # Workaround to avoid name collisions with installed modules
@@ -67,14 +74,20 @@ class WavTokenizer(Codec):
         self.num_codebooks = 1
         self.vocab_size = 4096
 
-        path = snapshot_download(repo_id=source)
-        checkpoint_path = os.path.join(path, checkpoint)
-        path = snapshot_download(repo_id="novateur/WavTokenizer")
-        config_path = os.path.join(path, config)
+        if model_ckpt_dir is None:
+            path = snapshot_download(repo_id=source)
+            checkpoint_path = os.path.join(path, checkpoint)
+            path = snapshot_download(repo_id="novateur/WavTokenizer")
+            config_path = os.path.join(path, config)
+        else:
+            checkpoint_path = os.path.join(model_ckpt_dir, checkpoint)
+            config_path = os.path.join(model_ckpt_dir, config)
         self.model = wavtokenizer.WavTokenizer.from_pretrained0802(
             config_path, checkpoint_path
         )
+
         self.dim = self.model.feature_extractor.encodec.encoder.dimension
+        self.token_rate = self.model.feature_extractor.encodec.frame_rate
 
         # Delete the decoder to save memory overhead.
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
@@ -87,14 +100,14 @@ class WavTokenizer(Codec):
     @torch.no_grad()
     def embs(self):
         embs = self.model.feature_extractor.encodec.quantizer.vq.layers[0].codebook
-        embs = embs[None]  # [K, C, H] 
+        embs = embs[None]  # [K, C, H]
         return embs
 
     # override
     def _sig_to_unquantized_emb(self, sig, length):
         """
-            sig: [B, T]
-            return: [B, D, N]  
+        sig: [B, T]
+        return: [B, D, N]
         """
         if sig.dim() == 2:
             sig = sig.unsqueeze(1)
@@ -104,37 +117,39 @@ class WavTokenizer(Codec):
     # override
     def _sig_to_quantized_emb(self, sig, length):
         """
-            sig: [B, T]
-            return: [B, D, N] 
+        sig: [B, T]
+        return: [B, D, N]
         """
         toks = self._sig_to_toks(sig, length)
-        quantized_feats = self.model.codes_to_features(toks.movedim(-1, 0))    
+        quantized_feats = self.model.codes_to_features(toks.movedim(-1, 0))
         return quantized_feats
 
     # override
     def _sig_to_toks(self, sig, length):
         """
-            sig: [B, T]
-            return: [B, N, K] 
+        sig: [B, T]
+        return: [B, N, K]
         """
         _, toks = self.model.encode(sig, bandwidth_id=0)
-        toks = toks.movedim(0, -1)  
+        toks = toks.movedim(0, -1)
         return toks
 
     # override
     def _toks_to_sig(self, toks, length):
         """
-            toks: [B, N, K]
-            return: [B, T] 
+        toks: [B, N, K]
+        return: [B, T]
         """
         quantized_feats = self.model.codes_to_features(toks.movedim(-1, 0))
         sig = self.model.decode(
             quantized_feats, bandwidth_id=torch.tensor(0, device=toks.device)
-        )  
+        )
         return sig
+
 
 if __name__ == "__main__":
     import torchaudio
+
     use_cuda = torch.cuda.is_available()
     device = "cuda" if use_cuda else "cpu"
     batch_size = 2
@@ -142,12 +157,23 @@ if __name__ == "__main__":
 
     sig, sample_rate = torchaudio.load(os.path.join(root_path, "codecs", "example.wav"))
     sig = sig.unsqueeze(0)
-    sig = torch.cat([sig, sig], dim=0).to(device).squeeze(1) # [B=2, T]
+    sig = torch.cat([sig, sig], dim=0).to(device).squeeze(1)  # [B=2, T]
 
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
-        codec = WavTokenizer(sample_rate, mode=mode).eval().to(device)
+        codec = (
+            WavTokenizer(
+                sample_rate,
+                mode=mode,
+                model_ckpt_dir="/sdb/model_weight/codec_evaluation/codec_ckpt/wavTokenizer/models--novateur--WavTokenizer-large-unify-40token",
+                need_resample=False,
+            )
+            .eval()
+            .to(device)
+        )
         embs = codec.embs()
-        print(f'{mode} mode, the codec has {embs.shape[0]} codebooks, each codebook has {embs.shape[1]} entries, each entry has {embs.shape[2]} dimensions')
+        print(
+            f"{mode} mode, the codec has {embs.shape[0]} codebooks, each codebook has {embs.shape[1]} entries, each entry has {embs.shape[2]} dimensions"
+        )
         if mode == "decode":
             input = torch.zeros(batch_size, 10, 1).long().to(device)
             with torch.no_grad():
@@ -159,8 +185,12 @@ if __name__ == "__main__":
         if mode == "reconstruct":
             save_dir = os.path.join(root_path, "codecs", "reconstruction_wav")
             os.makedirs(save_dir, exist_ok=True)
-            save_path = os.path.join(save_dir, f'wavtokenizer_reconstruction.wav')
-            torchaudio.save(save_path, output[0].unsqueeze(0).cpu() if use_cuda else output[0].unsqueeze(0), codec.orig_sample_rate)
-            print(f'{mode} mode has been saved to {save_path}')
+            save_path = os.path.join(save_dir, f"wavtokenizer_reconstruction.wav")
+            torchaudio.save(
+                save_path,
+                output[0].unsqueeze(0).cpu() if use_cuda else output[0].unsqueeze(0),
+                codec.orig_sample_rate,
+            )
+            print(f"{mode} mode has been saved to {save_path}")
         else:
-            print(f'{mode} mode, the output shape is {output.shape}')
+            print(f"{mode} mode, the output shape is {output.shape}")

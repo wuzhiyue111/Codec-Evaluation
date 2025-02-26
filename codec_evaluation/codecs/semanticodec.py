@@ -39,6 +39,11 @@ class SemantiCodec(Codec):
         """ "
         sample_rate: sample rate of the input signal
         mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
+            encode: encode the audio to id tokens
+            decode: decode the id tokens to audio
+            reconstruct: encode -> decode
+            unquantized_emb: encode -> unquantized embedding
+            quantized_emb: encode + quantizer -> quantized embedding
         token_rate: token rate of the codec
         semantic_vocab_size: semantic vocab size of the codec
         ddim_sample_step: number of steps for DDIM sampling

@@ -27,6 +27,7 @@ class SpeechTokenizer(Codec):
         mode="reconstruct",
         num_codebooks=8,
         need_resample=True,
+        model_ckpt_dir=None,
     ):
         """
             sample_rate: The sample rate of the input signal.
@@ -47,8 +48,11 @@ class SpeechTokenizer(Codec):
 
         super().__init__(sample_rate, 16000, mode)
         self.num_codebooks = num_codebooks
-        source = "fnlp/SpeechTokenizer"
-        path = snapshot_download(repo_id=source)
+        if model_ckpt_dir is None:
+            source = "fnlp/SpeechTokenizer"
+            path = snapshot_download(repo_id=source)
+        else:
+            path = model_ckpt_dir
         config_path = os.path.join(path, "speechtokenizer_hubert_avg", "config.json")
         checkpoint_path = os.path.join(
             path, "speechtokenizer_hubert_avg", "SpeechTokenizer.pt"
@@ -58,6 +62,7 @@ class SpeechTokenizer(Codec):
         )
         self.need_resample = need_resample
         self.dim = self.model.encoder.dimension
+        self.token_rate = self.model.sample_rate / self.model.downsample_rate
 
         # Delete the decoder to save memory overhead.
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
@@ -105,7 +110,7 @@ class SpeechTokenizer(Codec):
         """
         toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]   
         toks = toks.movedim(-3, -1)  # [B, N, K]    
-        quantized_feats = self.model.quantizer.deocde(toks.movedim(-1, 0))
+        quantized_feats = self.model.quantizer.decode(toks.movedim(-1, 0))
         return quantized_feats
 
     # override
@@ -145,6 +150,8 @@ if __name__ == "__main__":
                 sample_rate,
                 mode=mode,
                 num_codebooks=num_codebooks,
+                model_ckpt_dir='/sdb/model_weight/codec_evaluation/codec_ckpt/speechtokenizer',
+                need_resample=False,
             )
             .eval()
             .to(device)

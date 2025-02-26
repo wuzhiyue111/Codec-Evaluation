@@ -54,9 +54,10 @@ class DAC(Codec):
         tag = int(orig_sample_rate / 1000)
         if model_path is None:
             model_path = str(dac.utils.download(model_type=f"{tag}khz"))
-        
+
         self.model = dac.DAC.load(model_path) # model init and load_state_dict
         self.dim = self.model.latent_dim
+        self.token_rate = self.model.sample_rate / self.model.hop_length
 
         # Delete the decoder to save memory overhead.
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
