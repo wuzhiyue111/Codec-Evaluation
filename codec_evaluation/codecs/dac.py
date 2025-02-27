@@ -96,7 +96,7 @@ class DAC(Codec):
         """
         if sig.dim() == 2:
             sig = sig.unsqueeze(1)
-        unquantized_feats = self.model.encoder(sig)     
+        unquantized_feats = self.model.encoder(sig)
         return unquantized_feats
 
     # override
@@ -119,9 +119,9 @@ class DAC(Codec):
         """
         _, toks, *_ = self.model.encode(
             sig[:, None], n_quantizers=self.num_codebooks
-        )  # [B, K, N]
+        )  # tokens.shape = [B, K, N]
         toks = toks.movedim(-1, -2)
-        return toks
+        return toks # toks.shape = [B, N, K]
 
     # override
     def _toks_to_sig(self, toks, length):
@@ -130,7 +130,7 @@ class DAC(Codec):
             return: [B, T]
         """
         qfeats, _, _ = self.model.quantizer.from_codes(
-            toks.movedim(-1, -2)  # [B, K, N]
+            toks.movedim(-1, -2)
         )
         sig = self.model.decode(qfeats)[:, 0] 
         return sig

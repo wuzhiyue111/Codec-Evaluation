@@ -84,10 +84,10 @@ class Mimi(Codec):
     # override
     def _sig_to_unquantized_emb(self, sig, length):
         """
-        sig: [B, T]
-        return: [B, D, N]
+            sig: [B, T]
+            return: [B, D, N]
         """
-        sig, padding_mask = self.process_sig(sig, length)
+        sig, _ = self.process_sig(sig, length)
         embeddings = self.model.encoder(sig)
         encoder_outputs = self.model.encoder_transformer(embeddings.transpose(1, 2))
         embeddings = encoder_outputs[0].transpose(1, 2)
@@ -97,36 +97,37 @@ class Mimi(Codec):
     # override
     def _sig_to_quantized_emb(self, sig, length):
         """
-        sig: [B, T]
-        return: [B, D, N]
+            sig: [B, T]
+            return: [B, D, N]
         """
         sig, padding_mask = self.process_sig(sig, length)
         output = self.model.encode(sig, padding_mask, num_quantizers=self.num_codebooks)
-        toks = output.audio_codes.movedim(-1, -2)  # [B, N, K]
-        quantized_feats = self.model.quantizer(toks.movedim(-1, -2))  # [B, K, N]
+        quantized_feats = self.model.quantizer.decode(output.audio_codes)
         return quantized_feats
 
     # override
     def _sig_to_toks(self, sig, length):
         """
-        sig: [B, T]
-        return: [B, N, K]
+            sig: [B, T]
+            return: [B, N, K]
         """
         sig, padding_mask = self.process_sig(sig, length)
-        output = self.model.encode(sig, padding_mask, num_quantizers=self.num_codebooks)
+        output = self.model.encode(input_values=sig, 
+                                   padding_mask=padding_mask, 
+                                   num_quantizers=self.num_codebooks)
         toks = output.audio_codes.movedim(-1, -2)
-        return toks
+        return toks, padding_mask
 
     # override
-    def _toks_to_sig(self, toks, length):
+    def _toks_to_sig(self, toks, length, padding_mask=None):
         """
-        toks: [B, N, K]
-        return: [B, T]
+            toks: [B, N, K]
+            return: [B, T]
         """
-        output = self.model.decode(toks.movedim(-1, -2))
+        output = self.model.decode(audio_codes=toks.movedim(-1, -2),
+                                   padding_mask=padding_mask)
         sig = output.audio_values[:, 0]
         return sig
-
 
 if __name__ == "__main__":
     import torchaudio
@@ -174,5 +175,7 @@ if __name__ == "__main__":
                 codec.orig_sample_rate,
             )
             print(f"{mode} mode has been saved to {save_path}")
+        elif mode == "encode":
+            print(f"{mode} mode, the output shape is {output[0].shape}")
         else:
             print(f"{mode} mode, the output shape is {output.shape}")

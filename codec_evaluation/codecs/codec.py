@@ -43,14 +43,14 @@ class Codec(torch.nn.Module, ABC):
 
     def forward(self, input, length=None):
         if self.mode == "encode":
-            toks = self.sig_to_toks(input, length)
-            return toks
+            toks, padding_mask = self.sig_to_toks(input, length)
+            return toks, padding_mask
         if self.mode == "decode":
             sig = self.toks_to_sig(input, length)
             return sig
         if self.mode == "reconstruct":
-            toks = self.sig_to_toks(input, length)
-            sig = self.toks_to_sig(toks, length)
+            toks, padding_mask = self.sig_to_toks(input, length)
+            sig = self.toks_to_sig(toks, length, padding_mask)
             return sig
         if self.mode == "unquantized_emb":
             unquantized_emb = self.sig_to_unquantized_emb(input, length)
@@ -69,7 +69,7 @@ class Codec(torch.nn.Module, ABC):
         if length is None:
             length = torch.ones(len(sig), device=sig.device)
         return sig, length
-    
+
     def sig_to_unquantized_emb(self, sig, length=None):
         # sig:[B, T]
         sig, length = self.process_audio(sig, length)
@@ -85,11 +85,11 @@ class Codec(torch.nn.Module, ABC):
         sig, length = self.process_audio(sig, length)
         return self._sig_to_toks(sig, length)
 
-    def toks_to_sig(self, toks, length=None):
+    def toks_to_sig(self, toks, length=None, padding_mask=None):
         # toks: [B, N, K]
         if length is None:
             length = torch.ones(len(toks), device=toks.device)
-        sig = self._toks_to_sig(toks, length)
+        sig = self._toks_to_sig(toks, length, padding_mask)
         if self.need_resample:
             sig = torchaudio.functional.resample(
                 sig,
