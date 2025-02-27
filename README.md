@@ -39,18 +39,19 @@ bash env_build.sh
             <th colspan="7">Dataset</th>
         </tr>
         <tr>
-            <th colspan="3">emomusic</th>
+            <th colspan="2">emomusic</th>
             <th></th>
             <th></th>
             <th></th>
             <th></th>
+	    <th></th>
         </tr>
 	<tr>
-	    <td align=center>R2</td>
-	    <td align=center>Arousal_R2</td>
-            <td align=center>Valence_R2</td>
+	    <td align=center>A</td>
+            <td align=center>V</td>
 	    <td align=center> </td>
             <td align=center> </td>
+	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
     </thead>
@@ -58,21 +59,21 @@ bash env_build.sh
         <tr>
             <td align=center rowspan="2">DAC</td>
             <td align=center>unquantized_emb</td>
-            <td align=center>0.3438</td>
-            <td align=center>0.4886</td>
-            <td align=center>0.2207</td>
+            <td align=center>0.49</td>
+            <td align=center>0.22</td>
             <td align=center> </td>
             <td align=center> </td>
+	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center>0.4045</td>
-            <td align=center>0.5730</td>
-            <td align=center>0.2533</td>
+            <td align=center>0.57</td>
+            <td align=center>0.25</td>
             <td align=center> </td>
             <td align=center> </td>
+	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
         </tr>
