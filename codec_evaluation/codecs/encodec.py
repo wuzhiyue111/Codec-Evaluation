@@ -133,8 +133,8 @@ class Encodec(Codec):
     # override
     def _sig_to_quantized_emb(self, sig, length):
         """
-        sig: [B, T]
-        return: [B, D, N]
+            sig: [B, T]
+            return: [B, D, N]
         """
         sig, padding_mask = self.process_sig(sig, length)
         output = self.model.encode(sig, padding_mask, bandwidth=self.bandwidth)
@@ -149,16 +149,18 @@ class Encodec(Codec):
     # override
     def _sig_to_toks(self, sig, length):
         """
-        sig: [B, T]
-        return: [B, N, K]
+            sig: [B, T]
+            return: [B, N, K]
         """
         sig, padding_mask = self.process_sig(sig, length)
-        output = self.model.encode(sig, padding_mask, bandwidth=self.bandwidth)
+        output = self.model.encode(
+            input_values=sig, padding_mask=padding_mask, bandwidth=self.bandwidth
+        )
         toks = output.audio_codes[0].movedim(-1, -2)
-        return toks
+        return toks, padding_mask
 
     # override
-    def _toks_to_sig(self, toks, length):
+    def _toks_to_sig(self, toks, length, padding_mask=None):
         """
         toks: [B, N, K]
         return: [B, T]
@@ -170,7 +172,9 @@ class Encodec(Codec):
                 feats, bandwidth_id=torch.tensor(bandwidth_id, device=toks.device)
             )  # [B, T]
             return sig
-        output = self.model.decode(toks[None].movedim(-1, -2), [None])
+        output = self.model.decode(
+            toks[None].movedim(-1, -2), [None], padding_mask=padding_mask
+        )
         sig = output.audio_values[:, 0]
         return sig
 
@@ -225,9 +229,15 @@ if __name__ == "__main__":
                 )
                 torchaudio.save(
                     save_path,
-                    output[0].unsqueeze(0).cpu() if use_cuda else output[0].unsqueeze(0),
+                    (
+                        output[0].unsqueeze(0).cpu()
+                        if use_cuda
+                        else output[0].unsqueeze(0)
+                    ),
                     codec.orig_sample_rate,
                 )
                 print(f"{mode} mode has been saved to {save_path}")
+            elif mode == "encode":
+                print(f"{mode} mode, the output shape is {output[0].shape}")
             else:
                 print(f"{mode} mode, the output shape is {output.shape}")
