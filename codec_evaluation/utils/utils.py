@@ -2,11 +2,16 @@ import os
 import torch.nn.functional as F  
 from codec_evaluation.codecs.encodec import Encodec
 from codec_evaluation.codecs.mimi import Mimi
-from codec_evaluation.codecs.semantic_codec import SemantiCodec
+from codec_evaluation.codecs.semanticodec import SemantiCodec
 from codec_evaluation.codecs.speechtokenizer import SpeechTokenizer
 from codec_evaluation.codecs.wavlm_kmeans import WavLMKmeans
 from codec_evaluation.codecs.wavtokenizer import WavTokenizer
 from codec_evaluation.codecs.dac import DAC
+import glob
+import logging
+
+log = logging.getLogger(__name__)
+
 def find_audios(
         audio_dir, 
         exts=['.wav', '.mp3', '.flac', '.webm', '.mp4']
@@ -111,4 +116,17 @@ def cut_or_pad(waveform, target_length, codecname = None):
             waveform = F.pad(waveform, (0, padding_length))
 
         return waveform
+
+def find_lastest_ckpt(directory):
+    if directory is None:
+        return None
+    ckpt_file = glob.glob(os.path.join(directory, "*.ckpt"))
+
+    if not ckpt_file:
+        log.info(f"No ckpt files found in this directory: {directory}")
+        return None
+
+    latest_ckpt_file = max(ckpt_file, key=os.path.getmtime)
+    return latest_ckpt_file
+
         
