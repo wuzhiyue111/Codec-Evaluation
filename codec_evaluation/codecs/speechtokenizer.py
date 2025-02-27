@@ -108,9 +108,8 @@ class SpeechTokenizer(Codec):
             sig: [B, T]
             return: [B, D, N]
         """
-        toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]   
-        toks = toks.movedim(-3, -1)  # [B, N, K]    
-        quantized_feats = self.model.quantizer.decode(toks.movedim(-1, 0))
+        toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]    
+        quantized_feats = self.model.quantizer.decode(toks)
         return quantized_feats
 
     # override
@@ -121,10 +120,10 @@ class SpeechTokenizer(Codec):
         """
         toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]
         toks = toks.movedim(-3, -1)  
-        return toks
+        return toks, None
 
     # override
-    def _toks_to_sig(self, toks, length):
+    def _toks_to_sig(self, toks, length, padding_mask=None):
         """
             toks: [B, N, K]
             return: [B, T] 
@@ -173,5 +172,7 @@ if __name__ == "__main__":
             save_path = os.path.join(save_dir, f'speechtokenizer_reconstruction.wav')
             torchaudio.save(save_path, output[0].unsqueeze(0).cpu() if use_cuda else output[0].unsqueeze(0), codec.orig_sample_rate)
             print(f'{mode} mode has been saved to {save_path}')
+        elif mode == "encode":
+            print(f'{mode} mode, the output shape is {output[0].shape}')
         else:
             print(f'{mode} mode, the output shape is {output.shape}')

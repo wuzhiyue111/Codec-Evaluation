@@ -121,10 +121,10 @@ class DAC(Codec):
             sig[:, None], n_quantizers=self.num_codebooks
         )  # tokens.shape = [B, K, N]
         toks = toks.movedim(-1, -2)
-        return toks # toks.shape = [B, N, K]
+        return toks, None # toks.shape = [B, N, K]
 
     # override
-    def _toks_to_sig(self, toks, length):
+    def _toks_to_sig(self, toks, length, padding_mask=None):
         """
             toks: [B, N, K] 
             return: [B, T]
@@ -175,5 +175,7 @@ if __name__ == "__main__":
             save_path = os.path.join(save_dir, f'dac_reconstruction.wav')
             torchaudio.save(save_path, output[0].unsqueeze(0).cpu() if use_cuda else output[0].unsqueeze(0), codec.orig_sample_rate)
             print(f'{mode} mode has been saved to {save_path}')
+        elif mode == "encode":
+            print(f'{mode} mode, the output shape is {output[0].shape}')
         else:
             print(f'{mode} mode, the output shape is {output.shape}')

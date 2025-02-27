@@ -82,7 +82,7 @@ class WavTokenizer(Codec):
         else:
             checkpoint_path = os.path.join(model_ckpt_dir, checkpoint)
             config_path = os.path.join(model_ckpt_dir, config)
-        self.model = wavtokenizer.WavTokenizer.from_pretrained0802(
+        self.model: wavtokenizer.WavTokenizer = wavtokenizer.WavTokenizer.from_pretrained0802(
             config_path, checkpoint_path
         )
 
@@ -106,8 +106,8 @@ class WavTokenizer(Codec):
     # override
     def _sig_to_unquantized_emb(self, sig, length):
         """
-        sig: [B, T]
-        return: [B, D, N]
+            sig: [B, T]
+            return: [B, D, N]
         """
         if sig.dim() == 2:
             sig = sig.unsqueeze(1)
@@ -117,11 +117,10 @@ class WavTokenizer(Codec):
     # override
     def _sig_to_quantized_emb(self, sig, length):
         """
-        sig: [B, T]
-        return: [B, D, N]
+            sig: [B, T]
+            return: [B, D, N]
         """
-        toks = self._sig_to_toks(sig, length)
-        quantized_feats = self.model.codes_to_features(toks.movedim(-1, 0))
+        quantized_feats, _ = self.model.encode(sig, bandwidth_id=0)
         return quantized_feats
 
     # override
@@ -132,10 +131,10 @@ class WavTokenizer(Codec):
         """
         _, toks = self.model.encode(sig, bandwidth_id=0)
         toks = toks.movedim(0, -1)
-        return toks
+        return toks, None
 
     # override
-    def _toks_to_sig(self, toks, length):
+    def _toks_to_sig(self, toks, length, padding_mask=None):
         """
         toks: [B, N, K]
         return: [B, T]
@@ -192,5 +191,7 @@ if __name__ == "__main__":
                 codec.orig_sample_rate,
             )
             print(f"{mode} mode has been saved to {save_path}")
+        elif mode == "encode":
+            print(f"{mode} mode, the output shape is {output[0].shape}")
         else:
             print(f"{mode} mode, the output shape is {output.shape}")

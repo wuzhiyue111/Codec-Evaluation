@@ -115,9 +115,9 @@ class SemantiCodec(Codec):
     def _sig_to_unquantized_emb(self, sig, length):
         """
         sig: [B, T]
-        return: [B, N, C, D]  C:token type(acoustic and semantic)
+        return: [B, N, C, D]  C: token type(acoustic and semantic)
         """
-        toks = self._sig_to_toks(sig, length)
+        toks, _ = self._sig_to_toks(sig, length)
         unquantized_feats = self.model.encoder.unquant(toks)
         return unquantized_feats
 
@@ -125,9 +125,9 @@ class SemantiCodec(Codec):
     def _sig_to_quantized_emb(self, sig, length):
         """
         sig: [B, T]
-        return: [B, N, D]  D:cat acoustic_feature and semantic_feature dim
+        return: [B, N, D]  D: cat acoustic_feature and semantic_feature dim
         """
-        toks = self._sig_to_toks(sig, length)
+        toks, _ = self._sig_to_toks(sig, length)
         quantized_feats = self._token_to_quantized_feature(toks)
         return quantized_feats
 
@@ -138,11 +138,11 @@ class SemantiCodec(Codec):
         return: [B, N, K]
         """
         toks = self._encode(sig)
-        return toks
+        return toks, None
 
     # override
 
-    def _toks_to_sig(self, toks, length):
+    def _toks_to_sig(self, toks, length, padding_mask=None):
         """
         toks: [B, N, K]
         return: [B, T]
@@ -258,7 +258,8 @@ if __name__ == "__main__":
                 sample_rate,
                 mode=mode,
                 # model_path_dir='/sdb/model_weight/codec_evaluation/codec_ckpt/semanticodec_weights_10khz_16kbps_0.0.1.pth'
-                model_path_dir=None
+                model_path_dir='/sdb/model_weight/codec_evaluation/codec_ckpt/semantic',
+                need_resample=False
             )
             .eval()
             .to(device)
@@ -279,5 +280,7 @@ if __name__ == "__main__":
             save_path = os.path.join(save_dir, f'semanticodec_reconstruction.wav')
             torchaudio.save(save_path, output[0].unsqueeze(0).cpu() if use_cuda else output[0].unsqueeze(0), codec.orig_sample_rate)
             print(f'{mode} mode has been saved to {save_path}')
+        elif mode == "encode":
+            print(f'{mode} mode, the output shape is {output[0].shape}')
         else:
             print(f'{mode} mode, the output shape is {output.shape}')
