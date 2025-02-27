@@ -9,8 +9,8 @@ import sys
 import torch
 import torchaudio.transforms as T   
 import codec_evaluation
-path_root = codec_evaluation.__path__[0]
-sys.path.append(path_root)
+root_path = codec_evaluation.__path__[0]
+sys.path.append(root_path)
 
 from codec_evaluation.codecs.codec import Codec
 
@@ -25,6 +25,7 @@ class DAC(Codec):
         mode="reconstruct",
         num_codebooks=8,
         need_resample=True,
+        model_path: str | None = None
     ):
         """
             sample_rate: sample rate of the input signal
@@ -32,6 +33,7 @@ class DAC(Codec):
             mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
             num_codebooks: number of codebooks
             need_resample: Boolean, whether to resample the audio after decoding
+            model_path: str, path to the model weights, if None, the model will be downloaded from the internet
         """
         try:
             # Workaround to avoid name collisions with installed modules
@@ -50,9 +52,12 @@ class DAC(Codec):
         self.vocab_size = 1024
 
         tag = int(orig_sample_rate / 1000)
-        model_path = str(dac.utils.download(model_type=f"{tag}khz"))
-        self.model = dac.DAC.load(model_path)
+        if model_path is None:
+            model_path = str(dac.utils.download(model_type=f"{tag}khz"))
+
+        self.model = dac.DAC.load(model_path) # model init and load_state_dict
         self.dim = self.model.latent_dim
+        self.token_rate = self.model.sample_rate / self.model.hop_length
 
         # Delete the decoder to save memory overhead.
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
@@ -63,6 +68,7 @@ class DAC(Codec):
     # override
     @torch.no_grad()
     def embs(self):
+        # H means the dimension of the embedding
         # See https://github.com/descriptinc/descript-audio-codec/blob/c7cfc5d2647e26471dc394f95846a0830e7bec34/dac/nn/quantize.py#L200
         device = next(iter(self.model.state_dict().values())).device
         toks = torch.arange(self.vocab_size, device=device)
@@ -83,22 +89,22 @@ class DAC(Codec):
         return embs
 
     # override
-    """
-        sig: [B, T]
-        unquantized_feats: [B, D, N]    
-    """
     def _sig_to_unquantized_emb(self, sig, length):
+        """
+            sig: [B, T]
+            return: [B, D, N]    
+        """
         if sig.dim() == 2:
             sig = sig.unsqueeze(1)
-        unquantized_feats = self.model.encoder(sig)     
+        unquantized_feats = self.model.encoder(sig)
         return unquantized_feats
 
     # override
-    """
-        sig: [B, T]
-        quantized_feats: [B, D, N]   
-    """
     def _sig_to_quantized_emb(self, sig, length):
+        """
+            sig: [B, T]
+            return: [B, D, N]   
+        """
         _, toks, *_ = self.model.encode(
             sig[:, None], n_quantizers = self.num_codebooks
         )   # [B, K, N]
@@ -106,36 +112,39 @@ class DAC(Codec):
         return quantized_feats
 
     # override
-    """
-        sig: [B, T]
-        toks: [B, N, K] 
-    """
     def _sig_to_toks(self, sig, length):
+        """
+            sig: [B, T]
+            return: [B, N, K] 
+        """
         _, toks, *_ = self.model.encode(
             sig[:, None], n_quantizers=self.num_codebooks
-        )  # [B, K, N]
+        )  # tokens.shape = [B, K, N]
         toks = toks.movedim(-1, -2)
-        return toks
+        return toks, None # toks.shape = [B, N, K]
 
     # override
-    """
-        toks: [B, N, K] 
-        sig: [B, T]
-    """
-    def _toks_to_sig(self, toks, length):
+    def _toks_to_sig(self, toks, length, padding_mask=None):
+        """
+            toks: [B, N, K] 
+            return: [B, T]
+        """
         qfeats, _, _ = self.model.quantizer.from_codes(
-            toks.movedim(-1, -2)  # [B, K, N]
+            toks.movedim(-1, -2)
         )
         sig = self.model.decode(qfeats)[:, 0] 
         return sig
 
 if __name__ == "__main__":
     import torchaudio
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    sample_rate = 10000
+    use_cuda = torch.cuda.is_available()
+    device = "cuda" if use_cuda else "cpu"
     batch_size = 2
     num_codebooks = 8
+
+    sig, sample_rate = torchaudio.load(os.path.join(root_path, "codecs", "example.wav"))
+    sig = sig.unsqueeze(0)
+    sig = torch.cat([sig, sig], dim=0).to(device).squeeze(1) # [B=2, T]
 
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
@@ -143,24 +152,30 @@ if __name__ == "__main__":
                 sample_rate,
                 mode=mode,
                 num_codebooks=num_codebooks,
+                need_resample=False, # means the output sample rate is the same as codec's sample rate
+                model_path='/sdb/model_weight/codec_evaluation/codec_ckpt/dac_weights_24khz_16kbps_0.0.1.pth'
             )
             .eval()
             .to(device)
         )
-        input = (
-            torch.zeros(batch_size, 10, num_codebooks).long()
-            if mode == "decode"
-            else torch.randn(batch_size, sample_rate)
-        ).to(device)
-        with torch.no_grad():
-            output = codec(input)
-            print(output.shape)
-            embs = codec.embs()
-            print(embs.shape)
+        embs = codec.embs()
+        print(f'{mode} mode, the codec has {embs.shape[0]} codebooks, each codebook has {embs.shape[1]} entries, each entry has {embs.shape[2]} dimensions')
 
-    sig, sample_rate = torchaudio.load("example.wav")
-    codec = DAC(sample_rate, num_codebooks=num_codebooks, need_resample=False).eval()
-    with torch.no_grad():
-        rec_sig = codec(sig)
-    torchaudio.save("reconstruction.wav", rec_sig, codec.orig_sample_rate)
-    
+        if mode == "decode":
+            input = torch.zeros(batch_size, 10, num_codebooks).long().to(device)
+            with torch.no_grad():
+                output = codec(input)
+        else:
+            with torch.no_grad():
+                output = codec(sig)
+
+        if mode == "reconstruct":
+            save_dir = os.path.join(root_path, "codecs", "reconstruction_wav")
+            os.makedirs(save_dir, exist_ok=True)
+            save_path = os.path.join(save_dir, f'dac_reconstruction.wav')
+            torchaudio.save(save_path, output[0].unsqueeze(0).cpu() if use_cuda else output[0].unsqueeze(0), codec.orig_sample_rate)
+            print(f'{mode} mode has been saved to {save_path}')
+        elif mode == "encode":
+            print(f'{mode} mode, the output shape is {output[0].shape}')
+        else:
+            print(f'{mode} mode, the output shape is {output.shape}')

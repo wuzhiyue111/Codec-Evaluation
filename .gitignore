@@ -172,3 +172,8 @@ cython_debug/
 
 # codec_evaluation
 *.wav
+
+# the temporary folder for saving the reconstruction wav
+reconstruction_wav/
+
+.vscode/
