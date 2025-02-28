@@ -33,7 +33,7 @@ class SemantiCodec(Codec):
         semantic_vocab_size=8192,
         ddim_sample_step=50,
         cfg_scale=2.0,
-        model_path_dir: str | None = None,
+        model_ckpt_dir: str | None = None,
         need_resample=True,
     ):
         """ "
@@ -76,7 +76,7 @@ class SemantiCodec(Codec):
             semantic_vocab_size=semantic_vocab_size,
             ddim_sample_step=ddim_sample_step,
             cfg_scale=cfg_scale,
-            checkpoint_path=model_path_dir,
+            checkpoint_path=model_ckpt_dir,
             cache_path=_CACHE_DIR,
         ).to("cpu")
         self.dim = self.model.encoder.feature_dimension
@@ -257,8 +257,8 @@ if __name__ == "__main__":
             SemantiCodec(
                 sample_rate,
                 mode=mode,
-                # model_path_dir='/sdb/model_weight/codec_evaluation/codec_ckpt/semanticodec_weights_10khz_16kbps_0.0.1.pth'
-                model_path_dir='/sdb/model_weight/codec_evaluation/codec_ckpt/semantic',
+                # model_ckpt_dir='/sdb/model_weight/codec_evaluation/codec_ckpt/semanticodec_weights_10khz_16kbps_0.0.1.pth'
+                model_ckpt_dir='/sdb/model_weight/codec_evaluation/codec_ckpt/semantic',
                 need_resample=False
             )
             .eval()
