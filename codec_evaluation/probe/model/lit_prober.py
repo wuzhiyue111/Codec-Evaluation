@@ -24,7 +24,6 @@ class Prober(pl.LightningModule):
                  mode: str = 'quantized_emb',
                  target_sec: int = 30,
                  n_segments: int = 6,
-                 loss_type: str = 'mse',
                  probe_model_builder: Any = None,
                  optimizer_builder: Any = None,
                  lr_scheduler_builder: Any = None,
@@ -43,7 +42,6 @@ class Prober(pl.LightningModule):
                                 freeze = True)
 
         self.codec_name = codec_name
-        self.loss_type = loss_type
         self.token_rate = self.codec.token_rate
         self.in_ch = self.dim = self.codec.dim  
         self.target_T = self.token_rate * target_sec // n_segments
@@ -62,16 +60,8 @@ class Prober(pl.LightningModule):
             waveforms: [B, T]
             return: [B*n_segments, D, T]
         """
-        all_features = []
-
-        for i in range(waveforms.shape[0]):
-            waveform = waveforms[i].unsqueeze(0) # [1, T]
-            length = torch.tensor([1.])
-            features = self.codec(waveform, length)
-
-            all_features.append(features)
-
-        all_features = torch.cat(all_features, dim=0) 
+        length = torch.ones(waveforms.shape[0])
+        all_features = self.codec(waveforms, length)
 
         all_features = cut_or_pad(waveform=all_features, 
                                   target_length=self.target_T, 
@@ -95,33 +85,24 @@ class Prober(pl.LightningModule):
 
         x = self.extract_feature(x)
 
-        y_pred = self.probe_model(x)
-
-        if self.loss_type == 'mse':
-            loss = F.mse_loss(y_pred, y)
-        elif self.loss_type == 'l1':
-            loss = F.l1_loss(y_pred, y)
+        loss, y_pred = self.probe_model(x, y)
 
         self.log('train_loss', loss, batch_size=batch_size, on_epoch=True, prog_bar=True, logger=True, on_step=True)
         self.update_metrics("train", y, y_pred)
-        
         return loss
-    
+
     def validation_step(self, batch, batch_idx):
         """Validation step."""
         x, y = batch
         batch_size = y.shape[0]
         x = self.extract_feature(x) 
 
-        y_pred = self.probe_model(x)
-        y_pred = reduce(y_pred, '(b g) n -> b n', reduction = 'mean', g = self.n_segments) 
-            
-        loss = F.mse_loss(y_pred, y)
+        loss, y_pred = self.probe_model(x, y)
+
         self.log('valid_loss', loss, batch_size=batch_size, on_epoch=True, prog_bar=True, logger=True, on_step=True)
         self.update_metrics("valid", y, y_pred)
 
         return loss
-
 
     def configure_optimizers(self):
         """Configure the optimizer and scheduler."""
@@ -172,8 +153,8 @@ class Prober(pl.LightningModule):
         self.log(f"{split}_valence_r2", getattr(self, f"{split}_valence_r2").compute(), sync_dist=True)
         getattr(self, f"{split}_valence_r2").reset()
 
-    def on_train_epoch_end(self, outputs):
+    def on_train_epoch_end(self, outputs = None):
         self.log_metrics('train')
     
-    def on_validation_epoch_end(self, outputs):
+    def on_validation_epoch_end(self, outputs = None):
         self.log_metrics('valid')

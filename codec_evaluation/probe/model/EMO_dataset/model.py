@@ -1,5 +1,7 @@
 import torch.nn as nn
 import math
+import torch.nn.functional as F
+from einops import reduce
 
 class SEBlock(nn.Module):
     def __init__(self, channel, reduction):
@@ -60,7 +62,8 @@ class EMOProber(nn.Module):
                  stride = 2,
                  ):
         super(EMOProber, self).__init__()
-        self.num_outputs = 2  
+        self.num_outputs = 2 
+        self.n_segments = n_segments
         self.channel_attention = nn.Sequential(
             SEBlock(channel = codec_dim, reduction = channel_reduction),
             SEBlock(channel = codec_dim, reduction = channel_reduction),
@@ -98,7 +101,7 @@ class EMOProber(nn.Module):
 
         self.output = nn.Linear(input_dim, self.num_outputs)
 
-    def forward(self, x):
+    def forward(self, x, y):
         x = x.float()  #[B*n_segments, D, T] 
 
         x_channel = self.channel_attention(x)
@@ -112,5 +115,9 @@ class EMOProber(nn.Module):
         x_flattened = x_conv.flatten(start_dim=1, end_dim=-1)    #[B*n_segments, input_dim=T' * D//16]
 
         output = self.output(x_flattened)  #[B*n_segments, 2]
+        if output.shape[0] != y.shape[0]:
+            output = reduce(output, '(b g) n -> b n', reduction = 'mean', g = self.n_segments) 
 
-        return output
+        loss = F.mse_loss(output, y)
+
+        return loss, output

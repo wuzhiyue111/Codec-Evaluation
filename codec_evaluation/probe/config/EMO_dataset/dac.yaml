@@ -13,7 +13,6 @@ trainer:
   max_epochs: 100
   log_every_n_steps: 5
   val_check_interval: 1.0
-  num_sanity_val_steps: 0  # 添加这一行来禁用 sanity check
 
 data:
   _target_: codec_evaluation.probe.dataset.EMO_dataset.EMOdataModule
@@ -24,10 +23,10 @@ data:
     n_segments: ${n_segments}
     is_mono: True
     is_normalize: True
-    audio_dir: /home/wsy/project/MARBLE-Benchmark/data/EMO/emomusic/wav
-    meta_dir: /home/wsy/project/MARBLE-Benchmark/data/EMO/emomusic
-  batch_size: 64
-  val_split: 0.2
+    audio_dir: /sdb/data1/music/mix_music/marble_dataset/data/EMO/emomusic/wav
+    meta_dir: /sdb/data1/music/mix_music/marble_dataset/data/EMO/emomusic
+  batch_size: 32
+  val_split: 0.1
   codec_name: dac
   num_workers: 16
 
@@ -80,7 +79,7 @@ callbacks:
 
   model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
-    monitor: val_loss
+    monitor: valid_loss
     dirpath: ${probe_ckpt_dir}
     every_n_epochs: 1
     mode: min
@@ -91,6 +90,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /sdb/model_weight/codec_evaluation/probe_eval/tensorboard_log/emo_dataset
+  save_dir: /home/wzy/projects/Codec-Evaluation/codec_evaluation/tb_log
   name: dac_${mode}
   log_graph: true
