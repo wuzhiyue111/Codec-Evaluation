@@ -173,7 +173,8 @@ cython_debug/
 # codec_evaluation
 *.wav
 
-# the temporary folder for saving the reconstruction wav
+# the temporary folder for saving the reconstruction wav and the output of the lightning
 reconstruction_wav/
+outputs/
 
 .vscode/

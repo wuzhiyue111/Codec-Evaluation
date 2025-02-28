@@ -80,7 +80,7 @@ class WavLMKmeans(Codec):
         return toks
 
     # override
-    def _toks_to_sig(self, toks, length):
+    def _toks_to_sig(self, toks, length, padding_mask=None):
         """
             toks: [B, N, K]
             return: [B, T]
