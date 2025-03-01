@@ -257,7 +257,6 @@ if __name__ == "__main__":
             SemantiCodec(
                 sample_rate,
                 mode=mode,
-                # model_ckpt_dir='/sdb/model_weight/codec_evaluation/codec_ckpt/semanticodec_weights_10khz_16kbps_0.0.1.pth'
                 model_ckpt_dir='/sdb/model_weight/codec_evaluation/codec_ckpt/semantic',
                 need_resample=False
             )
