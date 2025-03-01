@@ -25,7 +25,8 @@ class DAC(Codec):
         mode="reconstruct",
         num_codebooks=8,
         need_resample=True,
-        model_path: str | None = None
+        model_path: str | None = None,
+        model_ckpt_dir: str | None = None
     ):
         """
             sample_rate: sample rate of the input signal
@@ -51,11 +52,16 @@ class DAC(Codec):
         self.need_resample = need_resample
         self.vocab_size = 1024
 
-        tag = int(orig_sample_rate / 1000)
-        if model_path is None:
-            model_path = str(dac.utils.download(model_type=f"{tag}khz"))
-
-        self.model = dac.DAC.load(model_path) # model init and load_state_dict
+        # Prioritize using model_ckpt_dir
+        if model_ckpt_dir is not None:
+            tag = int(orig_sample_rate / 1000)
+            model_path = os.path.join(model_ckpt_dir, f'dac_{tag}khz.pt')
+            self.model = dac.DAC.load(model_path)
+        else:
+            tag = int(orig_sample_rate / 1000)
+            if model_path is None:
+                model_path = str(dac.utils.download(model_type=f"{tag}khz"))
+            self.model = dac.DAC.load(model_path)
         self.dim = self.model.latent_dim
         self.token_rate = self.model.sample_rate / self.model.hop_length
 
@@ -141,6 +147,7 @@ if __name__ == "__main__":
     device = "cuda" if use_cuda else "cpu"
     batch_size = 2
     num_codebooks = 8
+    model_ckpt_dir= '/sdb/model_weight/codec_evaluation/codec_ckpt'
 
     sig, sample_rate = torchaudio.load(os.path.join(root_path, "codecs", "example.wav"))
     sig = sig.unsqueeze(0)
@@ -153,7 +160,7 @@ if __name__ == "__main__":
                 mode=mode,
                 num_codebooks=num_codebooks,
                 need_resample=False, # means the output sample rate is the same as codec's sample rate
-                model_path='/sdb/model_weight/codec_evaluation/codec_ckpt/dac_weights_24khz_16kbps_0.0.1.pth'
+                model_path=None
             )
             .eval()
             .to(device)
