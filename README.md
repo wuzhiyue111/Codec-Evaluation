@@ -19,7 +19,7 @@ bash env_build.sh
 
 ## Road Map
 
-- [ ] multi codec deploy
+- [x] multi codec deploy
     - multi codec deploy reference: https://github.com/lucadellalib/audiocodecs
 - [ ] clean different dataset in marble benchmark
     - add code to redeploy marble in our benchmark
@@ -142,5 +142,7 @@ bash env_build.sh
         </tr>
     </tbody>
 </table>
+
+### Speech Probe
 
 
