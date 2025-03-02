@@ -29,7 +29,7 @@ bash env_build.sh
     - 
 
 ## Probe Experiment
-
+### Marble Probe (Music)
 <table border="1" >
     
    <thead>
@@ -121,69 +121,6 @@ bash env_build.sh
         </tr>
         <tr>
             <td align=center rowspan="2">Wavtokenizer</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-        </tr>
-	<tr>
-            <td align=center>quantized_emb</td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-        </tr>
-        <tr>
-            <td align=center rowspan="2">Mimi</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-        </tr>
-	<tr>
-            <td align=center>quantized_emb</td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-        </tr>
-        <tr>
-            <td align=center rowspan="2">Speechtokenizer</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-        </tr>
-	<tr>
-            <td align=center>quantized_emb</td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-            <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-        </tr>
-        <tr>
-            <td align=center rowspan="2">Wavlm_kmeans</td>
             <td align=center>unquantized_emb</td>
             <td align=center> </td>
             <td align=center> </td>
