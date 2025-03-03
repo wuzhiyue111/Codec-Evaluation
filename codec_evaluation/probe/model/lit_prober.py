@@ -22,6 +22,8 @@ class Prober(pl.LightningModule):
                  codec_name: str,
                  sample_rate: int,
                  model_ckpt_dir: str,
+                 task: str,
+                 num_outputs: int,
                  mode: str = 'quantized_emb',
                  target_sec: int = 30,
                  n_segments: int = 6,
@@ -49,10 +51,13 @@ class Prober(pl.LightningModule):
         self.probe_model = probe_model_builder(
             codec_dim = self.dim,
             token_rate = self.token_rate)
-
+        
+        self.num_outputs = num_outputs
+        self.task = task
         self.optimizer_builder = optimizer_builder
         self.lr_scheduler_builder = lr_scheduler_builder
         self.init_metrics()  
+    
 
     def extract_feature(self, waveforms):
         """
@@ -123,35 +128,89 @@ class Prober(pl.LightningModule):
             check torchmetrics version == 1.4.1
         """
         self.all_metrics = set()
-        for split in ['train', 'valid']:
-            # r2 score
-            setattr(self, f"{split}_r2", torchmetrics.R2Score(num_outputs=2, multioutput='uniform_average'))
-            self.all_metrics.add('r2')
-            setattr(self, f"{split}_arousal_r2", torchmetrics.R2Score(num_outputs=1))
-            self.all_metrics.add('arousal_r2')
-            setattr(self, f"{split}_valence_r2", torchmetrics.R2Score(num_outputs=1))
-            self.all_metrics.add('valence_r2')
+        if self.task == 'multilabel':
+            for split in ['train', 'valid']:
+                setattr(self, f"{split}_ap", torchmetrics.AveragePrecision(
+                                                            task=self.task,
+                                                            num_labels=self.num_outputs))
+                self.all_metrics.add('ap')
+
+                setattr(self, f"{split}_aucroc", torchmetrics.AUROC(
+                                                            task=self.task,
+                                                            num_labels=self.num_outputs))
+                self.all_metrics.add('aucroc')
+
+                setattr(self, f"{split}_f1", torchmetrics.F1Score(
+                                                            task=self.task,
+                                                            num_labels=self.num_outputs,
+                                                            average='macro'))
+                self.all_metrics.add('f1')
+
+        elif self.task == 'multiclass':
+            for split in ['train', 'valid']:
+                setattr(self, f"{split}_acc", torchmetrics.Accuracy(
+                                                            task=self.task,
+                                                            num_classes=self.num_outputs))
+                self.all_metrics.add('acc')
+
+                setattr(self, f"{split}_prec", torchmetrics.Precision(
+                                                            task=self.task,
+                                                            num_classes=self.num_outputs))
+                self.all_metrics.add('prec')
+
+        elif self.task == 'regression':        
+            for split in ['train', 'valid']:
+                # r2 score
+                setattr(self, f"{split}_r2", torchmetrics.R2Score(num_outputs=2, multioutput='uniform_average'))
+                self.all_metrics.add('r2')
+                setattr(self, f"{split}_arousal_r2", torchmetrics.R2Score(num_outputs=1))
+                self.all_metrics.add('arousal_r2')
+                setattr(self, f"{split}_valence_r2", torchmetrics.R2Score(num_outputs=1))
+                self.all_metrics.add('valence_r2')
 
     @torch.no_grad()
     def update_metrics(self, split, y, y_pred):
         """
             update metrics per step
         """
-        getattr(self, f"{split}_r2").update(y_pred, y)
-        getattr(self, f"{split}_arousal_r2").update(y_pred[:, 0], y[:, 0])
-        getattr(self, f"{split}_valence_r2").update(y_pred[:, 1], y[:, 1])
+        if self.task == 'regression':
+            getattr(self, f"{split}_r2").update(y_pred, y)
+            getattr(self, f"{split}_arousal_r2").update(y_pred[:, 0], y[:, 0])
+            getattr(self, f"{split}_valence_r2").update(y_pred[:, 1], y[:, 1])
+        elif self.task == 'multiclass':
+            y_pred = torch.softmax(y_pred, dim=1)
+            getattr(self, f"{split}_acc").update(y_pred, y)
+            getattr(self, f"{split}_prec").update(y_pred, y)
+        elif self.task == 'multilabel':
+            y_pred = torch.sigmoid(y_pred)
+            getattr(self, f"{split}_ap").update(y_pred, y)
+            getattr(self, f"{split}_aucroc").update(y_pred, y)
+            getattr(self, f"{split}_f1").update(y_pred, y)
 
     @torch.no_grad()
     def log_metrics(self, split):
         """
             log metrics at the end of epoch
         """
-        self.log(f"{split}_r2", getattr(self, f"{split}_r2").compute(), sync_dist=True)
-        getattr(self, f"{split}_r2").reset()
-        self.log(f"{split}_arousal_r2", getattr(self, f"{split}_arousal_r2").compute(), sync_dist=True)
-        getattr(self, f"{split}_arousal_r2").reset()
-        self.log(f"{split}_valence_r2", getattr(self, f"{split}_valence_r2").compute(), sync_dist=True)
-        getattr(self, f"{split}_valence_r2").reset()
+        if self.task == 'regression':
+            self.log(f"{split}_r2", getattr(self, f"{split}_r2").compute(), sync_dist=True)
+            getattr(self, f"{split}_r2").reset()
+            self.log(f"{split}_arousal_r2", getattr(self, f"{split}_arousal_r2").compute(), sync_dist=True)
+            getattr(self, f"{split}_arousal_r2").reset()
+            self.log(f"{split}_valence_r2", getattr(self, f"{split}_valence_r2").compute(), sync_dist=True)
+            getattr(self, f"{split}_valence_r2").reset()
+        elif self.task == 'multiclass':
+            self.log(f"{split}_acc", getattr(self, f"{split}_acc").compute(), sync_dist=True)
+            getattr(self, f"{split}_acc").reset()
+            self.log(f"{split}_prec", getattr(self, f"{split}_prec").compute(), sync_dist=True)
+            getattr(self, f"{split}_prec").reset()
+        elif self.task == 'multilabel':
+            self.log(f"{split}_ap", getattr(self, f"{split}_ap").compute(), sync_dist=True)
+            getattr(self, f"{split}_ap").reset()
+            self.log(f"{split}_aucroc", getattr(self, f"{split}_aucroc").compute(), sync_dist=True)
+            getattr(self, f"{split}_aucroc").reset()
+            self.log(f"{split}_f1", getattr(self, f"{split}_f1").compute(), sync_dist=True)
+            getattr(self, f"{split}_f1").reset()
 
     def on_train_epoch_end(self, outputs = None):
         self.log_metrics('train')
