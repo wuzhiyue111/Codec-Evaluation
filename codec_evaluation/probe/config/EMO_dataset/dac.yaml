@@ -2,8 +2,10 @@ mode: quantized_emb
 sample_rate: 44100
 target_sec: 30
 n_segments: 6
-probe_ckpt_dir: /sdb/model_weight/codec_evaluation/probe_eval/probe_ckpt/emo_dataset/
+num_outputs: 2
+probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/EMO_dataset/ # 需要更改
 seed: 666
+codec_name: dac # 需要更改
 
 trainer:
   _target_: pytorch_lightning.Trainer
@@ -27,12 +29,12 @@ data:
     meta_dir: /sdb/data1/music/mix_music/marble_dataset/data/EMO/emomusic
   batch_size: 32
   val_split: 0.1
-  codec_name: dac
+  codec_name: ${codec_name}
   num_workers: 16
 
 model:
   _target_: codec_evaluation.probe.model.lit_prober.Prober
-  codec_name: dac
+  codec_name: ${codec_name}
   sample_rate: ${sample_rate}
   mode: ${mode}
   probe_model_builder:
@@ -40,12 +42,14 @@ model:
     _partial_: true
     target_sec: ${target_sec}
     n_segments: ${n_segments}
+    num_outputs: ${num_outputs}
     channel_reduction: 16
     padding: 1
     kernel_size: 3
     stride: 2
   target_sec: ${target_sec}
   n_segments: ${n_segments}
+  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -85,11 +89,11 @@ callbacks:
     mode: min
     save_top_k: 1
     save_last: True
-    filename: dac_${mode}_{epoch}-{val_loss:.4f}
+    filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
     verbose: True
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /home/wzy/projects/Codec-Evaluation/codec_evaluation/tb_log
-  name: dac_${mode}
+  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/EMO_dataset # 需要更改
+  name: ${codec_name}_${mode}
   log_graph: true

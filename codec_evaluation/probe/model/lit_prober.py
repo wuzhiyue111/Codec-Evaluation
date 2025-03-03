@@ -3,8 +3,8 @@ import torchmetrics
 import torch.nn.functional as F
 import pytorch_lightning as pl
 from einops import reduce
-
-from codec_evaluation.utils.utils import init_codec, cut_or_pad
+from codec_evaluation.init_codecs import init_codec
+from codec_evaluation.utils.utils import cut_or_pad
 from typing import Any
 
 class Prober(pl.LightningModule):
@@ -21,6 +21,7 @@ class Prober(pl.LightningModule):
     def __init__(self, 
                  codec_name: str,
                  sample_rate: int,
+                 model_ckpt_dir: str,
                  mode: str = 'quantized_emb',
                  target_sec: int = 30,
                  n_segments: int = 6,
@@ -33,14 +34,13 @@ class Prober(pl.LightningModule):
             sample_rate: the audio sample_rate when you are training the probe model
             mode must in ['quantized_emb', 'unquantized_emb']
         """
-        super(Prober, self).__init__()
-        self.num_outputs = 2  
+        super(Prober, self).__init__()  
         self.codec = init_codec(modelname = codec_name,      
                                 sample_rate = sample_rate, 
                                 mode = mode, 
+                                model_ckpt_dir = model_ckpt_dir,
                                 device = 'cpu', 
                                 freeze = True)
-
         self.codec_name = codec_name
         self.token_rate = self.codec.token_rate
         self.in_ch = self.dim = self.codec.dim  

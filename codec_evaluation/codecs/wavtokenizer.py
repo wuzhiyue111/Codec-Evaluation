@@ -121,6 +121,8 @@ class WavTokenizer(Codec):
             return: [B, D, N]
         """
         quantized_feats, _ = self.model.encode(sig, bandwidth_id=0)
+        quantized_feats = quantized_feats.clone()
+        quantized_feats.requires_grad_(True)
         return quantized_feats
 
     # override

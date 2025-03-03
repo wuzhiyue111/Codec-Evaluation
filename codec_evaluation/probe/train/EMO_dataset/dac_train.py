@@ -10,7 +10,7 @@ from codec_evaluation.probe.dataset.EMO_dataset import EMOdataModule
 root_path = codec_evaluation.__path__[0]
 logger = RankedLogger(__name__, rank_zero_only=True)
 
-@hydra.main(config_path=f"{root_path}/probe/config/EMO_dataset", config_name="dac.yaml", version_base=None)
+@hydra.main(config_path=f"{root_path}/probe/config/EMO_dataset", config_name="dac.yaml", version_base=None) # 需要更改
 def main(config: DictConfig) -> None:
 
     print_config_tree(config)
@@ -42,7 +42,8 @@ def main(config: DictConfig) -> None:
         use_distributed_sampler=False, # Custom bucket sampler, the use_distributed_sampler need to be set to False
     )
 
-    latest_ckpt_path = find_lastest_ckpt(config.get("probe_ckpt_dir", None))
+    # latest_ckpt_path = find_lastest_ckpt(config.get("probe_ckpt_dir", None))
+    latest_ckpt_path = None
     logger.info(f"start_training, latest_ckpt_path: {latest_ckpt_path}")
     trainer.fit(
         model=model,

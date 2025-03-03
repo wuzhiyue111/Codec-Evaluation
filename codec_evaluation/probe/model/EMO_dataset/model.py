@@ -56,13 +56,14 @@ class EMOProber(nn.Module):
                  token_rate,
                  target_sec,
                  n_segments,
+                 num_outputs,
                  channel_reduction = 16,
                  padding = 1,
                  kernel_size = 3,
                  stride = 2,
                  ):
         super(EMOProber, self).__init__()
-        self.num_outputs = 2 
+        self.num_outputs = num_outputs 
         self.n_segments = n_segments
         self.channel_attention = nn.Sequential(
             SEBlock(channel = codec_dim, reduction = channel_reduction),
