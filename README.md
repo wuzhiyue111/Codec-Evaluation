@@ -72,8 +72,8 @@ bash env_build.sh
             <td align=center>quantized_emb</td>
             <td align=center>0.49</td>
             <td align=center>0.29</td>
-            <td align=center> </td>
-            <td align=center> </td>
+            <td align=center>0.34</td>
+            <td align=center>0.34</td>
 	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
