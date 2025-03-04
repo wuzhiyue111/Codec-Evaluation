@@ -41,7 +41,7 @@ bash env_build.sh
         </tr>
         <tr>
             <th colspan="2">emomusic</th>
-            <th></th>
+            <th colspan="2">GTZAN</th>
             <th></th>
             <th></th>
             <th></th>
@@ -50,8 +50,8 @@ bash env_build.sh
 	<tr>
 	    <td align=center>A</td>
             <td align=center>V</td>
-	    <td align=center> </td>
-            <td align=center> </td>
+	    <td align=center>Acc</td>
+            <td align=center>Prec</td>
 	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
