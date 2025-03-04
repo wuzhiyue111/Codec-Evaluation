@@ -3,7 +3,8 @@
 ## Purpose
 
 1. how to evaluate the quality of codebook
-2. collect all existing metrics
+2. collect all existing metrics for reconstruction
+3. collect all existing metrics for Linear Probing (Music and Speech)
 
 ## Env Build
 
