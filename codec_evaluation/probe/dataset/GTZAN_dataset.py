@@ -12,6 +12,7 @@ from einops import reduce
 class GTZANdataset(Dataset):
     def __init__(
         self,
+        split,
         sample_rate,
         target_sec,
         n_segments,
@@ -20,17 +21,22 @@ class GTZANdataset(Dataset):
         audio_dir,
         meta_dir,
     ):
+        self.split = split
         self.sample_rate = sample_rate
         self.target_sec = target_sec
         self.n_segments = n_segments
         self.target_length = self.target_sec * self.sample_rate
         self.is_mono = is_mono
         self.is_normalize = is_normalize
-        self.audio_files = find_audios(audio_dir)
+        self.audio_dir = audio_dir
         self.meta_dir = meta_dir
+        self.metadata = pd.read_csv(filepath_or_buffer=os.path.join(meta_dir, f'{split}_filtered.txt'), 
+                                    names = ['audio_path'])
+        self.class2id = {'blues': 0, 'classical': 1, 'country': 2, 'disco': 3, 'hiphop': 4, 'jazz': 5, 'metal': 6, 'pop': 7, 'reggae': 8, 'rock': 9}
+        self.id2class = {v: k for k, v in self.class2id.items()}
 
     def __len__(self):
-        return len(self.audio_files)
+        return len(self.metadata)
 
     def __getitem__(self, index):
         return self.getitem(index)
@@ -41,9 +47,11 @@ class GTZANdataset(Dataset):
                 segments: [n_segments, segments_length]
                 labels: [n_segments, 10]
         """
-        audio_file = self.audio_files[index]
+        audio_path = self.metadata.iloc[index].iloc[0]
+        audio_file = os.path.join(self.audio_dir,audio_path)
+
         waveform = self.load_audio(audio_file)
-        label = self.load_label(audio_file)
+        label = torch.tensor(self.class2id[audio_path.split('/')[0]]).float()
 
         segments = self.split_audio(waveform, self.n_segments)
         segments = torch.stack(segments, dim=0)
@@ -84,21 +92,6 @@ class GTZANdataset(Dataset):
 
         return waveform
     
-    # TODO: have some question!
-    def load_label(self, audio_file, split):
-        """Load the label for a given from text file
-        input:
-            audio_file:one of audio_file path
-        return:
-            label:[10]
-        """
-        metadata = pd.read_csv(filepath_or_buffer=os.path.join(self.meta_dir, f'{split}_filtered.txt'), 
-                                    names = ['audio_path'])
-        class2id = {'blues': 0, 'classical': 1, 'country': 2, 'disco': 3, 'hiphop': 4, 'jazz': 5, 'metal': 6, 'pop': 7, 'reggae': 8, 'rock': 9}
-        audio_path = metadata.iloc[audio_file][0]
-        label = class2id[audio_path.split('/')[0]]  
-
-        return label
 
     def split_audio(self, waveform, n_segments):
         """
@@ -121,24 +114,21 @@ class GTZANdataset(Dataset):
 
 
 class GTZANdataModule(pl.LightningDataModule):
-    def __init__(self, dataset, batch_size, val_split, codec_name, num_workers):
+    def __init__(self, dataset_args, batch_size, codec_name, num_workers):
         super().__init__()
-        self.dataset = dataset
+        self.dataset_args = dataset_args
         self.batch_size = batch_size
-        self.val_split = val_split
         self.train_dataset = None
         self.val_dataset = None
         self.codec_name = codec_name
-        self.n_segments = dataset.n_segments
+        self.n_segments = dataset_args["n_segments"]
         self.num_workers = num_workers
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            train_size = int((1 - self.val_split) * len(self.dataset))
-            valid_size = len(self.dataset) - train_size
-            self.train_dataset, self.val_dataset = torch.utils.data.random_split(
-                self.dataset, [train_size, valid_size]
-            ) 
+            self.train_dataset = GTZANdataset(split="train", **self.dataset_args)
+            # 创建验证集
+            self.valid_dataset = GTZANdataset(split="valid", **self.dataset_args) 
     
     def train_collate_fn(self, batch):
         """
@@ -169,9 +159,11 @@ class GTZANdataModule(pl.LightningDataModule):
         features, labels = zip(*batch)
         features_tensor = torch.cat(features, dim=0)
         labels_tensor = torch.cat(labels, dim=0)
-        labels_tensor = reduce(
-            labels_tensor, "(b g) n -> b", reduction="mean", g=self.n_segments
-        )
+        labels_tensor = labels_tensor.squeeze(1)
+        # labels_tensor = reduce(
+        #     labels_tensor, "(b g) n -> b", reduction="mean", g=self.n_segments
+        # )
+
 
         if self.codec_name == "semanticodec":
             labels_tensor = torch.cat([labels_tensor, labels_tensor], dim=0)
@@ -180,9 +172,18 @@ class GTZANdataModule(pl.LightningDataModule):
     
     def train_dataloader(self):
         return DataLoader(
-            dataset=self.val_dataset,
-            batch_size=1,
+            dataset=self.train_dataset,
+            batch_size=self.batch_size,
+            shuffle=True,
+            collate_fn=self.train_collate_fn,
+            num_workers=self.num_workers,
+        )
+
+    def val_dataloader(self):
+        return DataLoader(
+            dataset=self.valid_dataset,
+            batch_size=2,
             shuffle=False,
             collate_fn=self.valid_collate_fn,
-            num_workers=self.num_workers
+            num_workers=self.num_workers,
         )

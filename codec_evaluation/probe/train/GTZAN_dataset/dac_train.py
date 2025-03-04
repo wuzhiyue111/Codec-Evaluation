@@ -41,6 +41,7 @@ def main(config: DictConfig) -> None:
         use_distributed_sampler=False, # Custom bucket sampler, the use_distributed_sampler need to be set to False
     )
 
+    # latest_ckpt_path = find_lastest_ckpt(config.get("probe_ckpt_dir", None))
     latest_ckpt_path = None
     logger.info(f"start_training, latest_ckpt_path: {latest_ckpt_path}")
     trainer.fit(
