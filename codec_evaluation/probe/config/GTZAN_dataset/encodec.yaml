@@ -1,4 +1,4 @@
-mode: quantized_emb
+mode: unquantized_emb
 sample_rate: 22050
 target_sec: 30
 n_segments: 6
@@ -6,29 +6,28 @@ num_outputs: 10
 probe_ckpt_dir: /home/ch/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/GTZAN_dataset/
 seed: 666
 codec_name: encodec 
+task: multiclass
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
   devices: [0]
   precision: 32
-  max_epochs: 200
+  max_epochs: 100
   log_every_n_steps: 5
   val_check_interval: 1.0
 
 data:
   _target_: codec_evaluation.probe.dataset.GTZAN_dataset.GTZANdataModule
-  dataset:
-    _target_: codec_evaluation.probe.dataset.GTZAN_dataset.GTZANdataset
+  dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     n_segments: ${n_segments}
     is_mono: True
     is_normalize: True
-    audio_dir: /sdb/data1/music/mix_music/marble_dataset/data/GTZAN/Data/genres_original
-    meta_dir: /sdb/data1/music/mix_music/marble_dataset/data/GTZAN/Data
+    audio_dir: /sdb/data1/music/mix_music/marble_dataset/data/GTZAN/genres
+    meta_dir: /sdb/data1/music/mix_music/marble_dataset/data/GTZAN
   batch_size: 32
-  val_split: 0.1
   codec_name: ${codec_name}
   num_workers: 16
 
@@ -37,6 +36,8 @@ model:
   codec_name: ${codec_name}
   sample_rate: ${sample_rate}
   mode: ${mode}
+  num_outputs: ${num_outputs}
+  task: multiclass
   probe_model_builder:
     _target_: codec_evaluation.probe.model.GTZAN_dataset.model.GTZANProber
     _partial_: true
