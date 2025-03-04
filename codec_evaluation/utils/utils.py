@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import torch.nn.functional as F  
 from codec_evaluation.codecs.encodec import Encodec
 from codec_evaluation.codecs.mimi import Mimi
@@ -92,30 +93,38 @@ def init_codec(modelname, sample_rate, mode, device, freeze = False):
 def cut_or_pad(waveform, target_length, codecname = None):
         """Cut or pad a waveform or a feature to a target length."""
         
-        if waveform.dim() == 2:  #[B,T]
-            waveform_length = waveform.shape[1]
-
-        elif codecname == 'semanticodec':
-                
+        if codecname == 'semanticodec':
             if waveform.dim() == 4:
-                waveform = waveform.permute(0,3,2,1) # [B,T,2,D]->[B,D,2,T]
-                waveform_length = waveform.shape[3]
-            else:        
-                waveform = waveform.permute(0, 2, 1) # [B,T,D]->[B,D,T]
-                waveform_length = waveform.shape[2]      
-
-        else:                                       
-            waveform_length = waveform.shape[2]      # [B,D,T]
-
+                waveform = waveform.permute(0, 3, 2, 1)  # [B, T, 2, D] -> [B, D, 2, T]
+            elif waveform.dim() == 3:
+                waveform = waveform.permute(0, 2, 1)  # [B, T, D] -> [B, D, T]
+    
+    # Get waveform length based on dimension
+        if waveform.dim() == 2:
+            waveform_length = waveform.shape[1]  # [B, T]
+        elif waveform.dim() == 3:
+            waveform_length = waveform.shape[2]  # [B, D, T]
+        elif waveform.dim() == 4:
+            waveform_length = waveform.shape[3]  # [B, D, 2, T]
+        else:
+            raise ValueError("Unsupported waveform dimension!")
+        
+        # Cut or pad
         if waveform_length > target_length:
-            # Cut the waveform
-            waveform = waveform[:, :target_length]
+            if waveform.dim() == 2:
+                # Random cut for 2D input
+                start = np.random.randint(0, waveform_length - target_length)
+                waveform = waveform[:, start:start + target_length]
+            else:
+                # Direct cut for higher dimensions
+                waveform = waveform[..., :target_length]
         elif waveform_length < target_length:
-            # Pad the waveform
+            # Pad
             padding_length = target_length - waveform_length
             waveform = F.pad(waveform, (0, padding_length))
-
+        
         return waveform
+
 
 def find_lastest_ckpt(directory):
     if directory is None:
