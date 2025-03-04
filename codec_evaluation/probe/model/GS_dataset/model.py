@@ -50,7 +50,7 @@ class DSConv(nn.Module):
         
         return x
     
-class EMOProber(nn.Module):
+class GSProber(nn.Module):
     def __init__(self, 
                  codec_dim, 
                  token_rate,
@@ -62,7 +62,7 @@ class EMOProber(nn.Module):
                  kernel_size = 3,
                  stride = 2,
                  ):
-        super(EMOProber, self).__init__()
+        super(GSProber, self).__init__()
         self.num_outputs = num_outputs 
         self.n_segments = n_segments
         self.channel_attention = nn.Sequential(
@@ -104,7 +104,8 @@ class EMOProber(nn.Module):
 
     def forward(self, x, y):
         x = x.float()  #[B*n_segments, D, T] 
-
+        y = y.long()
+        
         x_channel = self.channel_attention(x)
         x_conv = self.dsconv(x_channel)  
         x_channel = self.channel_attention(x_conv)
@@ -115,10 +116,10 @@ class EMOProber(nn.Module):
 
         x_flattened = x_conv.flatten(start_dim=1, end_dim=-1)    #[B*n_segments, input_dim=T' * D//16]
 
-        output = self.output(x_flattened)  #[B*n_segments, 2]
+        output = self.output(x_flattened)  #[B*n_segments, 24]
         if output.shape[0] != y.shape[0]:
             output = reduce(output, '(b g) n -> b n', reduction = 'mean', g = self.n_segments) 
-
-        loss = F.mse_loss(output, y)
+        loss_fn = nn.CrossEntropyLoss()
+        loss = loss_fn(output, y)
 
         return loss, output

@@ -1,11 +1,11 @@
-mode: unquantized_emb
+mode: quantized_emb
 sample_rate: 44100
 target_sec: 30
 n_segments: 6
 num_outputs: 2
 probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/EMO_dataset/ # 需要更改
 seed: 666
-codec_name: semanticodec
+codec_name: wavtokenizer
 
 trainer:
   _target_: pytorch_lightning.Trainer
@@ -49,8 +49,8 @@ model:
     stride: 2
   target_sec: ${target_sec}
   n_segments: ${n_segments}
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/semantic # 需要更改
-  
+  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/wavTokenizer/models--novateur--WavTokenizer-large-unify-40token # 需要更改
+
   optimizer_builder:
     _target_: torch.optim.AdamW
     _partial_: true

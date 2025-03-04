@@ -1,33 +1,34 @@
 mode: unquantized_emb
 sample_rate: 44100
-target_sec: 30
-n_segments: 6
-num_outputs: 2
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/EMO_dataset/ # 需要更改
+target_sec: 120
+n_segments: 12
+num_outputs: 24
+probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/GS_dataset/ # 需要更改
 seed: 666
-codec_name: semanticodec
+codec_name: wavtokenizer # 需要更改
+task: multiclass
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
   devices: [0]
   precision: 32
-  max_epochs: 200
+  max_epochs: 100
   log_every_n_steps: 5
   val_check_interval: 1.0
 
 data:
-  _target_: codec_evaluation.probe.dataset.EMO_dataset.EMOdataModule
+  _target_: codec_evaluation.probe.dataset.GS_dataset.GSdataModule
   dataset:
-    _target_: codec_evaluation.probe.dataset.EMO_dataset.EMOdataset
+    _target_: codec_evaluation.probe.dataset.GS_dataset.GSdataset
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     n_segments: ${n_segments}
     is_mono: True
     is_normalize: True
-    audio_dir: /sdb/data1/music/mix_music/marble_dataset/data/EMO/emomusic/wav
-    meta_dir: /sdb/data1/music/mix_music/marble_dataset/data/EMO/emomusic
-  batch_size: 32
+    audio_dir: /sdb/data1/music/mix_music/marble_dataset/data/GS/giantsteps_clips/wav
+    meta_path: /sdb/data1/music/mix_music/marble_dataset/data/GS/giantsteps_clips/meta.json
+  batch_size: 16
   val_split: 0.1
   codec_name: ${codec_name}
   num_workers: 16
@@ -37,8 +38,10 @@ model:
   codec_name: ${codec_name}
   sample_rate: ${sample_rate}
   mode: ${mode}
+  task: ${task}
+  num_outputs: ${num_outputs}
   probe_model_builder:
-    _target_: codec_evaluation.probe.model.EMO_dataset.model.EMOProber
+    _target_: codec_evaluation.probe.model.GS_dataset.model.GSProber
     _partial_: true
     target_sec: ${target_sec}
     n_segments: ${n_segments}
@@ -49,15 +52,14 @@ model:
     stride: 2
   target_sec: ${target_sec}
   n_segments: ${n_segments}
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/semantic # 需要更改
-  
+  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/wavTokenizer/models--novateur--WavTokenizer-large-unify-40token # 需要更改
   optimizer_builder:
-    _target_: torch.optim.AdamW
-    _partial_: true
-    lr: 1e-4
-    betas: [0.8, 0.99]
-    eps: 1e-5
-    weight_decay: 0.08
+      _target_: torch.optim.AdamW
+      _partial_: true
+      lr: 1e-4
+      betas: [0.8, 0.99]
+      eps: 1e-5
+      weight_decay: 0.08
     
   lr_scheduler_builder:
     _target_: torch.optim.lr_scheduler.LambdaLR
@@ -88,11 +90,12 @@ callbacks:
     every_n_epochs: 1
     mode: min
     save_top_k: 1
+    save_last: True
     filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
     verbose: True
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/EMO_dataset # 需要更改
+  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/GS_dataset # 需要更改
   name: ${codec_name}_${mode}
   log_graph: true
