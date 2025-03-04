@@ -115,7 +115,9 @@ class VocalSetProber(nn.Module):
         x_conv = self.linear(x_conv)      #[B*n_segments, T', D//16]
 
         x_flattened = x_conv.flatten(start_dim=1, end_dim=-1)    #[B*n_segments, input_dim=T' * D//16]
-
+        relu = nn.ReLU()
+        x_flattened = relu(x_flattened)
+        
         output = self.output(x_flattened)  #[B*n_segments, 24]
         if output.shape[0] != y.shape[0]:
             output = reduce(output, '(b g) n -> b n', reduction = 'mean', g = self.n_segments) 
