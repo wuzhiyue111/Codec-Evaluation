@@ -83,8 +83,8 @@ bash env_build.sh
             <td align=center>unquantized_emb</td>
             <td align=center>0.56</td>
             <td align=center>0.24</td>
-            <td align=center>0.246</td>
-            <td align=center>0.246</td>
+            <td align=center>0.314</td>
+            <td align=center>0.314</td>
             <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
@@ -93,8 +93,8 @@ bash env_build.sh
             <td align=center>quantized_emb</td>
             <td align=center>0.57</td>
             <td align=center>0.21</td>
-            <td align=center>0.253</td>
-            <td align=center>0.253</td>
+            <td align=center>0.308</td>
+            <td align=center>0.308</td>
             <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
