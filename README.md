@@ -114,8 +114,8 @@ bash env_build.sh
             <td align=center>quantized_emb</td>
             <td align=center>0.50</td>
             <td align=center>0.15</td>
-            <td align=center>0.286</td>
-            <td align=center>0.286</td>
+            <td align=center>0.313</td>
+            <td align=center>0.313</td>
             <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
