@@ -50,7 +50,7 @@ class DSConv(nn.Module):
         
         return x
     
-class VocalSetProber(nn.Module):
+class MTGProber(nn.Module):
     def __init__(self, 
                  codec_dim, 
                  token_rate,
@@ -62,7 +62,7 @@ class VocalSetProber(nn.Module):
                  kernel_size = 3,
                  stride = 2,
                  ):
-        super(VocalSetProber, self).__init__()
+        super(MTGProber, self).__init__()
         self.num_outputs = num_outputs 
         self.n_segments = n_segments
         self.channel_attention = nn.Sequential(
@@ -103,9 +103,8 @@ class VocalSetProber(nn.Module):
         self.output = nn.Linear(input_dim, self.num_outputs)
 
     def forward(self, x, y):
-        x = x.float()  #[B*n_segments, D, T] 
-        y = y.long()
-        
+        y = y.float()  #[B*n_segments, D, T] 
+
         x_channel = self.channel_attention(x)
         x_conv = self.dsconv(x_channel)  
         x_channel = self.channel_attention(x_conv)
@@ -118,10 +117,11 @@ class VocalSetProber(nn.Module):
         relu = nn.ReLU()
         x_flattened = relu(x_flattened)
         
-        output = self.output(x_flattened)  #[B*n_segments, 24]
+        output = self.output(x_flattened)  #[B*n_segments, 87]
         if output.shape[0] != y.shape[0]:
             output = reduce(output, '(b g) n -> b n', reduction = 'mean', g = self.n_segments) 
-        loss_fn = nn.CrossEntropyLoss()
+
+        loss_fn = nn.BCEWithLogitsLoss()
         loss = loss_fn(output, y)
 
         return loss, output
