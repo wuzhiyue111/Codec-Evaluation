@@ -43,8 +43,8 @@ bash env_build.sh
             <th colspan="2">emomusic</th>
             <th colspan="1">GTZAN</th>
             <th colspan="2">MTT</th>
-            <th></th>
-            <th></th>
+            <th colspan="1">NSynthI</th>
+            <th colspan="1">NSynthP</th>
 	    <th></th>
         </tr>
 	<tr>
@@ -53,8 +53,8 @@ bash env_build.sh
 	    <td align=center>Acc</td>
             <td align=center>AUROC</td>
 	    <td align=center>Ap</td>
-	    <td align=center></td>
-	    <td align=center> </td>
+	    <td align=center>Acc</td>
+	    <td align=center>Acc</td>
     </thead>
     <tbody>
         <tr>
