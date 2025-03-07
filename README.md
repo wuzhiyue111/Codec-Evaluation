@@ -51,9 +51,9 @@ bash env_build.sh
 	    <td align=center>A</td>
             <td align=center>V</td>
 	    <td align=center>Acc</td>
-            <td align=center></td>
-	    <td align=center>Auc-Roc</td>
+            <td align=center>Auc-Roc</td>
 	    <td align=center>Ap</td>
+	    <td align=center></td>
 	    <td align=center> </td>
     </thead>
     <tbody>
