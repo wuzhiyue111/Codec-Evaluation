@@ -51,7 +51,7 @@ bash env_build.sh
 	    <td align=center>A</td>
             <td align=center>V</td>
 	    <td align=center>Acc</td>
-            <td align=center>Auc-Roc</td>
+            <td align=center>AUROC</td>
 	    <td align=center>Ap</td>
 	    <td align=center></td>
 	    <td align=center> </td>
@@ -136,8 +136,8 @@ bash env_build.sh
             <td align=center>0.49</td>
             <td align=center>0.05</td>
             <td align=center>0.324</td>
-            <td align=center></td>
-            <td align=center> </td>
+            <td align=center>0.781</td>
+            <td align=center>0.178</td>
 	    <td align=center> </td>
 	    <td align=center> </td>
         </tr>
