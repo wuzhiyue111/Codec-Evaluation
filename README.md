@@ -41,8 +41,8 @@ bash env_build.sh
         </tr>
         <tr>
             <th colspan="2">emomusic</th>
-            <th colspan="2">GTZAN</th>
-            <th colspan="2">GTZANBT</th>
+            <th colspan="1">GTZAN</th>
+            <th colspan="2">MTT</th>
             <th></th>
             <th></th>
 	    <th></th>
@@ -51,9 +51,9 @@ bash env_build.sh
 	    <td align=center>A</td>
             <td align=center>V</td>
 	    <td align=center>Acc</td>
-            <td align=center>Prec</td>
-	    <td align=center>Acc</td>
-	    <td align=center>Prec</td>
+            <td align=center></td>
+	    <td align=center>Auc-Roc</td>
+	    <td align=center>Ap</td>
 	    <td align=center> </td>
     </thead>
     <tbody>
@@ -63,7 +63,7 @@ bash env_build.sh
             <td align=center>0.51</td>
             <td align=center>0.34</td>
             <td align=center>0.321</td>
-            <td align=center>0.321</td>
+            <td align=center></td>
 	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
@@ -73,7 +73,7 @@ bash env_build.sh
             <td align=center>0.49</td>
             <td align=center>0.29</td>
             <td align=center>0.319</td>
-            <td align=center>0.319</td>
+            <td align=center></td>
 	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
@@ -84,7 +84,7 @@ bash env_build.sh
             <td align=center>0.56</td>
             <td align=center>0.24</td>
             <td align=center>0.314</td>
-            <td align=center>0.314</td>
+            <td align=center></td>
             <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
@@ -94,7 +94,7 @@ bash env_build.sh
             <td align=center>0.57</td>
             <td align=center>0.21</td>
             <td align=center>0.308</td>
-            <td align=center>0.308</td>
+            <td align=center></td>
             <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
@@ -105,7 +105,7 @@ bash env_build.sh
             <td align=center>0.33</td>
             <td align=center>0.15</td>
             <td align=center>0.291</td>
-            <td align=center>0.291</td>
+            <td align=center></td>
             <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
@@ -115,7 +115,7 @@ bash env_build.sh
             <td align=center>0.50</td>
             <td align=center>0.15</td>
             <td align=center>0.313</td>
-            <td align=center>0.313</td>
+            <td align=center></td>
             <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
@@ -126,7 +126,7 @@ bash env_build.sh
             <td align=center>0.49</td>
             <td align=center>0.05</td>
             <td align=center>0.322</td>
-            <td align=center>0.322</td>
+            <td align=center></td>
             <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
@@ -136,7 +136,7 @@ bash env_build.sh
             <td align=center>0.49</td>
             <td align=center>0.05</td>
             <td align=center>0.324</td>
-            <td align=center>0.324</td>
+            <td align=center></td>
             <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
