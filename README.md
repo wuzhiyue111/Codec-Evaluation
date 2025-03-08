@@ -164,8 +164,8 @@ bash env_build.sh
             <td align=center>0.49</td>
             <td align=center>0.05</td>
             <td align=center>0.322</td>
-            <td align=center></td>
-            <td align=center> </td>
+            <td align=center>0.782</td>
+            <td align=center>0.179</td>
 	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center>0.24</td>
