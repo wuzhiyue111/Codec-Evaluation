@@ -40,8 +40,10 @@ class Encodec(Codec):
             unquantized_emb: encode -> unquantized embedding
             quantized_emb: encode + quantizer -> quantized embedding
         num_codebooks: number of codebooks
-        use_vocos: Boolean, whether to use Vocos to post-process the audio after decoding
-        need_resample: Boolean, whether to resample the audio after decoding
+        use_vocos: boolean, whether to use Vocos to post-process the audio after decoding
+        model_ckpt_dir: path to the model checkpoint
+        vocos_ckpt_dir: path to the Vocos checkpoint
+        need_resample: boolean, whether to resample the audio after decoding
         """
         try:
             from transformers import EncodecModel as EncodecModelHF

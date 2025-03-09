@@ -35,7 +35,8 @@ class Mimi(Codec):
             unquantized_emb: encode -> unquantized embedding
             quantized_emb: encode + quantizer -> quantized embedding
         num_codebooks: number of codebooks
-        need_resample: Boolean, whether to resample the audio after decoding
+        model_ckpt_dir: path to the model checkpoint
+        need_resample: boolean, whether to resample the audio after decoding
         """
         try:
             from transformers import MimiModel

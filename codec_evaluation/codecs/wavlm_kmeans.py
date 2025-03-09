@@ -27,26 +27,45 @@ class WavLMKmeans(Codec):
             model_ckpt_dir=None,
             need_resample=True
             ):
+        """
+        sample_rate: sample rate of the input signal
+        need_resample: boolean, whether to resample the audio after decoding
+        mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
+            encode: encode the audio to id tokens
+            decode: decode the id tokens to audio
+            reconstruct: encode -> decode
+            unquantized_emb: encode -> unquantized embedding
+            quantized_emb: encode + quantizer -> quantized embedding
+        layer_ids: layer ids of the model
+        model_ckpt_dir: path to the model checkpoint
+        need_resample: boolean, whether to resample the audio after decoding
+        """
         super().__init__(sample_rate, 16000, mode)
         self.layer_ids = layer_ids
         self.vocab_size = 512
+        self.hop_length = 320
+        self.token_rate = int(self.orig_sample_rate / self.hop_length)
+        
         if model_ckpt_dir is None:
             self.model = torch.hub.load(
                 repo_or_dir="lucadellalib/discrete-wavlm-codec",
                 model="discrete_wavlm_large",
                 layer_ids=layer_ids,  
             )   
-        else:
+        else: 
             self.model = torch.hub.load(
                 repo_or_dir=model_ckpt_dir,
                 model="discrete_wavlm_large",
+                pretrained=model_ckpt_dir,
                 layer_ids=layer_ids,
                 source="local",       
                 force_reload=True,    
-                trust_repo=True,     
+                trust_repo=True,    
             ) 
         self.need_resample = need_resample
         self.dim = self.model.vocoder.embedding_dim
+        #self.token_rate = 
+        #self.hop_length = 
 
         # Delete the decoder to save memory overhead.
         if mode == "encode" or mode == "unquantized_emb":
