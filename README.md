@@ -245,7 +245,7 @@ bash env_build.sh
 	    <td align=center></td>
         </tr>
 	<tr>
-            <td align=center rowspan="2">DAC</td>
+            <td align=center rowspan="2">enocdec</td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -260,7 +260,7 @@ bash env_build.sh
 	    <td align=center></td>
         </tr>
         <tr>
-            <td align=center rowspan="2">DAC</td>
+            <td align=center rowspan="2">mimi</td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -275,38 +275,7 @@ bash env_build.sh
 	    <td align=center></td>
         </tr>
 	<tr>
-            <td align=center rowspan="2">DAC</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-        </tr>
-        <tr>
             <td align=center rowspan="2">Semanticodec</td>
-            <td align=center rowspan="2">DAC</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-        </tr>
-	<tr>
-            <td align=center rowspan="2">DAC</td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -321,7 +290,7 @@ bash env_build.sh
 	    <td align=center></td>
         </tr>
         <tr>
-            <td align=center rowspan="2">DAC</td>
+            <td align=center rowspan="2">speechtokenizer</td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -336,7 +305,7 @@ bash env_build.sh
 	    <td align=center></td>
         </tr>
 	<tr>
-            <td align=center rowspan="2">DAC</td>
+            <td align=center rowspan="2">wavlm_kmeans</td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -350,8 +319,8 @@ bash env_build.sh
 	    <td align=center></td>
 	    <td align=center></td>
         </tr>
-	<tr>
-            <td align=center rowspan="2">DAC</td>
+        <tr>
+            <td align=center rowspan="2">wavtokenizer</td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -365,21 +334,7 @@ bash env_build.sh
 	    <td align=center></td>
 	    <td align=center></td>
         </tr>
-	<tr>
-            <td align=center rowspan="2">DAC</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-        </tr>
+	
     </tbody>
 </table>
 
