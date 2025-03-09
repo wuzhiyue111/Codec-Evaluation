@@ -1,7 +1,6 @@
-mode: unquantized_emb
+mode: quantized_emb
 sample_rate: 44100
-target_sec: 120
-n_segments: 12
+target_sec: 10
 num_outputs: 24
 probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/GS_dataset/ # 需要更改
 seed: 666
@@ -11,7 +10,7 @@ task: multiclass
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [0]
+  devices: [2]
   precision: 32
   max_epochs: 100
   log_every_n_steps: 5
@@ -19,19 +18,20 @@ trainer:
 
 data:
   _target_: codec_evaluation.probe.dataset.GS_dataset.GSdataModule
-  dataset:
-    _target_: codec_evaluation.probe.dataset.GS_dataset.GSdataset
+  dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
-    n_segments: ${n_segments}
     is_mono: True
-    is_normalize: True
+    is_normalize: False
     audio_dir: /sdb/data1/music/mix_music/marble_dataset/data/GS/giantsteps_clips/wav
     meta_path: /sdb/data1/music/mix_music/marble_dataset/data/GS/giantsteps_clips/meta.json
-  batch_size: 16
-  val_split: 0.1
   codec_name: ${codec_name}
-  num_workers: 16
+  train_batch_size: 4
+  valid_batch_size: 1
+  test_batch_size: 4
+  train_num_workers: 8
+  valid_num_workers: 4
+  test_num_workers: 4
 
 model:
   _target_: codec_evaluation.probe.model.lit_prober.Prober
@@ -43,16 +43,15 @@ model:
   probe_model_builder:
     _target_: codec_evaluation.probe.model.GS_dataset.model.GSProber
     _partial_: true
-    target_sec: ${target_sec}
-    n_segments: ${n_segments}
     num_outputs: ${num_outputs}
+    drop_out: 0.1
     channel_reduction: 16
     padding: 1
     kernel_size: 3
-    stride: 2
+    stride: 1
   target_sec: ${target_sec}
-  n_segments: ${n_segments}
   model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/wavTokenizer/models--novateur--WavTokenizer-large-unify-40token # 需要更改
+  
   optimizer_builder:
       _target_: torch.optim.AdamW
       _partial_: true

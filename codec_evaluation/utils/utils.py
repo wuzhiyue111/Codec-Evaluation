@@ -90,7 +90,7 @@ def init_codec(modelname, sample_rate, mode, device, freeze = False):
 
     return model
 
-def cut_or_pad(waveform, target_length, n_segments = 6, codecname = None):
+def cut_or_pad(waveform, target_length, task=None, codecname = None):
         """Cut or pad a waveform or a feature to a target length."""
         
         if codecname == 'semanticodec':
@@ -111,17 +111,9 @@ def cut_or_pad(waveform, target_length, n_segments = 6, codecname = None):
         
         if waveform.dim() == 2: 
 
-            if waveform_length > target_length:
-                start = np.random.randint(0, waveform_length - target_length)
-                waveform = waveform[:, start:start + target_length]
+            segments, pad_mask = split_audio(waveform = waveform, segment_length = target_length, task=task)
 
-            elif waveform_length < target_length:
-                pad_length = target_length - waveform_length
-                waveform = F.pad(waveform, (0, pad_length, 0, 0), mode="constant", value=-100)
-
-            segments = split_audio(waveform = waveform, n_segments = n_segments)
-
-            return segments
+            return segments, pad_mask
         else:
             if waveform_length > target_length:
                 waveform = waveform[..., :target_length]
@@ -140,22 +132,45 @@ def find_lastest_ckpt(directory):
     latest_ckpt_file = max(ckpt_file, key=os.path.getmtime)
     return latest_ckpt_file
 
-def split_audio(waveform, n_segments):
+def split_audio(waveform, segment_length, task, pad_value=-100):
     """
     input:
-        waveform:[T];
+        waveform:[1,T];
         n_segments: the number of segments per audio
     return:
         segments:[n_segments,segment_length]
     """
 
-    segment_length = waveform.shape[1] // n_segments  # length of per segment
+    total_length = waveform.shape[1]  # 音频的总长度
     segments = []
+    pad_mask = []
 
-    for i in range(n_segments):
-        start = i * segment_length
-        end = (i + 1) * segment_length
-        segment = waveform[:, start:end]
-        segments.append(segment)
+    if task != "regression":
+        for start in range(0, total_length, segment_length):
+            end = start + segment_length
+            if end <= total_length:  
+                segment = waveform[:, start:end] 
+                pad_mask.append(1) 
+            else:  
+                segment = waveform[:, start:] 
+                
+                padding_length = segment_length - segment.shape[1]
+                segment = F.pad(segment, (0, padding_length), value=pad_value)
+                pad_mask.append(0) 
 
-    return segments
+            segments.append(segment)
+    else:
+        for start in range(0, total_length, segment_length):
+            end = start + segment_length
+            if end <= total_length:  
+                segment = waveform[:, start:end] 
+                pad_mask.append(1) 
+
+            segments.append(segment)
+
+    return segments, pad_mask
+
+
+
+
+    

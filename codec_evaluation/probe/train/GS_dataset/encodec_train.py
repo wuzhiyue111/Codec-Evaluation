@@ -5,7 +5,7 @@ import codec_evaluation
 from codec_evaluation.utils.logger import RankedLogger
 from codec_evaluation.utils.print_config import print_config_tree
 from codec_evaluation.utils.utils import find_lastest_ckpt
-from codec_evaluation.probe.dataset.EMO_dataset import EMOdataModule
+from codec_evaluation.probe.dataset.GS_dataset import GSdataModule
 
 root_path = codec_evaluation.__path__[0]
 logger = RankedLogger(__name__, rank_zero_only=True)
