@@ -176,5 +176,8 @@ cython_debug/
 # the temporary folder for saving the reconstruction wav and the output of the lightning
 reconstruction_wav/
 outputs/
-
+tb_log/
 .vscode/
+__pycache__
+*.jsonl
+lightning_logs/
