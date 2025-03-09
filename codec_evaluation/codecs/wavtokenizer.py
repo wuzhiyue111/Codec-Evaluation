@@ -85,7 +85,7 @@ class WavTokenizer(Codec):
         self.model: wavtokenizer.WavTokenizer = wavtokenizer.WavTokenizer.from_pretrained0802(
             config_path, checkpoint_path
         )
-
+        self.hop_length = self.model.feature_extractor.encodec.encoder.hop_length
         self.dim = self.model.feature_extractor.encodec.encoder.dimension
         self.token_rate = self.model.feature_extractor.encodec.frame_rate
 
@@ -107,7 +107,7 @@ class WavTokenizer(Codec):
     def _sig_to_unquantized_emb(self, sig, length):
         """
             sig: [B, T]
-            return: [B, D, N]
+            return: [B, D, N]   [2, 512, 6924]
         """
         if sig.dim() == 2:
             sig = sig.unsqueeze(1)
@@ -118,7 +118,7 @@ class WavTokenizer(Codec):
     def _sig_to_quantized_emb(self, sig, length):
         """
             sig: [B, T]
-            return: [B, D, N]
+            return: [B, D, N]   [2, 512, 6924]
         """
         quantized_feats, _ = self.model.encode(sig, bandwidth_id=0)
         quantized_feats = quantized_feats.clone()
@@ -129,7 +129,7 @@ class WavTokenizer(Codec):
     def _sig_to_toks(self, sig, length):
         """
         sig: [B, T]
-        return: [B, N, K]
+        return: [B, N, K]   [2, 6924, 1]
         """
         _, toks = self.model.encode(sig, bandwidth_id=0)
         toks = toks.movedim(0, -1)
@@ -139,7 +139,7 @@ class WavTokenizer(Codec):
     def _toks_to_sig(self, toks, length, padding_mask=None):
         """
         toks: [B, N, K]
-        return: [B, T]
+        return: [B, T]  [2, 6000]
         """
         quantized_feats = self.model.codes_to_features(toks.movedim(-1, 0))
         sig = self.model.decode(
@@ -187,11 +187,7 @@ if __name__ == "__main__":
             save_dir = os.path.join(root_path, "codecs", "reconstruction_wav")
             os.makedirs(save_dir, exist_ok=True)
             save_path = os.path.join(save_dir, f"wavtokenizer_reconstruction.wav")
-            torchaudio.save(
-                save_path,
-                output[0].unsqueeze(0).cpu() if use_cuda else output[0].unsqueeze(0),
-                codec.orig_sample_rate,
-            )
+            torchaudio.save(save_path,output[0].unsqueeze(0).cpu() if use_cuda else output[0].unsqueeze(0),codec.orig_sample_rate)
             print(f"{mode} mode has been saved to {save_path}")
         elif mode == "encode":
             print(f"{mode} mode, the output shape is {output[0].shape}")

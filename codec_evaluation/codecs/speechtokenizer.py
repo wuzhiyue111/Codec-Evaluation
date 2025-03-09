@@ -61,6 +61,7 @@ class SpeechTokenizer(Codec):
             config_path, checkpoint_path
         )
         self.need_resample = need_resample
+        self.hop_length = self.model.encoder.hop_length
         self.dim = self.model.encoder.dimension
         self.token_rate = self.model.sample_rate / self.model.downsample_rate
 
@@ -95,7 +96,7 @@ class SpeechTokenizer(Codec):
     def _sig_to_unquantized_emb(self, sig, length):
         """
             sig: [B, T]
-            return: [B, D, N] 
+            return: [B, D, N]   [2, 1024, 468]
         """
         if sig.dim() == 2:
             sig = sig.unsqueeze(1)
@@ -106,7 +107,7 @@ class SpeechTokenizer(Codec):
     def _sig_to_quantized_emb(self, sig, length):
         """
             sig: [B, T]
-            return: [B, D, N]
+            return: [B, D, N]   [2, 1024, 468]
         """
         toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]    
         quantized_feats = self.model.quantizer.decode(toks)
@@ -116,7 +117,7 @@ class SpeechTokenizer(Codec):
     def _sig_to_toks(self, sig, length):
         """
             sig: [B, T]
-            return: [B, N, K] 
+            return: [B, N, K]   [2, 468, 8]
         """
         toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]
         toks = toks.movedim(-3, -1)  
@@ -126,7 +127,7 @@ class SpeechTokenizer(Codec):
     def _toks_to_sig(self, toks, length, padding_mask=None):
         """
             toks: [B, N, K]
-            return: [B, T] 
+            return: [B, T]   [2, 3200]
         """
         toks = toks.movedim(-1, -3)  # [K, B, N]
         sig = self.model.decode(toks)[:, 0]  

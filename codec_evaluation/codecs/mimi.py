@@ -7,7 +7,7 @@ import sys
 import torch
 import codec_evaluation
 import os
-
+import numpy as np
 root_path = codec_evaluation.__path__[0]
 sys.path.append(root_path)
 
@@ -52,7 +52,7 @@ class Mimi(Codec):
             self.model = MimiModel.from_pretrained(model_ckpt_dir)
         self.dim = self.model.config.hidden_size
         self.token_rate = self.model.config.frame_rate
-
+        self.hop_length = int(self.orig_sample_rate / self.token_rate)
         # Delete the decoder to save memory overhead.
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
             self.model.decoder = None
@@ -85,7 +85,7 @@ class Mimi(Codec):
     def _sig_to_unquantized_emb(self, sig, length):
         """
             sig: [B, T]
-            return: [B, D, N]
+            return: [B, D, N]    [2, 512, 117]  
         """
         sig, _ = self.process_sig(sig, length)
         embeddings = self.model.encoder(sig)
@@ -98,7 +98,7 @@ class Mimi(Codec):
     def _sig_to_quantized_emb(self, sig, length):
         """
             sig: [B, T]
-            return: [B, D, N]
+            return: [B, D, N]    [2, 512, 117]
         """
         sig, padding_mask = self.process_sig(sig, length)
         output = self.model.encode(sig, padding_mask, num_quantizers=self.num_codebooks)
@@ -109,7 +109,7 @@ class Mimi(Codec):
     def _sig_to_toks(self, sig, length):
         """
             sig: [B, T]
-            return: [B, N, K]
+            return: [B, N, K]    [2, 117, 8]
         """
         sig, padding_mask = self.process_sig(sig, length)
         output = self.model.encode(input_values=sig, 
@@ -122,7 +122,7 @@ class Mimi(Codec):
     def _toks_to_sig(self, toks, length, padding_mask=None):
         """
             toks: [B, N, K]
-            return: [B, T]
+            return: [B, T]    [2, 19200]
         """
         output = self.model.decode(audio_codes=toks.movedim(-1, -2),
                                    padding_mask=padding_mask)

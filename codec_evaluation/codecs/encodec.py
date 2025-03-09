@@ -8,7 +8,7 @@ import os
 import sys
 import torch
 import codec_evaluation
-
+import numpy as np
 root_path = codec_evaluation.__path__[0]
 sys.path.append(root_path)
 
@@ -62,6 +62,7 @@ class Encodec(Codec):
             self.model = EncodecModelHF.from_pretrained(model_ckpt_dir)
         self.dim = self.model.config.hidden_size
         self.token_rate = self.model.config.frame_rate
+        self.hop_length = int(self.orig_sample_rate / self.token_rate)
 
         self.vocos = None
         if use_vocos:
@@ -124,7 +125,7 @@ class Encodec(Codec):
     def _sig_to_unquantized_emb(self, sig, length):
         """
         sig: [B, T]
-        return: [B, D, N]
+        return: [B, D, N]    [2, 128, 701]  
         """
         sig, padding_mask = self.process_sig(sig, length)
         unquantized_feats = self.model.encoder(sig)
@@ -134,7 +135,7 @@ class Encodec(Codec):
     def _sig_to_quantized_emb(self, sig, length):
         """
             sig: [B, T]
-            return: [B, D, N]
+            return: [B, D, N]    [2, 128, 701]
         """
         sig, padding_mask = self.process_sig(sig, length)
         output = self.model.encode(sig, padding_mask, bandwidth=self.bandwidth)
@@ -150,7 +151,7 @@ class Encodec(Codec):
     def _sig_to_toks(self, sig, length):
         """
             sig: [B, T]
-            return: [B, N, K]
+            return: [B, N, K]    [2, 701, 8]
         """
         sig, padding_mask = self.process_sig(sig, length)
         output = self.model.encode(
@@ -163,7 +164,7 @@ class Encodec(Codec):
     def _toks_to_sig(self, toks, length, padding_mask=None):
         """
         toks: [B, N, K]
-        return: [B, T]
+        return: [B, T]    [2, 3200]
         """
         if self.vocos is not None:
             bandwidth_id = [1.5, 3.0, 6.0, 12.0].index(self.bandwidth)
