@@ -43,9 +43,7 @@ class WavLMKmeans(Codec):
         super().__init__(sample_rate, 16000, mode)
         self.layer_ids = layer_ids
         self.vocab_size = 512
-        self.hop_length = 320
-        self.token_rate = int(self.orig_sample_rate / self.hop_length)
-        
+
         if model_ckpt_dir is None:
             self.model = torch.hub.load(
                 repo_or_dir="lucadellalib/discrete-wavlm-codec",
@@ -64,9 +62,8 @@ class WavLMKmeans(Codec):
             ) 
         self.need_resample = need_resample
         self.dim = self.model.vocoder.embedding_dim
-        #self.token_rate = 
-        #self.hop_length = 
-
+        self.hop_length = 320
+        self.token_rate = int(self.orig_sample_rate / self.hop_length)
         # Delete the decoder to save memory overhead.
         if mode == "encode" or mode == "unquantized_emb":
             self.model.dequantizer = None
