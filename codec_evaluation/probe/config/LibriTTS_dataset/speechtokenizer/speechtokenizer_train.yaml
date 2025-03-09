@@ -1,27 +1,28 @@
 mode: quantized_emb
 sample_rate: 24000
-probe_ckpt_path: /sdb/tmp/user/wzy/codec_eval/ctc_libritts/ckpt/dac_quantized_emb_epoch=2-val_loss=5.1592.ckpt
+probe_root_dir: /sdb/tmp/user/wzy/codec_eval/ctc_libritts
 seed: 666
-codec_name: dac
-save_asr_result: null # /sdb/tmp/user/wzy/codec_eval/ctc_libritts/result/dac_asr.jsonl
+codec_name: speechtokenizer
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [1]
+  devices: [3]
   precision: 32
-  deterministic: true  # ensure reproducible results
-  enable_progress_bar: true  # show progress bar
-  enable_checkpointing: false  # no need to save checkpoints during testing
-  # limit_test_batches: 5  # only test 5 samples for debugging
+  max_epochs: 5
+  log_every_n_steps: 20
+  val_check_interval: 1.0
+  limit_val_batches: 5
 
 data:
   _target_: codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc.LibriTTS_ctc_module
   train_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/train-clean-100
   valid_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/dev-other
   test_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/test-clean
-  test_batch_size: 32
-  test_num_workers: 4
+  train_batch_size: 10
+  valid_batch_size: 4
+  train_num_workers: 4
+  valid_num_workers: 1
 
 model:
   _target_: codec_evaluation.probe.model.ctc_lit_prober.CtcLitProber
@@ -37,7 +38,7 @@ model:
     vocab_size: 10000
     dropout: 0.1
     conformer_head: 8
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/
+  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/speechtokenizer
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -46,7 +47,7 @@ model:
       betas: [0.8, 0.99]
       eps: 1e-5
       weight_decay: 0.08
-    
+
   lr_scheduler_builder:
     _target_: torch.optim.lr_scheduler.LambdaLR
     _partial_: true
@@ -68,3 +69,19 @@ callbacks:
   model_summary:
     _target_: pytorch_lightning.callbacks.ModelSummary
     max_depth: 1
+
+  model_checkpoint:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    monitor: val_loss
+    dirpath: ${probe_root_dir}/ckpt
+    every_n_epochs: 1
+    mode: min
+    save_top_k: 1
+    filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
+    verbose: True
+
+tensorboard:
+  _target_: pytorch_lightning.loggers.TensorBoardLogger
+  save_dir: ${probe_root_dir}/tb_log
+  name: ${codec_name}_${mode}
+  log_graph: true

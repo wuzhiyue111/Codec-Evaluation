@@ -25,11 +25,13 @@ class Ctc_probe_model(nn.Module):
         )
         self.automatic_optimization = False
 
+        self.codec_projection = nn.Linear(codec_dim, 1024)
+
         assert codec_dim % conformer_head == 0, "The dimension of the codec model must be divisible by the number of conformer heads"
         self.conformer = Conformer(
-            dim=codec_dim,
+            dim=1024,
             depth=3,  # 3 blocks
-            dim_head=codec_dim // conformer_head,
+            dim_head=1024 // conformer_head,
             heads=conformer_head,
             ff_mult=4,
             conv_expansion_factor=2,
@@ -38,12 +40,13 @@ class Ctc_probe_model(nn.Module):
             ff_dropout=0.0,
             conv_dropout=0.0,
         )
-        self.conformer_head = nn.Linear(codec_dim, vocab_size)
+        self.conformer_head = nn.Linear(1024, vocab_size)
     
     def forward(self, feature, feature_length, text):
         # feature: [B, D, T]
         feature = self.dropout(feature)
-        feature = self.conformer(feature.transpose(1, 2))
+        feature = self.codec_projection(feature.transpose(1, 2))
+        feature = self.conformer(feature)
         feature = self.conformer_head(feature)
         feature_logits_prob = torch.nn.functional.log_softmax(
             feature, dim=-1, dtype=torch.float32
@@ -53,11 +56,12 @@ class Ctc_probe_model(nn.Module):
         labels_mask = output["attention_mask"]
         labels_lengths = tuple(mask.sum().item() for mask in labels_mask)
 
-        loss = self.criterion(feature_logits_prob.transpose(0, 1), labels, tuple(length.item() for length in feature_length), labels_lengths)
+        loss = self.criterion(feature_logits_prob.transpose(0, 1), labels, tuple(int(length.item()) for length in feature_length), labels_lengths)
         return loss
-    
+
     def inference(self, feature):
-        feature = self.conformer(feature.transpose(1, 2))
+        feature = self.codec_projection(feature.transpose(1, 2))
+        feature = self.conformer(feature)
         feature = self.conformer_head(feature)
         feature_logits_prob = torch.nn.functional.log_softmax(
             feature, dim=-1, dtype=torch.float32

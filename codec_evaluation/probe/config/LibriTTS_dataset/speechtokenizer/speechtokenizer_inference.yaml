@@ -1,14 +1,14 @@
 mode: quantized_emb
 sample_rate: 24000
-probe_ckpt_path: /sdb/tmp/user/wzy/codec_eval/ctc_libritts/ckpt/dac_quantized_emb_epoch=2-val_loss=5.1592.ckpt
+probe_ckpt_path: /sdb/tmp/user/wzy/codec_eval/ctc_libritts/ckpt/speechtokenizer_quantized_emb_epoch=2-val_loss=1.8953.ckpt
 seed: 666
-codec_name: dac
+codec_name: speechtokenizer
 save_asr_result: null # /sdb/tmp/user/wzy/codec_eval/ctc_libritts/result/dac_asr.jsonl
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [1]
+  devices: [0]
   precision: 32
   deterministic: true  # ensure reproducible results
   enable_progress_bar: true  # show progress bar
@@ -37,7 +37,7 @@ model:
     vocab_size: 10000
     dropout: 0.1
     conformer_head: 8
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/
+  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/speechtokenizer
 
   optimizer_builder:
       _target_: torch.optim.AdamW
