@@ -338,8 +338,70 @@ bash env_build.sh
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
+            <td align=center>0.645</td>
+            <td align=center>0.416</td>
             <td align=center></td>
             <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+	    <td align=center rowspan="2">Mimi</td>
+            <td align=center>unquantized_emb</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	</tr>
+	<tr>
+            <td align=center>quantized_emb</td>
+            <td align=center>0.499</td>
+            <td align=center>0.22</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+	    <td align=center rowspan="2">speechtokenizer</td>
+            <td align=center>unquantized_emb</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	</tr>
+	<tr>
+            <td align=center>quantized_emb</td>
+            <td align=center>0.433</td>
+            <td align=center>0.164</td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
