@@ -7,6 +7,7 @@ import sys
 import torch
 import codec_evaluation
 import os
+import numpy as np
 root_path = codec_evaluation.__path__[0]
 sys.path.append(root_path)
 from codec_evaluation.codecs.codec import Codec
@@ -18,16 +19,32 @@ __all__ = ["WavLMKmeans"]
 class WavLMKmeans(Codec):
     LAYER_IDS = [(6,), (1, 3, 6)]
 
-    def __init__(self, sample_rate, mode="reconstruct", layer_ids=(6,), need_resample=True):
+    def __init__(
+            self, 
+            sample_rate, 
+            mode="reconstruct", 
+            layer_ids=(6,), 
+            model_ckpt_dir=None,
+            need_resample=True
+            ):
         super().__init__(sample_rate, 16000, mode)
         self.layer_ids = layer_ids
         self.vocab_size = 512
-
-        self.model = torch.hub.load(
-            repo_or_dir="lucadellalib/discrete-wavlm-codec",
-            model="discrete_wavlm_large",
-            layer_ids=layer_ids,
-        )   
+        if model_ckpt_dir is None:
+            self.model = torch.hub.load(
+                repo_or_dir="lucadellalib/discrete-wavlm-codec",
+                model="discrete_wavlm_large",
+                layer_ids=layer_ids,  
+            )   
+        else:
+            self.model = torch.hub.load(
+                repo_or_dir=model_ckpt_dir,
+                model="discrete_wavlm_large",
+                layer_ids=layer_ids,
+                source="local",       
+                force_reload=True,    
+                trust_repo=True,     
+            ) 
         self.need_resample = need_resample
         self.dim = self.model.vocoder.embedding_dim
 
@@ -54,7 +71,7 @@ class WavLMKmeans(Codec):
     def _sig_to_unquantized_emb(self, sig, length):
         """
             sig: [B, T]
-            return: [B, D, N] 
+            return: [B, D, N]   [2, 1024, 467]
         """
         unquantized_feats = self.model.sig_to_feats(sig).mean(dim=-1).movedim(-1, -2)
         return unquantized_feats
@@ -63,9 +80,9 @@ class WavLMKmeans(Codec):
     def _sig_to_quantized_emb(self, sig, length):
         """
             sig: [B, T]
-            return: [B, D, N] 
+            return: [B, D, N]   [2, 1024, 467]
         """
-        toks = self._sig_to_toks(sig, length)
+        toks, _ = self._sig_to_toks(sig, length)
         quantized_feats = self.model.toks_to_qfeats(toks).mean(dim=-1).movedim(-1, -2)
         return quantized_feats
 
@@ -73,17 +90,17 @@ class WavLMKmeans(Codec):
     def _sig_to_toks(self, sig, length):
         """
             sig: [B, T]
-            return: [B, N, K] 
+            return: [B, N, K]   [2, 467, 1]
         """
         feats = self.model.sig_to_feats(sig)
-        toks = self.model.feats_to_toks(feats)  
-        return toks
+        toks = self.model.feats_to_toks(feats) 
+        return toks, None
 
     # override
     def _toks_to_sig(self, toks, length, padding_mask=None):
         """
             toks: [B, N, K]
-            return: [B, T]
+            return: [B, T]  [2, 9600]
         """
         quantized_feats = self.model.toks_to_qfeats(toks)
         feats = self.model.qfeats_to_feats(quantized_feats)
@@ -105,10 +122,20 @@ if __name__ == "__main__":
 
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
-            WavLMKmeans(sample_rate, mode=mode, layer_ids=layer_ids).eval().to(device)
+            WavLMKmeans(
+                sample_rate, 
+                mode=mode, 
+                layer_ids=layer_ids,
+                model_ckpt_dir="/sdb/model_weight/codec_evaluation/codec_ckpt/discrete-wavlm-codec",
+                need_resample=False
+                )
+                .eval()
+                .to(device)
         )
         embs = codec.embs()
-        print(f'{mode} mode, the codec has {embs.shape[0]} codebooks, each codebook has {embs.shape[1]} entries, each entry has {embs.shape[2]} dimensions')
+        print(
+            f"{mode} mode, the codec has {embs.shape[0]} codebooks, each codebook has {embs.shape[1]} entries, each entry has {embs.shape[2]} dimensions"
+        )
         if mode == "decode":
             input = torch.zeros(batch_size, 10, len(layer_ids)).long().to(device)
             with torch.no_grad():
@@ -123,5 +150,7 @@ if __name__ == "__main__":
             save_path = os.path.join(save_dir, f'wavlm_kmeans_reconstruction.wav')
             torchaudio.save(save_path, output[0].unsqueeze(0).cpu() if use_cuda else output[0].unsqueeze(0), codec.orig_sample_rate)
             print(f'{mode} mode has been saved to {save_path}')
+        elif mode == "encode":
+            print(f'{mode} mode, the output shape is {output[0].shape}')
         else:
             print(f'{mode} mode, the output shape is {output.shape}')
