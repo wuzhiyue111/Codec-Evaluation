@@ -35,7 +35,7 @@ bash env_build.sh
     
    <thead>
         <tr>
-            <th rowspan="2">Codec</th>
+            <th rowspan="3">Codec</th>
 	    <th rowspan="3">Mode</th>
             <th colspan="12">Dataset</th>
         </tr>
