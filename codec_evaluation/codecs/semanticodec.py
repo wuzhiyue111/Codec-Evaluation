@@ -116,20 +116,22 @@ class SemantiCodec(Codec):
     def _sig_to_unquantized_emb(self, sig, length):
         """
         sig: [B, T]
-        return: [B, N, C, D]  C: token type(acoustic and semantic)  [2, 472, 2, 768]
+        return: [B, D, C, N]  C: token type(acoustic and semantic)  [2, 768, 2, 472]
         """
         toks, _ = self._sig_to_toks(sig, length)
         unquantized_feats = self.model.encoder.unquant(toks)
+        unquantized_feats = unquantized_feats.permute(0, 3, 2, 1)  
         return unquantized_feats
 
     # override
     def _sig_to_quantized_emb(self, sig, length):
         """
         sig: [B, T]
-        return: [B, N, D]  D: cat acoustic_feature and semantic_feature dim  [2, 472, 1536]
+        return: [B, D, N]  D: cat acoustic_feature and semantic_feature dim  [2, 1536, 472]  
         """
         toks, _ = self._sig_to_toks(sig, length)
         quantized_feats = self._token_to_quantized_feature(toks)
+        quantized_feats = quantized_feats.movedim(1, 2)
         return quantized_feats
 
     # override
