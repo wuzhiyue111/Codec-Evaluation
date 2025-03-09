@@ -55,7 +55,7 @@ class DAC(Codec):
         # Prioritize using model_ckpt_dir
         if model_ckpt_dir is not None:
             tag = int(orig_sample_rate / 1000)
-            model_path = os.path.join(model_ckpt_dir, f'dac_{tag}khz.pt')
+            model_path = os.path.join(model_ckpt_dir, f'dac_weights_{tag}khz_16kbps_0.0.1.pth')
             self.model = dac.DAC.load(model_path)
         else:
             tag = int(orig_sample_rate / 1000)
@@ -63,6 +63,7 @@ class DAC(Codec):
                 model_path = str(dac.utils.download(model_type=f"{tag}khz"))
             self.model = dac.DAC.load(model_path)
         self.dim = self.model.latent_dim
+        self.hop_length = self.model.hop_length
         self.token_rate = self.model.sample_rate / self.model.hop_length
 
         # Delete the decoder to save memory overhead.
@@ -98,7 +99,7 @@ class DAC(Codec):
     def _sig_to_unquantized_emb(self, sig, length):
         """
             sig: [B, T]
-            return: [B, D, N]    
+            return: [B, D, N]    [2, 1024, 701]
         """
         if sig.dim() == 2:
             sig = sig.unsqueeze(1)
@@ -109,7 +110,7 @@ class DAC(Codec):
     def _sig_to_quantized_emb(self, sig, length):
         """
             sig: [B, T]
-            return: [B, D, N]   
+            return: [B, D, N]    [2, 1024, 701]
         """
         _, toks, *_ = self.model.encode(
             sig[:, None], n_quantizers = self.num_codebooks
@@ -121,7 +122,7 @@ class DAC(Codec):
     def _sig_to_toks(self, sig, length):
         """
             sig: [B, T]
-            return: [B, N, K] 
+            return: [B, N, K]  [2, 701, 8]
         """
         _, toks, *_ = self.model.encode(
             sig[:, None], n_quantizers=self.num_codebooks
@@ -133,7 +134,7 @@ class DAC(Codec):
     def _toks_to_sig(self, toks, length, padding_mask=None):
         """
             toks: [B, N, K] 
-            return: [B, T]
+            return: [B, T]   [2, 3192]
         """
         qfeats, _, _ = self.model.quantizer.from_codes(
             toks.movedim(-1, -2)

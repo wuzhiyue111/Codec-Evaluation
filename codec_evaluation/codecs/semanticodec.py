@@ -79,6 +79,7 @@ class SemantiCodec(Codec):
             checkpoint_path=model_ckpt_dir,
             cache_path=_CACHE_DIR,
         ).to("cpu")
+        self.hop_length = int(self.orig_sample_rate / self.token_rate)
         self.dim = self.model.encoder.feature_dimension
 
         # Delete the decoder to save memory overhead.
@@ -115,7 +116,7 @@ class SemantiCodec(Codec):
     def _sig_to_unquantized_emb(self, sig, length):
         """
         sig: [B, T]
-        return: [B, N, C, D]  C: token type(acoustic and semantic)
+        return: [B, N, C, D]  C: token type(acoustic and semantic)  [2, 472, 2, 768]
         """
         toks, _ = self._sig_to_toks(sig, length)
         unquantized_feats = self.model.encoder.unquant(toks)
@@ -125,7 +126,7 @@ class SemantiCodec(Codec):
     def _sig_to_quantized_emb(self, sig, length):
         """
         sig: [B, T]
-        return: [B, N, D]  D: cat acoustic_feature and semantic_feature dim
+        return: [B, N, D]  D: cat acoustic_feature and semantic_feature dim  [2, 472, 1536]
         """
         toks, _ = self._sig_to_toks(sig, length)
         quantized_feats = self._token_to_quantized_feature(toks)
@@ -135,7 +136,7 @@ class SemantiCodec(Codec):
     def _sig_to_toks(self, sig, length):
         """
         sig: [B, T]
-        return: [B, N, K]
+        return: [B, N, K]   [2, 472, 2]
         """
         toks = self._encode(sig)
         return toks, None
@@ -145,7 +146,7 @@ class SemantiCodec(Codec):
     def _toks_to_sig(self, toks, length, padding_mask=None):
         """
         toks: [B, N, K]
-        return: [B, T]
+        return: [B, T]  [2, 3200]
         """
         sig = self._decode(toks)[:, 0]
         return sig
