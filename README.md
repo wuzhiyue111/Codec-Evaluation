@@ -202,7 +202,6 @@ bash env_build.sh
         <tr>
             <th rowspan="2">Codec</th>
 	    <th rowspan="2">Mode</th>
-            <th colspan="14">Dataset</th>
         </tr>
         <tr>
             <th colspan="2">Dac</th>
@@ -214,18 +213,20 @@ bash env_build.sh
 	    <th colspan="2">Wavtokenizer</th>
         </tr>
 	<tr>
-	    <td align=center>A</td>
-            <td align=center>V</td>
-	    <td align=center>Acc</td>
-            <td align=center>AUROC</td>
-	    <td align=center>Ap</td>
-	    <td align=center>Acc</td>
-	    <td align=center>Acc</td>
-	    <td align=center>Acc</td>
-	    <td align=center>Acc</td>
-	    <td align=center>Acc</td>
-	    <td align=center>ROC</td>
-	    <td align=center>AP</td>
+	    <td align=center>Unbiased</td>
+            <td align=center>Biased</td>
+	    <td align=center>Unbiased</td>
+            <td align=center>Biased</td>
+	    <td align=center>Unbiased</td>
+	    <td align=center>Biased</td>
+	    <td align=center>Unbiased</td>
+	    <td align=center>Biased</td>
+	    <td align=center>Unbiased</td>
+	    <td align=center>Biased</td>
+	    <td align=center>Unbiased</td>
+	    <td align=center>Biased</td>
+	    <td align=center>Unbiased</td>
+	    <td align=center>Biased</td>
     </thead>
     <tbody>
         <tr>
