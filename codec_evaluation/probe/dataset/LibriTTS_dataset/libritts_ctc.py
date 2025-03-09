@@ -85,8 +85,8 @@ class LibriTTS_ctc_dataset(Dataset):
 class LibriTTS_ctc_module(pl.LightningDataModule):
     def __init__(
         self,
-        train_audio_dir,
-        valid_audio_dir,
+        train_audio_dir=None,
+        valid_audio_dir=None,
         test_audio_dir=None,
         train_batch_size=16,
         valid_batch_size=16,

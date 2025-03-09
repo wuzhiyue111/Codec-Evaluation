@@ -1,10 +1,15 @@
 from pytorch_lightning import LightningModule
-from typing import Any
 from codec_evaluation.init_codecs import init_codec
 from codec_evaluation.utils.utils import cut_or_pad
 import torch
 from codec_evaluation.utils.logger import RankedLogger
 import os
+from typing import Dict, Any
+from asr_decoder import CTCDecoder
+from jiwer import wer, cer
+from codec_evaluation.probe.model.LibriTTS_dataset.model import Ctc_probe_model
+from codec_evaluation.reconstruction_eval.utils import transform_text_list_for_wer, transform_text_list_for_cer
+
 logger = RankedLogger(__name__, rank_zero_only=True)
 
 class CtcLitProber(LightningModule):
@@ -29,16 +34,15 @@ class CtcLitProber(LightningModule):
             freeze=True
         )
         self.dim = self.codec_model.dim
-        self.probe_model = probe_model_builder(
+        self.probe_model: Ctc_probe_model = probe_model_builder(
             codec_dim = self.dim)
         self.codec_name = codec_name
         self.optimizer_builder = optimizer_builder
         self.lr_scheduler_builder = lr_scheduler_builder
         self.automatic_optimization = False
         self.accumulate_grad_batches = accumulate_grad_batches
-
-    def forward(self, waveforms):
-        pass
+        self.ctc_decoder = CTCDecoder()
+        self.test_step_outputs = []
 
     def extract_feature(self, waveforms):
         """
@@ -58,6 +62,13 @@ class CtcLitProber(LightningModule):
             all_features = torch.cat(split_feature, dim=0)  # [2*B*n_segments, D, T]
 
         return all_features
+    
+    def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
+        # Do not save codec
+        state_dict = checkpoint["state_dict"]
+        for name in list(state_dict.keys()):
+            if "codec_model" in name:
+                state_dict.pop(name)
 
     def step(self, batch):
         audio = batch["audio"]
@@ -110,3 +121,59 @@ class CtcLitProber(LightningModule):
                     }}
         else:
             return optimizer
+        
+    def post_process_text_for_wer(self, text_list):
+        # 如果输入是list，先合并成字符串
+        # 过滤掉特殊token
+        filtered = [word for word in text_list if word not in ["", "<pad>", "</s>", "<unk>"]]
+        text = " ".join(filtered)
+        text = transform_text_list_for_wer([text])[0]
+        return text
+    
+    def post_process_text_for_cer(self, text_list):
+        # 如果输入是list，先合并成字符串
+        # 过滤掉特殊token
+        filtered = [word for word in text_list if word not in ["", "<pad>", "</s>", "<unk>"]]
+        text = " ".join(filtered)
+        text = transform_text_list_for_cer([text])[0]
+        return text
+
+    def test_step(self, batch, batch_idx):
+        audio = batch["audio"]
+        text = batch["text"]
+
+        audio_features = self.extract_feature(audio)
+        feature_logits_prob = self.probe_model.inference(audio_features)
+        
+        wer_list = []
+        result_list = []
+        cer_list = []
+        for i in range(len(text)):
+            result = self.ctc_decoder.ctc_greedy_search(feature_logits_prob[i], is_last=True)
+            self.ctc_decoder.reset()
+            pred_text = [self.probe_model.tokenizer.decode(r) for r in result["tokens"]]
+            pred_text_for_wer = self.post_process_text_for_wer(pred_text)
+            labels_text_for_wer = self.post_process_text_for_wer([text[i]])
+            pred_text_for_cer = self.post_process_text_for_cer(pred_text)
+            labels_text_for_cer = self.post_process_text_for_cer([text[i]])
+            wer_list.append(wer(labels_text_for_wer, pred_text_for_wer))
+            result_list.append({"pred_text": pred_text_for_wer, "labels_text": labels_text_for_wer})
+            cer_list.append(cer(labels_text_for_cer, pred_text_for_cer))
+        wer_result = sum(wer_list) / len(wer_list)
+        cer_result = sum(cer_list) / len(cer_list)
+
+        self.test_step_outputs.append({"wer": wer_result, "cer": cer_result, "result": result_list})
+    
+    def on_test_epoch_end(self):
+        wer_list = []
+        result = []
+        cer_list = []
+        for output in self.test_step_outputs:
+            wer_list.append(output["wer"])
+            for r in output["result"]:
+                result.append(r)
+            cer_list.append(output["cer"])
+        avg_wer = sum(wer_list) / len(wer_list)
+        avg_cer = sum(cer_list) / len(cer_list)
+
+        self.test_step_outputs = {"wer": avg_wer, "cer": avg_cer, "result": result}

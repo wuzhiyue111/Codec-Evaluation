@@ -179,3 +179,5 @@ outputs/
 tb_log/
 .vscode/
 __pycache__
+*.jsonl
+lightning_logs/

@@ -42,7 +42,6 @@ class Ctc_probe_model(nn.Module):
     
     def forward(self, feature, feature_length, text):
         # feature: [B, D, T]
-        feature.float()
         feature = self.dropout(feature)
         feature = self.conformer(feature.transpose(1, 2))
         feature = self.conformer_head(feature)
@@ -56,3 +55,11 @@ class Ctc_probe_model(nn.Module):
 
         loss = self.criterion(feature_logits_prob.transpose(0, 1), labels, tuple(length.item() for length in feature_length), labels_lengths)
         return loss
+    
+    def inference(self, feature):
+        feature = self.conformer(feature.transpose(1, 2))
+        feature = self.conformer_head(feature)
+        feature_logits_prob = torch.nn.functional.log_softmax(
+            feature, dim=-1, dtype=torch.float32
+        )  # [B, T, V]
+        return feature_logits_prob
