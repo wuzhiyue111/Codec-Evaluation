@@ -6,11 +6,12 @@ num_outputs: 2
 probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/EMO_dataset/ # 需要更改
 seed: 666
 codec_name: dac # 需要更改
+task: regression
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [0]
+  devices: [1]
   precision: 32
   max_epochs: 100
   log_every_n_steps: 5
@@ -18,8 +19,8 @@ trainer:
 
 data:
   _target_: codec_evaluation.probe.dataset.EMO_dataset.EMOdataModule
-  dataset:
-    _target_: codec_evaluation.probe.dataset.EMO_dataset.EMOdataset
+  dataset_args:
+    codec_name: ${codec_name}
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     n_segments: ${n_segments}
@@ -27,26 +28,31 @@ data:
     is_normalize: True
     audio_dir: /sdb/data1/music/mix_music/marble_dataset/data/EMO/emomusic/wav
     meta_dir: /sdb/data1/music/mix_music/marble_dataset/data/EMO/emomusic
-  batch_size: 32
-  val_split: 0.1
   codec_name: ${codec_name}
-  num_workers: 16
+  train_batch_size: 32
+  valid_batch_size: 2
+  test_batch_size: 16
+  train_num_workers: 8
+  valid_num_workers: 4
+  test_num_workers: 4
 
 model:
   _target_: codec_evaluation.probe.model.lit_prober.Prober
   codec_name: ${codec_name}
   sample_rate: ${sample_rate}
   mode: ${mode}
+  task: ${task}  
+  num_outputs: ${num_outputs}
   probe_model_builder:
     _target_: codec_evaluation.probe.model.EMO_dataset.model.EMOProber
     _partial_: true
-    target_sec: ${target_sec}
     n_segments: ${n_segments}
     num_outputs: ${num_outputs}
+    drop_out: 0.1
     channel_reduction: 16
     padding: 1
     kernel_size: 3
-    stride: 2
+    stride: 1
   target_sec: ${target_sec}
   n_segments: ${n_segments}
   model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt

@@ -2,7 +2,6 @@ import torch
 import torchmetrics 
 import torch.nn.functional as F
 import pytorch_lightning as pl
-from einops import reduce
 from codec_evaluation.init_codecs import init_codec
 from codec_evaluation.utils.utils import cut_or_pad
 from typing import Any
@@ -46,11 +45,11 @@ class Prober(pl.LightningModule):
         self.codec_name = codec_name
         self.token_rate = self.codec.token_rate
         self.in_ch = self.dim = self.codec.dim  
-        self.target_T = self.token_rate * target_sec // n_segments
+        self.target_T = int(self.token_rate * target_sec // n_segments)
         self.n_segments = n_segments
         self.probe_model = probe_model_builder(
             codec_dim = self.dim,
-            token_rate = self.token_rate)
+            target_T = self.target_T)
         
         self.num_outputs = num_outputs
         self.task = task
@@ -92,7 +91,7 @@ class Prober(pl.LightningModule):
 
         loss, y_pred = self.probe_model(x, y)
 
-        self.log('train_loss', loss, batch_size=batch_size, on_epoch=True, prog_bar=True, logger=True, on_step=True)
+        self.log('train_loss', loss, batch_size=batch_size, on_epoch=True, prog_bar=True, logger=True, on_step=True, sync_dist=True)
         self.update_metrics("train", y, y_pred)
         return loss
 
@@ -104,10 +103,22 @@ class Prober(pl.LightningModule):
 
         loss, y_pred = self.probe_model(x, y)
 
-        self.log('valid_loss', loss, batch_size=batch_size, on_epoch=True, prog_bar=True, logger=True, on_step=True)
+        self.log('valid_loss', loss, batch_size=batch_size, on_epoch=True, prog_bar=True, logger=True, on_step=True, sync_dist=True)
         self.update_metrics("valid", y, y_pred)
 
         return loss
+    
+    def test_step(self, batch, batch_idx):
+        """Test step."""
+        x, y = batch
+        batch_size = y.shape[0]
+        x = self.extract_feature(x) 
+
+        loss, y_pred = self.probe_model(x, y)
+
+        self.log('test_loss', loss, batch_size=batch_size, on_epoch=True, prog_bar=True, logger=True, on_step=True, sync_dist=True)
+        self.update_metrics("test", y, y_pred)
+
 
     def configure_optimizers(self):
         """Configure the optimizer and scheduler."""
@@ -129,7 +140,7 @@ class Prober(pl.LightningModule):
         """
         self.all_metrics = set()
         if self.task == 'multilabel':
-            for split in ['train', 'valid']:
+            for split in ['train', 'valid', 'test']:
                 setattr(self, f"{split}_ap", torchmetrics.AveragePrecision(
                                                             task=self.task,
                                                             num_labels=self.num_outputs))
@@ -139,27 +150,22 @@ class Prober(pl.LightningModule):
                                                             task=self.task,
                                                             num_labels=self.num_outputs))
                 self.all_metrics.add('aucroc')
-
-                setattr(self, f"{split}_f1", torchmetrics.F1Score(
-                                                            task=self.task,
-                                                            num_labels=self.num_outputs,
-                                                            average='macro'))
-                self.all_metrics.add('f1')
+       
 
         elif self.task == 'multiclass':
-            for split in ['train', 'valid']:
+            for split in ['train', 'valid', 'test']:
                 setattr(self, f"{split}_acc", torchmetrics.Accuracy(
                                                             task=self.task,
                                                             num_classes=self.num_outputs))
                 self.all_metrics.add('acc')
-
-                setattr(self, f"{split}_prec", torchmetrics.Precision(
-                                                            task=self.task,
-                                                            num_classes=self.num_outputs))
-                self.all_metrics.add('prec')
+                setattr(self, f"{split}_f1", torchmetrics.F1Score(
+                                                                    task=self.task,
+                                                                    num_classes=self.num_outputs,
+                                                                    average='macro'))
+                self.all_metrics.add('f1')
 
         elif self.task == 'regression':        
-            for split in ['train', 'valid']:
+            for split in ['train', 'valid', 'test']:
                 # r2 score
                 setattr(self, f"{split}_r2", torchmetrics.R2Score(num_outputs=2, multioutput='uniform_average'))
                 self.all_metrics.add('r2')
@@ -180,12 +186,11 @@ class Prober(pl.LightningModule):
         elif self.task == 'multiclass':
             y_pred = torch.softmax(y_pred, dim=1)
             getattr(self, f"{split}_acc").update(y_pred, y)
-            getattr(self, f"{split}_prec").update(y_pred, y)
+            getattr(self, f"{split}_f1").update(y_pred, y)
         elif self.task == 'multilabel':
             y_pred = torch.sigmoid(y_pred)
             getattr(self, f"{split}_ap").update(y_pred, y)
             getattr(self, f"{split}_aucroc").update(y_pred, y)
-            getattr(self, f"{split}_f1").update(y_pred, y)
 
     @torch.no_grad()
     def log_metrics(self, split):
@@ -202,18 +207,21 @@ class Prober(pl.LightningModule):
         elif self.task == 'multiclass':
             self.log(f"{split}_acc", getattr(self, f"{split}_acc").compute(), sync_dist=True)
             getattr(self, f"{split}_acc").reset()
-            self.log(f"{split}_prec", getattr(self, f"{split}_prec").compute(), sync_dist=True)
-            getattr(self, f"{split}_prec").reset()
+            self.log(f"{split}_f1", getattr(self, f"{split}_f1").compute(), sync_dist=True)
+            getattr(self, f"{split}_f1").reset()
+
         elif self.task == 'multilabel':
             self.log(f"{split}_ap", getattr(self, f"{split}_ap").compute(), sync_dist=True)
             getattr(self, f"{split}_ap").reset()
             self.log(f"{split}_aucroc", getattr(self, f"{split}_aucroc").compute(), sync_dist=True)
             getattr(self, f"{split}_aucroc").reset()
-            self.log(f"{split}_f1", getattr(self, f"{split}_f1").compute(), sync_dist=True)
-            getattr(self, f"{split}_f1").reset()
+            
 
     def on_train_epoch_end(self, outputs = None):
         self.log_metrics('train')
     
     def on_validation_epoch_end(self, outputs = None):
         self.log_metrics('valid')
+
+    def on_test_epoch_end(self, outputs = None):
+        self.log_metrics('test')
