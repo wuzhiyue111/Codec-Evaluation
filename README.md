@@ -205,15 +205,13 @@ bash env_build.sh
             <th colspan="14">Dataset</th>
         </tr>
         <tr>
-            <th colspan="2">emomusic</th>
-            <th colspan="1">GTZAN</th>
-            <th colspan="2">MTT</th>
-            <th colspan="1">NSynthI</th>
-            <th colspan="1">NSynthP</th>
-	    <th colspan="1">VocalSetSinger</th>
-	    <th colspan="1">VocalSetTech</th>
-	    <th colspan="1">GS</th>
-	    <th colspan="2">MTGInstrument</th>
+            <th colspan="2">Dac</th>
+            <th colspan="2">Encodec</th>
+            <th colspan="2">Mimi</th>
+            <th colspan="2">Semanticodec</th>
+            <th colspan="2">Speechtokenizer</th>
+	    <th colspan="2">Wavlm_kmeans</th>
+	    <th colspan="2">Wavtokenizer</th>
         </tr>
 	<tr>
 	    <td align=center>A</td>
