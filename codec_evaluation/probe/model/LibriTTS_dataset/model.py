@@ -25,13 +25,24 @@ class Ctc_probe_model(nn.Module):
         )
         self.automatic_optimization = False
 
-        self.codec_projection = nn.Linear(codec_dim, 1024)
+        # if codec_dim >= 1024, use the projection layer will get bad performance
+        if codec_dim < 1024:
+            self.codec_projection = nn.Linear(codec_dim, 1024)
+            input_dim = 1024
+            self.use_projection = True
+        else:
+            self.codec_projection = nn.Identity()
+            # self.codec_projection = nn.Linear(codec_dim, 1024)
+            # input_dim = 1024
+            input_dim = codec_dim
+            self.use_projection = False
+            # self.use_projection = True
 
-        assert codec_dim % conformer_head == 0, "The dimension of the codec model must be divisible by the number of conformer heads"
+        # assert input_dim % conformer_head == 0, "The dimension of the codec model must be divisible by the number of conformer heads"
         self.conformer = Conformer(
-            dim=1024,
+            dim=input_dim, # 1024
             depth=3,  # 3 blocks
-            dim_head=1024 // conformer_head,
+            dim_head=input_dim // conformer_head,
             heads=conformer_head,
             ff_mult=4,
             conv_expansion_factor=2,
@@ -40,12 +51,14 @@ class Ctc_probe_model(nn.Module):
             ff_dropout=0.0,
             conv_dropout=0.0,
         )
-        self.conformer_head = nn.Linear(1024, vocab_size)
+        self.conformer_head = nn.Linear(input_dim, vocab_size)
     
     def forward(self, feature, feature_length, text):
         # feature: [B, D, T]
+        feature = feature.transpose(1, 2)
         feature = self.dropout(feature)
-        feature = self.codec_projection(feature.transpose(1, 2))
+        if self.use_projection:
+            feature = self.codec_projection(feature)
         feature = self.conformer(feature)
         feature = self.conformer_head(feature)
         feature_logits_prob = torch.nn.functional.log_softmax(
@@ -60,7 +73,9 @@ class Ctc_probe_model(nn.Module):
         return loss
 
     def inference(self, feature):
-        feature = self.codec_projection(feature.transpose(1, 2))
+        feature = feature.transpose(1, 2)
+        if self.use_projection:
+            feature = self.codec_projection(feature)
         feature = self.conformer(feature)
         feature = self.conformer_head(feature)
         feature_logits_prob = torch.nn.functional.log_softmax(
