@@ -8,7 +8,7 @@ from codec_evaluation.utils.print_config import print_config_tree
 root_path = codec_evaluation.__path__[0]
 logger = RankedLogger(__name__, rank_zero_only=True)
 
-@hydra.main(config_path=f"{root_path}/probe/config/LibriTTS_dataset/dac", config_name="dac_train.yaml", version_base=None) # 需要更改
+@hydra.main(config_path=f"{root_path}/probe/config/LibriTTS_dataset/semanticodec", config_name="semanticodec_train.yaml", version_base=None) # 需要更改
 def main(config: DictConfig) -> None:
 
     print_config_tree(config)

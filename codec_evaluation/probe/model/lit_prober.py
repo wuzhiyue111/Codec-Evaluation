@@ -51,7 +51,7 @@ class Prober(pl.LightningModule):
         self.probe_model = probe_model_builder(
             codec_dim = self.dim,
             token_rate = self.token_rate)
-        
+
         self.num_outputs = num_outputs
         self.task = task
         self.optimizer_builder = optimizer_builder
