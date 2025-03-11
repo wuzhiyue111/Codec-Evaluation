@@ -3,7 +3,6 @@ from codec_evaluation.codecs.encodec import Encodec
 from codec_evaluation.codecs.mimi import Mimi
 from codec_evaluation.codecs.semanticodec import SemantiCodec
 from codec_evaluation.codecs.speechtokenizer import SpeechTokenizer
-from codec_evaluation.codecs.wavlm_kmeans import WavLMKmeans
 from codec_evaluation.codecs.wavtokenizer import WavTokenizer
 
 def init_codec(
@@ -13,10 +12,9 @@ def init_codec(
         model_ckpt_dir: str,  
         device: str = 'cpu', 
         num_codebooks: int = 8,
-        vocos_ckpt_dir: str | None = None,
-        use_vocos: bool = False,
         freeze: bool = False,
         need_resample: bool = True,
+        **kwargs,
         ):
     """
         Codec initialization
@@ -50,8 +48,8 @@ def init_codec(
             sample_rate=sample_rate, 
             mode=mode,
             num_codebooks=num_codebooks,
-            use_vocos=use_vocos,
-            vocos_ckpt_dir=vocos_ckpt_dir,  
+            use_vocos=kwargs.get("use_vocos", False),
+            vocos_ckpt_dir=kwargs.get("vocos_ckpt_dir", None),  
             model_ckpt_dir=model_ckpt_dir,
             need_resample=need_resample
         ).to(device)
@@ -81,13 +79,6 @@ def init_codec(
             num_codebooks=num_codebooks, 
             need_resample=need_resample,
             model_ckpt_dir=model_ckpt_dir
-        ).to(device)
-    elif modelname =='wavlm_kmeans':
-        model = WavLMKmeans(
-            sample_rate=sample_rate, 
-            mode=mode,
-            layer_ids=(6,),
-            need_resample=need_resample
         ).to(device)
     elif modelname =='wavtokenizer':
         model = WavTokenizer(

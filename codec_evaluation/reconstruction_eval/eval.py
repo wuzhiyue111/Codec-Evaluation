@@ -12,7 +12,7 @@ from codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc import (
 from tqdm import tqdm
 from transformers import WhisperForConditionalGeneration, WhisperProcessor
 from codec_evaluation.init_codecs import init_codec
-
+from typing import Optional
 from codec_evaluation.reconstruction_eval.utils import (
     calculate_f0_corr,
     calculate_pesq,
@@ -51,6 +51,7 @@ class CodecEvaluation:
         batch_size: int = 32,
         num_workers: int = 8,
         mode: str = "reconstruct",
+        **kwargs,
     ):
         """
         codec_model_safetensors_path: codec absolute path model.safetensors
@@ -71,6 +72,7 @@ class CodecEvaluation:
             device=device,
             freeze=True,
             need_resample=False,  # return the audio resampled to codec sample rate
+            **kwargs,
         )
 
         self.codec_sample_rate = self.codec.orig_sample_rate
@@ -152,9 +154,7 @@ class CodecEvaluation:
                 resampler = torchaudio.transforms.Resample(
                     self.sample_rate, self.codec_sample_rate
                 ).to(gt_audio_test.device)
-                gt_audio_test = resampler(
-                    gt_audio_test.view(-1, gt_audio_test.shape[-1])
-                ).view(gt_audio_test.shape[0], gt_audio_test.shape[1], -1)
+                gt_audio_test = resampler(gt_audio_test)
 
             # save to list
             texts = batch["text"]
@@ -166,7 +166,7 @@ class CodecEvaluation:
             max_length = audio_lengths.max().item()
 
             if self.codec_sample_rate != self.sample_rate:
-                max_length = max_length * (self.codec_sample_rate / self.sample_rate)
+                max_length = int(max_length * (self.codec_sample_rate / self.sample_rate))
 
             # prevent the more than max_length
             rec_audio = self.codec(gt_audio)[:, :max_length]
@@ -189,7 +189,6 @@ class CodecEvaluation:
         cer_gt_list = []
         stoi_list = []
         pesq_list = []
-        si_snr_list = []
         usage_entropy_list = []
 
         with torch.no_grad():
@@ -265,21 +264,12 @@ class CodecEvaluation:
                 )
                 print(f"pesq: {pesq_list[-1]}")
 
-                # si_snr
-                si_snr_list.append(
-                    calculate_si_snr(
-                        gt_audio=tmp_gt_audio, rec_audio=tmp_rec_audio
-                    )
-                )
-                print(f"si_snr: {si_snr_list[-1]}")
-
         avg_wer_gt = sum(wer_gt_list) / len(wer_gt_list)
         avg_wer_rec = sum(wer_rec_list) / len(wer_rec_list)
         avg_cer_gt = sum(cer_gt_list) / len(cer_gt_list)
         avg_cer_rec = sum(cer_rec_list) / len(cer_rec_list)
         avg_stoi = sum(stoi_list) / len(stoi_list)
         avg_pesq = sum(pesq_list) / len(pesq_list)
-        avg_si_snr = sum(si_snr_list) / len(si_snr_list)
         print(f"compute metrics done, now start to save results")
         print(f"wer_gt: {avg_wer_gt}")
         print(f"wer_rec: {avg_wer_rec}")
@@ -287,7 +277,6 @@ class CodecEvaluation:
         print(f"cer_rec: {avg_cer_rec}")
         print(f"stoi: {avg_stoi}")
         print(f"pesq: {avg_pesq}")
-        print(f"si_snr: {avg_si_snr}")
         return {
             "wer_gt": avg_wer_gt,
             "cer_gt": avg_cer_gt,
@@ -296,7 +285,6 @@ class CodecEvaluation:
             "cer_rec": avg_cer_rec,
             "stoi": avg_stoi,
             "pesq": avg_pesq,
-            "si_snr": avg_si_snr,
             # "codebook_usage": np.mean(per_codebook_usage, axis=0) / np.log2(self.effective_codebook_num)
         }
 
@@ -312,6 +300,9 @@ if __name__ == "__main__":
     parser.add_argument("--dataset_audio_dir", type=str, default="/sdb/data1/speech/24kHz/LibriTTS/test-other")
     parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_workers", type=int, default=8)
+    parser.add_argument("--mode", type=str, default="reconstruct")
+    parser.add_argument("--use_vocos", type=bool, default=False)
+    parser.add_argument("--vocos_ckpt_dir", type=Optional[str], default=None)
     args = parser.parse_args()
     print(f"args: {args}")
     codec_eval = CodecEvaluation(
@@ -323,6 +314,9 @@ if __name__ == "__main__":
         dataset_audio_dir=args.dataset_audio_dir,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
+        mode=args.mode,
+        use_vocos=args.use_vocos,
+        vocos_ckpt_dir=args.vocos_ckpt_dir,
     )
     result = codec_eval.evaluate()
     print(f"result: {result}")
