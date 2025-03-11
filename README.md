@@ -279,9 +279,9 @@ bash env_build.sh
         <tr>
             <td align=center rowspan="2">SemantiCodec</td>
             <td align=center>unquantized_emb</td>
-            <td align=center>0.33</td>
-            <td align=center>0.15</td>
-            <td align=center>0.291</td>
+            <td align=center>0.55</td>
+            <td align=center>0.35</td>
+            <td align=center>0.29</td>
             <td align=center></td>
             <td align=center> </td>
 	    <td align=center> </td>
@@ -294,8 +294,8 @@ bash env_build.sh
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center>0.54</td>
-            <td align=center>0.35</td>
+            <td align=center>0.44</td>
+            <td align=center>0.26</td>
             <td align=center>0.313</td>
             <td align=center></td>
             <td align=center> </td>
