@@ -48,7 +48,8 @@ class SemantiCodec(Codec):
         semantic_vocab_size: semantic vocab size of the codec
         ddim_sample_step: number of steps for DDIM sampling
         cfg_scale: classifier free guidance scale
-        need_resample: Boolean, whether to resample the audio after decoding
+        model_ckpt_dir: path to the model checkpoint
+        need_resample: boolean, whether to resample the audio after decoding
         """
         try:
             # Workaround to avoid name collisions with installed modules

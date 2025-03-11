@@ -30,10 +30,11 @@ class SpeechTokenizer(Codec):
         model_ckpt_dir=None,
     ):
         """
-            sample_rate: The sample rate of the input signal.
+            sample_rate: sample rate of the input signal
             mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
-            num_codebooks: The number of codebooks.
-            need_resample: Whether to resample the audio after decoding.
+            num_codebooks: number of codebooks
+            need_resample: boolean, whether to resample the audio after decoding
+            model_ckpt_dir: path to the model checkpoint
         """
         try:
             # Workaround to avoid name collisions with installed modules

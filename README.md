@@ -29,6 +29,173 @@ bash env_build.sh
     - test ID sensitive in same semantic
     - 
 
+## Reconstruction Metric
+### Speech
+<table border="1" align="center">
+  <thead>
+    <tr>
+      <th rowspan="2">Codec</th>
+      <th colspan="5">Metrics</th>
+    </tr>
+    <tr>
+      <th>PESQ</th>
+      <th>Speaker_Sim</th>
+      <th>WER_GT</th>
+      <th>WER_REC</th>
+      <th>CER_GT</th>
+      <th>CER_REC</th>
+      <th>STOI</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>DAC</td>
+      <td>3.69</td>
+      <td></td>
+      <td>0.155</td>
+      <td>0.202</td>
+      <td>0.09</td>
+      <td>0.125</td>
+      <td>0.94</td>
+    </tr>
+    <tr>
+      <td>Encodec</td>
+      <td>3.21</td>
+      <td></td>
+      <td>0.155</td>
+      <td>0.198</td>
+      <td>0.09</td>
+      <td>0.114</td>
+      <td>0.925</td>
+    </tr>
+    <tr>
+      <td>Mimi</td>
+      <td>2.77</td>
+      <td></td>
+      <td>0.155</td>
+      <td>0.287</td>
+      <td>0.09</td>
+      <td>0.173</td>
+      <td>0.88</td>
+    </tr>
+    <tr>
+      <td>SemantiCodec</td>
+      <td></td>
+      <td></td>
+      <td>0.155</td>
+      <td></td>
+      <td>0.09</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>WavTokenizer</td>
+      <td>2.17</td>
+      <td></td>
+      <td>0.155</td>
+      <td>0.494</td>
+      <td>0.09</td>
+      <td>0.325</td>
+      <td>0.83</td>
+    </tr>
+    <tr>
+      <td>WavLM_kmeans</td>
+      <td></td>
+      <td></td>
+      <td>0.155</td>
+      <td></td>
+      <td>0.09</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>SpeechTokenizer</td>
+      <td>2.97</td>
+      <td></td>
+      <td>0.155</td>
+      <td>0.216</td>
+      <td>0.09</td>
+      <td>0.12</td>
+      <td>0.89</td>
+    </tr>
+  </tbody>
+</table>
+
+### Music
+<table border="1" align="center">
+  <thead>
+    <tr>
+      <th rowspan="2">Codec</th>
+      <th colspan="5">Metrics</th>
+    </tr>
+    <tr>
+      <th>PESQ</th>
+      <th>Speaker_Sim</th>
+      <th>WER</th>
+      <th>CER</th>
+      <th>STOI</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>DAC</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Encodec</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Mimi</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>SemantiCodec</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>WavTokenizer</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>WavLM_kmeans</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>SpeechTokenizer</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
 ## Probe Experiment
 ### Marble Probe (Music)
 <table border="1" >
@@ -128,7 +295,7 @@ bash env_build.sh
 	    <td align=center>0.11</td>
         </tr>
         <tr>
-            <td align=center rowspan="2">Semanticodec</td>
+            <td align=center rowspan="2">SemantiCodec</td>
             <td align=center>unquantized_emb</td>
             <td align=center>0.33</td>
             <td align=center>0.15</td>
@@ -159,7 +326,7 @@ bash env_build.sh
 	    <td align=center> </td>
         </tr>
         <tr>
-            <td align=center rowspan="2">Wavtokenizer</td>
+            <td align=center rowspan="2">WavTokenizer</td>
             <td align=center>unquantized_emb</td>
             <td align=center>0.49</td>
             <td align=center>0.05</td>
@@ -245,8 +412,8 @@ bash env_build.sh
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center>0.57</td>
-            <td align=center>0.37</td>
+            <td align=center>0.573</td>
+            <td align=center>0.369</td>
             <td align=center></td>
             <td align=center></td>
 	    <td align=center></td>
@@ -290,7 +457,7 @@ bash env_build.sh
 	    <td align=center> </td>
         </tr>
         <tr>
-            <td align=center rowspan="2">Semanticodec</td>
+            <td align=center rowspan="2">SemantiCodec</td>
             <td align=center>unquantized_emb</td>
             <td align=center></td>
             <td align=center></td>
@@ -321,7 +488,7 @@ bash env_build.sh
 	    <td align=center> </td>
         </tr>
         <tr>
-            <td align=center rowspan="2">Wavtokenizer</td>
+            <td align=center rowspan="2">WavTokenizer</td>
             <td align=center>unquantized_emb</td>
             <td align=center></td>
             <td align=center></td>
@@ -338,8 +505,70 @@ bash env_build.sh
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
+            <td align=center>0.645</td>
+            <td align=center>0.416</td>
             <td align=center></td>
             <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+	    <td align=center rowspan="2">Mimi</td>
+            <td align=center>unquantized_emb</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	</tr>
+	<tr>
+            <td align=center>quantized_emb</td>
+            <td align=center>0.499</td>
+            <td align=center>0.22</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+	    <td align=center rowspan="2">SpeechTokenizer</td>
+            <td align=center>unquantized_emb</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	</tr>
+	<tr>
+            <td align=center>quantized_emb</td>
+            <td align=center>0.433</td>
+            <td align=center>0.164</td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -354,7 +583,7 @@ bash env_build.sh
     </tbody>
 </table>
 
-## Probe Mutual Information
+## Mutual Information Estimation
 
 
 
