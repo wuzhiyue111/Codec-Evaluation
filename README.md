@@ -566,6 +566,72 @@ bash env_build.sh
 </table>
 
 ## Mutual Information Estimation
+<table border="1" align="center">
+  <thead>
+    <tr>
+      <th rowspan="2">Codec</th>
+      <th colspan="5">Metrics</th>
+    </tr>
+    <tr>
+      <th>PESQ</th>
+      <th>Speaker_Sim</th>
+      <th>WER</th>
+      <th>CER</th>
+      <th>STOI</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>DAC</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Encodec</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Mimi</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>SemantiCodec</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>WavTokenizer</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>SpeechTokenizer</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
 
 
 
