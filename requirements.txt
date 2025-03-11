@@ -15,3 +15,6 @@ jiwer==3.1.0
 conformer==0.3.2
 pandas==2.2.3
 sentencepiece==0.2.0
+pesq==0.0.4
+speechbrain==1.0.2
+pandas==2.2.3

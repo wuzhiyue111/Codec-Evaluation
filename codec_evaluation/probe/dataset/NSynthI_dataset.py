@@ -2,7 +2,7 @@ import os
 from pytorch_lightning.utilities.types import TRAIN_DATALOADERS
 import torchaudio
 import torch
-import pandas as pd
+
 import pytorch_lightning as pl
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader

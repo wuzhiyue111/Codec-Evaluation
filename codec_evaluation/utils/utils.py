@@ -5,7 +5,6 @@ from codec_evaluation.codecs.encodec import Encodec
 from codec_evaluation.codecs.mimi import Mimi
 from codec_evaluation.codecs.semanticodec import SemantiCodec
 from codec_evaluation.codecs.speechtokenizer import SpeechTokenizer
-from codec_evaluation.codecs.wavlm_kmeans import WavLMKmeans
 from codec_evaluation.codecs.wavtokenizer import WavTokenizer
 from codec_evaluation.codecs.dac import DAC
 import glob
@@ -27,70 +26,13 @@ def find_audios(
             list: List of audio file paths that match the extensions.
         """
         audio_files = []
-        for root, dirs, files in os.walk(audio_dir):
+        for root, _, files in os.walk(audio_dir):
             for file in files:
                 if os.path.splitext(file)[1] in exts:
                     audio_files.append(os.path.join(root, file))
         return audio_files
 
-def init_codec(modelname, sample_rate, mode, device, freeze = False):
-    """
-        Codec initialization
-        input:
-            modelname: codecname
-            sample_rate: The sample rate of the input audio
-            mode: "quantized_emb" "unquantized_emb",etc.
-            device: Select the device to use
-            freeze: Whether to calculate the gradient
-        return:
-            model: Initialied codec
-
-    """
-    if modelname == 'dac':
-        model = DAC(
-            sample_rate=sample_rate, 
-            mode=mode
-        ).to(device)  
-    elif modelname == 'encodec':
-        model = Encodec(
-            sample_rate=sample_rate, 
-            mode=mode
-        ).to(device)
-    elif modelname == 'mimi':
-        model = Mimi(
-            sample_rate=sample_rate, 
-            mode=mode
-        ).to(device)
-    elif modelname == 'semanticodec':
-        model = SemantiCodec(
-            sample_rate=sample_rate, 
-            mode=mode
-        ).to(device)
-    elif modelname =='speechtokenizer':
-        model = SpeechTokenizer(
-            sample_rate=sample_rate, 
-            mode=mode
-        ).to(device)
-    elif modelname =='wavlm_kmeans':
-        model = WavLMKmeans(
-            sample_rate=sample_rate, 
-            mode=mode
-        ).to(device)
-    elif modelname =='wavtokenizer':
-        model = WavTokenizer(
-            sample_rate=sample_rate, 
-            mode=mode
-        ).to(device)
-    else:
-        raise ValueError(f"Invalid model name: {modelname}")
-
-    if freeze: 
-        for name, params in model.named_parameters():
-            params.requires_grad = False
-
-    return model
-
-def cut_or_pad(waveform, target_length, task=None, codecname = None):
+def cut_or_pad(waveform, target_length, codecname = None):
         """Cut or pad a waveform or a feature to a target length."""
         
         if codecname == 'semanticodec':

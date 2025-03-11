@@ -48,7 +48,8 @@ class SemantiCodec(Codec):
         semantic_vocab_size: semantic vocab size of the codec
         ddim_sample_step: number of steps for DDIM sampling
         cfg_scale: classifier free guidance scale
-        need_resample: Boolean, whether to resample the audio after decoding
+        model_ckpt_dir: path to the model checkpoint
+        need_resample: boolean, whether to resample the audio after decoding
         """
         try:
             # Workaround to avoid name collisions with installed modules
@@ -79,7 +80,7 @@ class SemantiCodec(Codec):
             checkpoint_path=model_ckpt_dir,
             cache_path=_CACHE_DIR,
         ).to("cpu")
-        self.hop_length = int(self.orig_sample_rate / self.token_rate)
+        self.hop_length = int(self.orig_sample_rate * 2 / self.token_rate)
         self.dim = self.model.encoder.feature_dimension
 
         # Delete the decoder to save memory overhead.
@@ -116,20 +117,22 @@ class SemantiCodec(Codec):
     def _sig_to_unquantized_emb(self, sig, length):
         """
         sig: [B, T]
-        return: [B, N, C, D]  C: token type(acoustic and semantic)  [2, 472, 2, 768]
+        return: [B, D, C, N]  C: token type(acoustic and semantic)  [2, 768, 2, 472]
         """
         toks, _ = self._sig_to_toks(sig, length)
         unquantized_feats = self.model.encoder.unquant(toks)
+        unquantized_feats = unquantized_feats.permute(0, 3, 2, 1)  
         return unquantized_feats
 
     # override
     def _sig_to_quantized_emb(self, sig, length):
         """
         sig: [B, T]
-        return: [B, N, D]  D: cat acoustic_feature and semantic_feature dim  [2, 472, 1536]
+        return: [B, D, N]  D: cat acoustic_feature and semantic_feature dim  [2, 1536, 472]  
         """
         toks, _ = self._sig_to_toks(sig, length)
         quantized_feats = self._token_to_quantized_feature(toks)
+        quantized_feats = quantized_feats.movedim(1, 2)
         return quantized_feats
 
     # override

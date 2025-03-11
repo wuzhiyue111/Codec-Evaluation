@@ -45,13 +45,14 @@ class WavTokenizer(Codec):
     ):
         """
         sample_rate: sample rate of the input signal
-        need_resample: Boolean, whether to resample the audio after decoding
+        need_resample: boolean, whether to resample the audio after decoding
         mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
             encode: encode the audio to id tokens
             decode: decode the id tokens to audio
             reconstruct: encode -> decode
             unquantized_emb: encode -> unquantized embedding
             quantized_emb: encode + quantizer -> quantized embedding
+        model_ckpt_dir: path to the model checkpoint
         source: source of the model
         config: config of the model
         checkpoint: checkpoint of the model

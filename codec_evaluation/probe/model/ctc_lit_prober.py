@@ -9,6 +9,7 @@ from asr_decoder import CTCDecoder
 from jiwer import wer, cer
 from codec_evaluation.probe.model.LibriTTS_dataset.model import Ctc_probe_model
 from codec_evaluation.reconstruction_eval.utils import transform_text_list_for_wer, transform_text_list_for_cer
+from einops import rearrange
 
 logger = RankedLogger(__name__, rank_zero_only=True)
 
@@ -33,7 +34,12 @@ class CtcLitProber(LightningModule):
             device="cpu",
             freeze=True
         )
-        self.dim = self.codec_model.dim
+        if codec_name == 'semanticodec':
+            self.dim = self.codec_model.dim * 2
+        else:
+            self.dim = self.codec_model.dim
+
+        logger.info(f"{codec_name} dim: {self.dim}")
         self.probe_model: Ctc_probe_model = probe_model_builder(
             codec_dim = self.dim)
         self.codec_name = codec_name
@@ -43,8 +49,9 @@ class CtcLitProber(LightningModule):
         self.accumulate_grad_batches = accumulate_grad_batches
         self.ctc_decoder = CTCDecoder()
         self.test_step_outputs = []
+        self.sample_rate = sample_rate
 
-    def extract_feature(self, waveforms):
+    def extract_feature(self, waveforms, expect_lenth: torch.Tensor = None):
         """
             extract features from codec
             waveforms: [B, T]
@@ -54,12 +61,11 @@ class CtcLitProber(LightningModule):
         all_features = self.codec_model(waveforms, length)
 
         if self.codec_name == 'semanticodec':
+            assert expect_lenth is not None, "expect_lenth is required for semanticodec"
             if all_features.dim() == 4:
-                split_feature = all_features.unbind(dim=2) # [B*n_segments, D, 2, T]
-            else:
-                split_feature = all_features.chunk(2, dim=1) # [tensor[B*n_segments, D, T]、tensor[B*n_segments, D, T]]
-
-            all_features = torch.cat(split_feature, dim=0)  # [2*B*n_segments, D, T]
+                all_features = rearrange(all_features, 'b d c t -> b (d c) t')
+            max_length = max(expect_lenth).item()
+            all_features = all_features[:, :, :int(max_length)]
 
         return all_features
     
@@ -75,8 +81,13 @@ class CtcLitProber(LightningModule):
         text = batch["text"]
         audio_length = batch["audio_length"]
         batch_size = audio.shape[0]
-        feature_length = audio_length // self.codec_model.model.hop_length
-        audio_features = self.extract_feature(audio)
+
+        # consider the resample function of codec, libriTTS dataset is 24000 sample rate
+        if self.codec_model.orig_sample_rate != self.sample_rate:
+            feature_length = audio_length * (self.codec_model.orig_sample_rate / self.sample_rate) // self.codec_model.hop_length
+        else:
+            feature_length = audio_length // self.codec_model.hop_length
+        audio_features = self.extract_feature(audio, feature_length)
         loss = self.probe_model(audio_features, feature_length, text)
         return loss, batch_size
 
@@ -142,9 +153,19 @@ class CtcLitProber(LightningModule):
         audio = batch["audio"]
         text = batch["text"]
 
-        audio_features = self.extract_feature(audio)
+        # semantic will pad the audio to multiple of 10.24
+        if self.codec_name == 'semanticodec':
+            audio_length = batch["audio_length"]
+            if self.codec_model.orig_sample_rate != self.sample_rate:
+                feature_length = audio_length * (self.codec_model.orig_sample_rate / self.sample_rate) // self.codec_model.hop_length
+            else:
+                feature_length = audio_length // self.codec_model.hop_length
+            audio_features = self.extract_feature(audio, feature_length)
+        else:
+            audio_features = self.extract_feature(audio)
+
         feature_logits_prob = self.probe_model.inference(audio_features)
-        
+
         wer_list = []
         result_list = []
         cer_list = []

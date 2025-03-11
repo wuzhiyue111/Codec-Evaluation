@@ -25,16 +25,22 @@ class DAC(Codec):
         mode="reconstruct",
         num_codebooks=8,
         need_resample=True,
-        model_path: str | None = None,
-        model_ckpt_dir: str | None = None
+        model_path=None,
+        model_ckpt_dir=None
     ):
         """
-            sample_rate: sample rate of the input signal
-            orig_sample_rate: original sample rate of the codec
-            mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
-            num_codebooks: number of codebooks
-            need_resample: Boolean, whether to resample the audio after decoding
-            model_path: str, path to the model weights, if None, the model will be downloaded from the internet
+        sample_rate: sample rate of the input signal
+        orig_sample_rate: original sample rate of the codec
+        mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
+            encode: encode the audio to id tokens
+            decode: decode the id tokens to audio
+            reconstruct: encode -> decode
+            unquantized_emb: encode -> unquantized embedding
+            quantized_emb: encode + quantizer -> quantized embedding
+        num_codebooks: number of codebooks
+        need_resample: boolean, whether to resample the audio after decoding
+        model_path: path to the model weights, if None, the model will be downloaded from the internet
+        model_ckpt_dir: path to the model checkpoint
         """
         try:
             # Workaround to avoid name collisions with installed modules

@@ -30,7 +30,7 @@ class Prober(pl.LightningModule):
                  lr_scheduler_builder: Any = None,
                  ):
         """
-            codec_name must in ['dac', 'encodec', 'mimi', 'semanticodec', 'speechtokenizer', wavtokenizer, wavlm_kmeans]
+            codec_name must in ['dac', 'encodec', 'mimi', 'semanticodec', 'speechtokenizer', wavtokenizer]
             sample_rate: the audio sample_rate when you are training the probe model
             mode must in ['quantized_emb', 'unquantized_emb']
         """

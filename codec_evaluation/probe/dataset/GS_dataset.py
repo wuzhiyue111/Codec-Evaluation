@@ -2,7 +2,6 @@ import os
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS
 import torch
 import torchaudio
-import numpy as np
 import json
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
