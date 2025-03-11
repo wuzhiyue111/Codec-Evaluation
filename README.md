@@ -80,13 +80,13 @@ bash env_build.sh
     </tr>
     <tr>
       <td>SemantiCodec</td>
-      <td></td>
+      <td>2.64</td>
       <td></td>
       <td>0.155</td>
-      <td></td>
+      <td>0.318</td>
       <td>0.09</td>
-      <td></td>
-      <td></td>
+      <td>0.195</td>
+      <td>0.86</td>
     </tr>
     <tr>
       <td>WavTokenizer</td>
