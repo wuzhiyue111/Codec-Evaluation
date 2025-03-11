@@ -569,20 +569,21 @@ bash env_build.sh
 <table border="1" align="center">
   <thead>
     <tr>
-      <th rowspan="2">Codec</th>
-      <th colspan="5">Metrics</th>
+      <th rowspan="2">Task</th>
+      <th colspan="6">Metrics</th>
     </tr>
     <tr>
-      <th>PESQ</th>
-      <th>Speaker_Sim</th>
-      <th>WER</th>
-      <th>CER</th>
-      <th>STOI</th>
+      <th>DAC</th>
+      <th>Encodec</th>
+      <th>Mimi</th>
+      <th>SemantiCodec</th>
+      <th>WavTokenizer</th>
+      <th>SpeechTokenizer</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>DAC</td>
+      <td>相同位置id数(codebook)</td>
       <td></td>
       <td></td>
       <td></td>
@@ -590,7 +591,7 @@ bash env_build.sh
       <td></td>
     </tr>
     <tr>
-      <td>Encodec</td>
+      <td>最大公共子串数(codebook)</td>
       <td></td>
       <td></td>
       <td></td>
@@ -598,7 +599,7 @@ bash env_build.sh
       <td></td>
     </tr>
     <tr>
-      <td>Mimi</td>
+      <td>§§</td>
       <td></td>
       <td></td>
       <td></td>
@@ -606,7 +607,7 @@ bash env_build.sh
       <td></td>
     </tr>
     <tr>
-      <td>SemantiCodec</td>
+      <td>§§</td>
       <td></td>
       <td></td>
       <td></td>
@@ -614,7 +615,7 @@ bash env_build.sh
       <td></td>
     </tr>
     <tr>
-      <td>WavTokenizer</td>
+      <td>§§</td>
       <td></td>
       <td></td>
       <td></td>
@@ -622,7 +623,7 @@ bash env_build.sh
       <td></td>
     </tr>
     <tr>
-      <td>SpeechTokenizer</td>
+      <td>§§</td>
       <td></td>
       <td></td>
       <td></td>
