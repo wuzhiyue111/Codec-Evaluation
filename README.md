@@ -589,6 +589,7 @@ bash env_build.sh
       <td></td>
       <td></td>
       <td></td>
+	<td></td>    
     </tr>
     <tr>
       <td>最大公共子串数(codebook)</td>
@@ -597,6 +598,25 @@ bash env_build.sh
       <td></td>
       <td></td>
       <td></td>
+	    <td></td>
+    </tr>
+    <tr>
+      <td>§§</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+	    <td></td>
+    </tr>
+    <tr>
+      <td>§§</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+	    <td></td>
     </tr>
     <tr>
       <td>§§</td>
@@ -613,22 +633,7 @@ bash env_build.sh
       <td></td>
       <td></td>
       <td></td>
-    </tr>
-    <tr>
-      <td>§§</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>§§</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+	    <td></td>
     </tr>
   </tbody>
 </table>
