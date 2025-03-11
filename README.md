@@ -60,63 +60,63 @@ bash env_build.sh
     </tr>
     <tr>
       <td>Encodec</td>
+      <td>3.21</td>
       <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>0.155</td>
+      <td>0.198</td>
+      <td>0.09</td>
+      <td>0.114</td>
+      <td>0.925</td>
     </tr>
     <tr>
       <td>Mimi</td>
+      <td>2.77</td>
       <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>0.155</td>
+      <td>0.287</td>
+      <td>0.09</td>
+      <td>0.173</td>
+      <td>0.88</td>
     </tr>
     <tr>
       <td>SemantiCodec</td>
       <td></td>
       <td></td>
+      <td>0.155</td>
       <td></td>
-      <td></td>
-      <td></td>
+      <td>0.09</td>
       <td></td>
       <td></td>
     </tr>
     <tr>
       <td>WavTokenizer</td>
+      <td>2.17</td>
       <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>0.155</td>
+      <td>0.494</td>
+      <td>0.09</td>
+      <td>0.325</td>
+      <td>0.83</td>
     </tr>
     <tr>
       <td>WavLM_kmeans</td>
       <td></td>
       <td></td>
+      <td>0.155</td>
       <td></td>
-      <td></td>
-      <td></td>
+      <td>0.09</td>
       <td></td>
       <td></td>
     </tr>
     <tr>
       <td>SpeechTokenizer</td>
+      <td>2.97</td>
       <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>0.155</td>
+      <td>0.216</td>
+      <td>0.09</td>
+      <td>0.12</td>
+      <td>0.89</td>
     </tr>
   </tbody>
 </table>
