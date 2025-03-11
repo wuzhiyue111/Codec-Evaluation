@@ -1,4 +1,3 @@
-import os
 import torch
 import torchaudio
 from torch.utils.data import Dataset
@@ -6,6 +5,7 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from codec_evaluation.utils.logger import RankedLogger
 from torch.nn.utils.rnn import pad_sequence
+from codec_evaluation.utils.utils import find_audios
 
 logger = RankedLogger(__name__, rank_zero_only=True)
 
@@ -15,21 +15,8 @@ class LibriTTS_ctc_dataset(Dataset):
         self,
         audio_dir,
     ):
-        self.all_paths = self.find_audio_files(audio_dir)
+        self.all_paths = find_audios(audio_dir)
         logger.info(f"Found {len(self.all_paths)} audio files in {audio_dir}")
-
-    def find_audio_files(
-        self,
-        audio_dir,
-        audio_type_list=["mp3", "wav", "flac", "ogg", "m4a", "aac", "webm"],
-    ):
-        audio_files = []
-        for root, _, files in os.walk(audio_dir):
-            for file in files:
-                for audio_type in audio_type_list:
-                    if file.endswith(audio_type):
-                        audio_files.append(os.path.join(root, file))
-        return audio_files
 
     def __len__(self):
         return len(self.all_paths)

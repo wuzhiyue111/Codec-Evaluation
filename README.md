@@ -99,16 +99,6 @@ bash env_build.sh
       <td>0.83</td>
     </tr>
     <tr>
-      <td>WavLM_kmeans</td>
-      <td></td>
-      <td></td>
-      <td>0.155</td>
-      <td></td>
-      <td>0.09</td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
       <td>SpeechTokenizer</td>
       <td>2.97</td>
       <td></td>
@@ -171,14 +161,6 @@ bash env_build.sh
     </tr>
     <tr>
       <td>WavTokenizer</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>WavLM_kmeans</td>
       <td></td>
       <td></td>
       <td></td>
