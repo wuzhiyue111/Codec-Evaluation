@@ -51,7 +51,7 @@ bash env_build.sh
     <tr>
       <td>DAC</td>
       <td>3.69</td>
-      <td></td>
+      <td>0.965</td>
       <td>0.155</td>
       <td>0.202</td>
       <td>0.09</td>
@@ -61,7 +61,7 @@ bash env_build.sh
     <tr>
       <td>Encodec</td>
       <td>3.21</td>
-      <td></td>
+      <td>0.919</td>
       <td>0.155</td>
       <td>0.198</td>
       <td>0.09</td>
@@ -71,7 +71,7 @@ bash env_build.sh
     <tr>
       <td>Mimi</td>
       <td>2.77</td>
-      <td></td>
+      <td>0.928</td>
       <td>0.155</td>
       <td>0.287</td>
       <td>0.09</td>
@@ -91,7 +91,7 @@ bash env_build.sh
     <tr>
       <td>WavTokenizer</td>
       <td>2.17</td>
-      <td></td>
+      <td>0.743</td>
       <td>0.155</td>
       <td>0.494</td>
       <td>0.09</td>
@@ -101,7 +101,7 @@ bash env_build.sh
     <tr>
       <td>SpeechTokenizer</td>
       <td>2.97</td>
-      <td></td>
+      <td>0.924</td>
       <td>0.155</td>
       <td>0.216</td>
       <td>0.09</td>
