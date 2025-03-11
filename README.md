@@ -81,7 +81,7 @@ bash env_build.sh
     <tr>
       <td>SemantiCodec</td>
       <td>2.64</td>
-      <td></td>
+      <td>0.907</td>
       <td>0.155</td>
       <td>0.318</td>
       <td>0.09</td>
