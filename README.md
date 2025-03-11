@@ -598,7 +598,25 @@ bash env_build.sh
       <td></td>
       <td></td>
       <td></td>
-	    <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>偏移2ms相同位置id数(codebook)</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>偏移2ms最大公共子串数(codebook)</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
     </tr>
     <tr>
       <td>§§</td>
@@ -607,7 +625,7 @@ bash env_build.sh
       <td></td>
       <td></td>
       <td></td>
-	    <td></td>
+      <th></th>
     </tr>
     <tr>
       <td>§§</td>
@@ -616,24 +634,7 @@ bash env_build.sh
       <td></td>
       <td></td>
       <td></td>
-	    <td></td>
-    </tr>
-    <tr>
-      <td>§§</td>
       <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>§§</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-	    <td></td>
     </tr>
   </tbody>
 </table>
