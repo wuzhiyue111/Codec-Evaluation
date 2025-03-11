@@ -50,7 +50,7 @@ class MTGGenredataset(Dataset):
         """
         return:
             segments: [1, wavform_length]
-            labels: [1, 20]
+            labels: [1, 87]
         """
         audio_path = self.all_paths[index]
         audio_path = audio_path.replace('.mp3', '.low.mp3')

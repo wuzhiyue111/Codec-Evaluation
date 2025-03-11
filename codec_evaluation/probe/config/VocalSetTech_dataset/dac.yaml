@@ -1,4 +1,4 @@
-mode: unquantized_emb
+mode: quantized_emb
 sample_rate: 44100
 target_sec: 3
 n_segments: 1

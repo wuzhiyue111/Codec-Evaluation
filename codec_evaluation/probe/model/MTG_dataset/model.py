@@ -118,8 +118,8 @@ class MTGProber(nn.Module):
         x_flattened = relu(x_flattened)
         
         output = self.output(x_flattened)  #[B*n_segments, 87]
-        if output.shape[0] != y.shape[0]:
-            output = reduce(output, '(b g) n -> b n', reduction = 'mean', g = self.n_segments) 
+        # if output.shape[0] != y.shape[0]:
+        #     output = reduce(output, '(b g) n -> b n', reduction = 'mean', g = self.n_segments) 
 
         loss_fn = nn.BCEWithLogitsLoss()
         loss = loss_fn(output, y)

@@ -1,7 +1,6 @@
 import torch.nn as nn
-import math
+import torch
 import torch.nn.functional as F
-from einops import reduce
 
 class SEBlock(nn.Module):
     def __init__(self, channel, reduction):
@@ -62,8 +61,7 @@ class DSConv(nn.Module):
 class EMOProber(nn.Module):
     def __init__(self, 
                  codec_dim, 
-                 target_T,                 
-                 n_segments,
+                 target_T,
                  num_outputs,
                  drop_out = 0.1,
                  channel_reduction = 16,
@@ -72,8 +70,7 @@ class EMOProber(nn.Module):
                  stride = 1,
                  ):
         super(EMOProber, self).__init__()
-        self.num_outputs = num_outputs 
-        self.n_segments = n_segments
+        self.num_outputs = num_outputs
         self.target_T = target_T
 
         current_T = target_T
@@ -95,14 +92,27 @@ class EMOProber(nn.Module):
         self.drop_out = nn.Dropout(p=drop_out)
         self.init_linear(codec_dim = codec_dim)
     
-    def init_linear(self, 
-                    codec_dim):
+    def init_linear(self, codec_dim):
         self.linear = nn.Linear(codec_dim, codec_dim // 16) 
         input_dim = (self.target_T // 4) * (codec_dim // 16)
 
         self.output = nn.Linear(input_dim, self.num_outputs)
 
-    def forward(self, x, y):
+    def group_mean(self, data, n_segment_list):
+        if sum(n_segment_list) != len(data):
+            raise ValueError("分组大小的总和必须等于张量的长度")
+
+        groups = torch.split(data, n_segment_list)
+
+        # 计算每组的均值
+        result = [group.float().mean() for group in groups]
+
+        # 将结果转换为张量
+        output_tensor = torch.tensor(result)
+
+        return output_tensor
+
+    def forward(self, x, y, n_segment_list):
         # x = x.float()  
         x = x.permute(0, 2, 1)  #[B*n_segments, T, D] 
         x_channel = self.channel_attention1(x)
@@ -116,7 +126,7 @@ class EMOProber(nn.Module):
 
         output = self.output(x_flattened)  #[B*n_segments, 2]
         if output.shape[0] != y.shape[0]:
-            output = reduce(output, '(b g) n -> b n', reduction = 'mean', g = self.n_segments) 
+            output = self.group_mean(data=output, n_segment_list=n_segment_list) 
         output = self.drop_out(output)
 
         loss = F.mse_loss(output, y)

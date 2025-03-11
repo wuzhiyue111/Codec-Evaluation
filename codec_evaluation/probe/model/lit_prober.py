@@ -43,12 +43,14 @@ class Prober(pl.LightningModule):
                                 freeze = True)
         self.codec_name = codec_name
         self.sample_rate = sample_rate
-        self.token_rate = self.codec.token_rate
+        
         if codec_name == "semanticodec":
             self.dim = self.codec.dim * 2
+            self.token_rate = self.codec.token_rate /2
         else:
             self.dim = self.codec.dim  
-        
+            self.token_rate = self.codec.token_rate
+
         self.target_T = int(self.token_rate * target_sec )
         self.audio_length = target_sec * self.sample_rate
         self.probe_model = probe_model_builder(
@@ -60,6 +62,7 @@ class Prober(pl.LightningModule):
         self.optimizer_builder = optimizer_builder
         self.lr_scheduler_builder = lr_scheduler_builder
         self.init_metrics()  
+        self.test_step_outputs = []
     
     def extract_feature(self, waveforms, expect_lenth: torch.Tensor = None):
         """
@@ -69,12 +72,12 @@ class Prober(pl.LightningModule):
         """
         length = torch.ones(waveforms.shape[0])
         all_features = self.codec(waveforms, length)
-
+        # import pdb; pdb.set_trace()
         if self.codec_name == 'semanticodec':
             assert expect_lenth is not None, "expect_lenth is required for semanticodec"
             if all_features.dim() == 4:
                 all_features = rearrange(all_features, 'b d c t -> b (d c) t')
-            max_length = max(expect_lenth).item()
+            max_length = expect_lenth
             all_features = all_features[:, :, :int(max_length)]
 
         return all_features
@@ -115,7 +118,8 @@ class Prober(pl.LightningModule):
             feature_length = self.audio_length * (self.codec.orig_sample_rate / self.sample_rate) // self.codec.hop_length
         else:
             feature_length = self.audio_length // self.codec.hop_length
-        audio_features = self.extract_feature(audio, feature_length)
+
+        audio_features = self.extract_feature(audio, int(feature_length))
 
         loss, labels_pred = self.probe_model(audio_features, labels, n_segments_list)
         return loss, batch_size, labels_pred, labels
@@ -220,8 +224,30 @@ class Prober(pl.LightningModule):
             getattr(self, f"{split}_ap").reset()
             self.log(f"{split}_aucroc", getattr(self, f"{split}_aucroc").compute(), sync_dist=True)
             getattr(self, f"{split}_aucroc").reset()
-            
 
+    def save_result(self):
+        if self.task == 'regression':
+            r2 = getattr(self, f"test_r2").compute()
+            arousal_r2 = getattr(self, f"test_arousal_r2").compute()
+            valence_r2 = getattr(self, f"test_valence_r2").compute()
+            self.test_step_outputs.append({"arousal_r2": arousal_r2, "valence_r2": valence_r2})
+
+            getattr(self, f"test_valence_r2").reset()
+            getattr(self, f"test_r2").reset()
+            getattr(self, f"test_arousal_r2").reset()
+        elif self.task == 'multiclass':
+            acc = getattr(self, f"test_acc").compute()
+            f1 = getattr(self, f"test_f1").compute()
+            self.test_step_outputs.append({"acc": acc, "f1": f1})
+            getattr(self, f"test_f1").reset()
+            getattr(self, f"test_acc").reset()
+        elif self.task == 'multilabel':
+            ap = getattr(self, f"test_ap").compute()
+            aucroc = getattr(self, f"test_aucroc").compute()
+            self.test_step_outputs.append({"ap": ap, "aucroc": aucroc})
+
+            getattr(self, f"test_aucroc").reset()
+            getattr(self, f"test_ap").reset()
     def on_train_epoch_end(self, outputs = None):
         self.log_metrics('train')
     
@@ -229,4 +255,30 @@ class Prober(pl.LightningModule):
         self.log_metrics('valid')
 
     def on_test_epoch_end(self, outputs = None):
-        self.log_metrics('test')
+        self.save_result()
+        list0 = []
+        list1 = []
+
+        if self.task == 'regression':
+            for output in self.test_step_outputs:
+                list0.append(output["arousal_r2"])
+                list1.append(output["valence_r2"])
+            avg_0 = sum(list0) / len(list0)
+            avg_1 = sum(list1) / len(list1)
+            self.test_step_outputs = {"arousal_r2": avg_0, "valence_r2": avg_1}
+        elif self.task == 'multiclass':
+            for output in self.test_step_outputs:
+                list0.append(output["acc"])
+                list1.append(output["f1"])
+            avg_0 = sum(list0) / len(list0)
+            avg_1 = sum(list1) / len(list1)
+            
+            self.test_step_outputs = {"acc": avg_0, "f1": avg_1}
+        elif self.task == 'multilabel':
+            for output in self.test_step_outputs:
+                list0.append(output["ap"])
+                list1.append(output["aucroc"])
+            avg_0 = sum(list0) / len(list0)
+            avg_1 = sum(list1) / len(list1)
+            
+            self.test_step_outputs = {"ap": avg_0, "aucroc": avg_1}

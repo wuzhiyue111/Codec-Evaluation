@@ -33,7 +33,7 @@ class GSdataset(Dataset):
         self.meta_path = meta_path
         with open(self.meta_path) as f:
             self.metadata = json.load(f)
-        self.audio_names_without_ext = [k for k in self.metadata.keys()]
+        self.audio_names_without_ext = [k for k in self.metadata.keys() if self.metadata[k]['split'] == split]
         self.classes = """C major, Db major, D major, Eb major, E major, F major, Gb major, G major, Ab major, A major, Bb major, B major, C minor, Db minor, D minor, Eb minor, E minor, F minor, Gb minor, G minor, Ab minor, A minor, Bb minor, B minor""".split(", ")
         self.class2id = {c: i for i, c in enumerate(self.classes)}
         self.id2class = {v: k for k, v in self.class2id.items()}

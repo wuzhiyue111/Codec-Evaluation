@@ -16,23 +16,21 @@ class EMOdataset(Dataset):
     def __init__(
         self,
         split,
-        codec_name,
         sample_rate,
         target_sec,
-        n_segments,
         is_mono,
         is_normalize,
         audio_dir,
         meta_dir,
+        task = "regression",
     ):
-        self.codec_name = codec_name
         self.sample_rate = sample_rate
         self.target_sec = target_sec
-        self.n_segments = n_segments
         self.target_length = self.target_sec * self.sample_rate
         self.is_mono = is_mono
         self.is_normalize = is_normalize
         self.audio_dir = audio_dir
+        self.task = task
 
         self.meta_dir = meta_dir
         with open(os.path.join(self.meta_dir, "meta.json")) as f:
@@ -56,14 +54,13 @@ class EMOdataset(Dataset):
         audio_name_without_ext = self.audio_names_without_ext[index]
         audio_path = audio_name_without_ext + '.wav'
         audio_file = os.path.join(self.audio_dir, audio_path)
-        segments = self.load_audio(audio_file)
-        label = torch.from_numpy(np.array(self.metadata[audio_name_without_ext]['y'], dtype=np.float32))
+
+        segments, pad_mask= self.load_audio(audio_file)
+        labels = torch.from_numpy(np.array(self.metadata[audio_name_without_ext]['y'], dtype=np.float32))
 
         segments = torch.vstack(segments)
 
-        labels = label.unsqueeze(0).repeat(self.n_segments, 1)
-
-        return segments, labels
+        return {"audio": segments, "labels":  labels, "n_segments": len(pad_mask)}
 
     def load_audio(
         self,
@@ -92,9 +89,10 @@ class EMOdataset(Dataset):
         if self.is_normalize:
             waveform = waveform / waveform.abs().max()
 
-        waveform = cut_or_pad(waveform=waveform, target_length=self.target_length, n_segments=self.n_segments)
+        waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length, task = self.task)
 
-        return waveform
+        return waveform, pad_mask 
+
     
     def collate_fn(self, batch):
         """
@@ -104,17 +102,17 @@ class EMOdataset(Dataset):
             if codecname='semanticodec'
                 labels_tensor:(batch_size * n_segments * 2, 2)
         """
-        features, labels = zip(*batch)
-        features_tensor = torch.cat(features, dim=0)
-        labels_tensor = torch.cat(labels, dim=0)
-        labels_tensor = reduce(
-            labels_tensor, "(b g) n -> b n", reduction="mean", g=self.n_segments
-        )
-        if self.codec_name == "semanticodec":
-            labels_tensor = torch.cat([labels_tensor, labels_tensor], dim=0)
+        audio_list = [item["audio"] for item in batch if item is not None]
+        label_list = [item["labels"] for item in batch if item is not None]
+        n_segments_list = [item["n_segments"] for item in batch if item is not None]
+        audio_tensor = torch.vstack(audio_list)
+        label_tensor = torch.vstack(label_list)
 
-        return features_tensor, labels_tensor
-
+        return {
+            "audio": audio_tensor,
+            "labels": label_tensor,
+            "n_segments_list": n_segments_list
+        }
 
 class EMOdataModule(pl.LightningDataModule):
     def __init__(
@@ -136,7 +134,6 @@ class EMOdataModule(pl.LightningDataModule):
         self.valid_dataset = None
         self.test_dataset = None
         self.codec_name = codec_name
-        self.n_segments = dataset_args["n_segments"]
         self.train_num_workers = train_num_workers
         self.valid_num_workers = valid_num_workers
         self.test_num_workers = test_num_workers

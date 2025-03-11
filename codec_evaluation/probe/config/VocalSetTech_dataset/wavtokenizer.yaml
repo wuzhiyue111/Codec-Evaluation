@@ -11,9 +11,9 @@ task: multiclass
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [0]
+  devices: [5]
   precision: 32
-  max_epochs: 100
+  max_epochs: 200
   log_every_n_steps: 5
   val_check_interval: 1.0
 

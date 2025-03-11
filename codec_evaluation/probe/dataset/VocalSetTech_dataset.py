@@ -131,7 +131,7 @@ class VocalSetdataModule(pl.LightningDataModule):
         if stage == "fit" or stage is None:
             self.train_dataset = VocalSetTechdataset(split="train", **self.dataset_args)
             self.valid_dataset = VocalSetTechdataset(split="valid", **self.dataset_args)
-
+            
     def train_collate_fn(self, batch):
         """
         return:

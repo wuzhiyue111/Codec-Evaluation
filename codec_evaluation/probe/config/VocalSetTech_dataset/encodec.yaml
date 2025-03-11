@@ -5,7 +5,7 @@ n_segments: 1
 num_outputs: 10
 probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/VocalSet_dataset/VocalSetTech # 需要更改
 seed: 666
-codec_name: enocdec # 需要更改
+codec_name: encodec # 需要更改
 task: multiclass
 
 trainer:
@@ -13,7 +13,7 @@ trainer:
   accelerator: gpu
   devices: [0]
   precision: 32
-  max_epochs: 100
+  max_epochs: 200
   log_every_n_steps: 5
   val_check_interval: 1.0
 

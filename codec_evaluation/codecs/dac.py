@@ -68,6 +68,11 @@ class DAC(Codec):
             if model_path is None:
                 model_path = str(dac.utils.download(model_type=f"{tag}khz"))
             self.model = dac.DAC.load(model_path)
+        tag = int(orig_sample_rate / 1000)
+        if model_path is None:
+            model_path = str(dac.utils.download(model_type=f"{tag}khz"))
+
+        self.model = dac.DAC.load(model_path) # model init and load_state_dict
         self.dim = self.model.latent_dim
         self.hop_length = self.model.hop_length
         self.token_rate = self.model.sample_rate / self.model.hop_length

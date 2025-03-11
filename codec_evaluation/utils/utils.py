@@ -32,7 +32,7 @@ def find_audios(
                     audio_files.append(os.path.join(root, file))
         return audio_files
 
-def cut_or_pad(waveform, target_length, codecname = None):
+def cut_or_pad(waveform, target_length, task=None, codecname = None):
         """Cut or pad a waveform or a feature to a target length."""
         
         if codecname == 'semanticodec':
@@ -53,7 +53,7 @@ def cut_or_pad(waveform, target_length, codecname = None):
         
         if waveform.dim() == 2: 
 
-            segments, pad_mask = split_audio(waveform = waveform, segment_length = target_length, task=task)
+            segments, pad_mask = split_audio(waveform = waveform, segment_length = target_length, task=task, pad_value=0)
 
             return segments, pad_mask
         else:
@@ -65,10 +65,11 @@ def cut_or_pad(waveform, target_length, codecname = None):
 def find_lastest_ckpt(directory):
     if directory is None:
         return None
-    ckpt_file = glob.glob(os.path.join(directory, "*.ckpt"))
+    search_path = os.path.join(directory, "*.ckpt")
+    ckpt_file = glob.glob(search_path)
 
     if not ckpt_file:
-        log.info(f"No ckpt files found in this directory: {directory}")
+        log.info(f"No ckpt files found in this directory: {search_path}")
         return None
 
     latest_ckpt_file = max(ckpt_file, key=os.path.getmtime)
@@ -107,8 +108,7 @@ def split_audio(waveform, segment_length, task, pad_value=-100):
             if end <= total_length:  
                 segment = waveform[:, start:end] 
                 pad_mask.append(1) 
-
-            segments.append(segment)
+                segments.append(segment)
 
     return segments, pad_mask
 

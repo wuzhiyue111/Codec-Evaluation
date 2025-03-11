@@ -1,6 +1,6 @@
-mode: unquantized_emb
+mode: quantized_emb
 sample_rate: 44100
-target_sec: 120
+target_sec: 60
 n_segments: 12
 num_outputs: 87
 probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/MTG_dataset/MTGGenre_dataset # 需要更改
@@ -11,11 +11,16 @@ task: multilabel
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [5]
+  devices: [2]
   precision: 32
   max_epochs: 100
+  check_val_every_n_epoch: 10
+  limit_val_batches: 1.0
   log_every_n_steps: 5
   val_check_interval: 1.0
+  strategy: ddp_find_unused_parameters_true 
+
+
 
 data:
   _target_: codec_evaluation.probe.dataset.MTG_dataset.MTGGenre_dataset.MTGGenreModule
