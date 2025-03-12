@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torchaudio
 from torch.nn.utils.rnn import pad_sequence
-# from speechbrain.inference.speaker import EncoderClassifier
+from speechbrain.inference.speaker import EncoderClassifier
 from torch.utils.data.dataloader import DataLoader
 from codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc import (
     LibriTTS_ctc_dataset,
@@ -14,9 +14,7 @@ from transformers import WhisperForConditionalGeneration, WhisperProcessor
 from codec_evaluation.init_codecs import init_codec
 from typing import Optional
 from codec_evaluation.reconstruction_eval.utils import (
-    calculate_f0_corr,
     calculate_pesq,
-    calculate_si_snr,
     calculate_spk_sim,
     calculate_stoi,
     wer,
@@ -51,6 +49,7 @@ class CodecEvaluation:
         batch_size: int = 32,
         num_workers: int = 8,
         mode: str = "reconstruct",
+        wav2vec_model_path_or_name: str = "speechbrain/spkrec-ecapa-voxceleb",
         **kwargs,
     ):
         """
@@ -86,7 +85,9 @@ class CodecEvaluation:
         self.asr_model.config.forced_decoder_ids = None
 
         # embedding model
-        # self.wav2vec_model = EncoderClassifier.from_hparams(source=wav2vec_model_path_or_name)
+        self.wav2vec_model = EncoderClassifier.from_hparams(source=wav2vec_model_path_or_name)
+        self.wav2vec_model.to(device)
+        self.wav2vec_model.device = device
 
         self.batch_size = batch_size
         self.device = device
@@ -99,48 +100,7 @@ class CodecEvaluation:
             collate_fn=dataset.collate_fn,
         )
 
-    def get_wer(
-        self,
-        gt_audio_test,
-        rec_audio,
-        text_list,
-        asr_processor,
-        asr_model,
-        sample_rate=24000,
-    ):
-        with torch.no_grad():
-            return wer(
-                gt_audio_test,
-                rec_audio,
-                text_list,
-                asr_processor,
-                asr_model,
-                sample_rate=sample_rate,
-            )
-
-    def get_speaker_sim(self, gt_audio, rec_audio, processor, model, sample_rate=24000):
-        with torch.no_grad():
-            return calculate_spk_sim(
-                gt_audio, rec_audio, processor, model, sample_rate=sample_rate
-            )
-
-    def get_f0_corr(self, gt_audio, rec_audio):
-        with torch.no_grad():
-            return calculate_f0_corr(gt_audio, rec_audio)
-
-    def get_si_snr(self, gt_audio, rec_audio):
-        with torch.no_grad():
-            return calculate_si_snr(gt_audio, rec_audio)
-
-    def get_text_from_path(self, posix_path_list):
-        text_list = []
-        for path in posix_path_list:
-            abs_path = os.path.join(self.audio_root_path, str(path))
-            text_abs_path = abs_path.replace(".wav", ".normalized.txt")
-            with open(text_abs_path, "r") as f:
-                text_list.append(f.read())
-        return text_list
-
+    @torch.inference_mode()
     def evaluate(self):
         # first get the reconstruction audio
         gt_audio_list = []
@@ -189,80 +149,76 @@ class CodecEvaluation:
         cer_gt_list = []
         stoi_list = []
         pesq_list = []
+        speaker_sim_list = []
         usage_entropy_list = []
 
-        with torch.no_grad():
-            data_length = len(gt_audio_list)
-            for i in tqdm(range(0, data_length, 100), desc="compute metrics"):  # per 100 samples to compute metrics
-                if i + 100 < data_length:
-                    tmp_gt_audio_list = gt_audio_list[i : i + 100]
-                    tmp_rec_audio_list = rec_audio_list[i : i + 100]
-                    tmp_text_list = text_list[i : i + 100]
+        data_length = len(gt_audio_list)
+        for i in tqdm(range(0, data_length, 50), desc="compute metrics"):  # per 50 samples to compute metrics
+            if i + 50 < data_length:
+                tmp_gt_audio_list = gt_audio_list[i : i + 50]
+                tmp_rec_audio_list = rec_audio_list[i : i + 50]
+                tmp_text_list = text_list[i : i + 50]
+            else:
+                tmp_gt_audio_list = gt_audio_list[i:]
+                tmp_rec_audio_list = rec_audio_list[i:]
+                tmp_text_list = text_list[i:]
+            tmp_gt_audio = pad_sequence(tmp_gt_audio_list, batch_first=True).to(self.device)
+            tmp_rec_audio = pad_sequence(tmp_rec_audio_list, batch_first=True).to(self.device)
 
-                else:
-                    tmp_gt_audio_list = gt_audio_list[i:]
-                    tmp_rec_audio_list = rec_audio_list[i:]
-                    tmp_text_list = text_list[i:]
-                tmp_gt_audio = pad_sequence(tmp_gt_audio_list, batch_first=True).to(self.device)
-                tmp_rec_audio = pad_sequence(tmp_rec_audio_list, batch_first=True).to(self.device)
-                # wer
-                wer_gt, wer_rec = wer(
+            # wer
+            wer_gt, wer_rec = wer(
+                gt_audio=tmp_gt_audio,
+                rec_audio=tmp_rec_audio,
+                gt_text=tmp_text_list,
+                processor=self.asr_processor,
+                model=self.asr_model,
+                device=self.device,
+                sample_rate=self.codec_sample_rate,
+            )
+            wer_rec_list.append(wer_rec)
+            wer_gt_list.append(wer_gt)
+            print(f"wer_gt: {wer_gt}, wer_rec: {wer_rec}")
+
+            # cer
+            cer_gt, cer_rec = cer(
+                gt_audio=tmp_gt_audio,
+                rec_audio=tmp_rec_audio,
+                gt_text=tmp_text_list,
+                processor=self.asr_processor,
+                model=self.asr_model,
+                device=self.device,
+                sample_rate=self.codec_sample_rate,
+            )
+            cer_rec_list.append(cer_rec)
+            cer_gt_list.append(cer_gt)
+            print(f"cer_gt: {cer_gt}, cer_rec: {cer_rec}")
+            speaker_sim_list.append(
+                calculate_spk_sim(
                     gt_audio=tmp_gt_audio,
                     rec_audio=tmp_rec_audio,
-                    gt_text=tmp_text_list,
-                    processor=self.asr_processor,
-                    model=self.asr_model,
-                    device=self.device,
-                    sample_rate=self.codec_sample_rate,
+                    model=self.wav2vec_model,
                 )
-                wer_rec_list.append(wer_rec)
-                wer_gt_list.append(wer_gt)
-                print(f"wer_gt: {wer_gt}, wer_rec: {wer_rec}")
-
-                # cer
-                cer_gt, cer_rec = cer(
+            )
+            print(f"speaker_sim: {speaker_sim_list[-1]}")
+            # stoi
+            stoi_list.append(
+                calculate_stoi(
                     gt_audio=tmp_gt_audio,
                     rec_audio=tmp_rec_audio,
-                    gt_text=tmp_text_list,
-                    processor=self.asr_processor,
-                    model=self.asr_model,
-                    device=self.device,
                     sample_rate=self.codec_sample_rate,
                 )
-                cer_rec_list.append(cer_rec)
-                cer_gt_list.append(cer_gt)
-                print(f"cer_gt: {cer_gt}, cer_rec: {cer_rec}")
+            )
+            print(f"stoi: {stoi_list[-1]}")
 
-                # speaker_sim
-                # speaker_sim_list.append(
-                #     self.get_speaker_sim(
-                #         gt_audio,
-                #         rec_audio,
-                #         self.wav2vec_feature_extractor,
-                #         self.wav2ver_model,
-                #     )
-                # )
-                # print(f"speaker_sim: {speaker_sim_list[-1]}")
-
-                # stoi
-                stoi_list.append(
-                    calculate_stoi(
-                        gt_audio=tmp_gt_audio,
-                        rec_audio=tmp_rec_audio,
-                        sample_rate=self.codec_sample_rate,
-                    )
+            # pesq
+            pesq_list.append(
+                calculate_pesq(
+                    gt_audio=tmp_gt_audio,
+                    rec_audio=tmp_rec_audio,
+                    sample_rate=self.codec_sample_rate,
                 )
-                print(f"stoi: {stoi_list[-1]}")
-
-                # pesq
-                pesq_list.append(
-                    calculate_pesq(
-                        gt_audio=tmp_gt_audio,
-                        rec_audio=tmp_rec_audio,
-                        sample_rate=self.codec_sample_rate,
-                    )
-                )
-                print(f"pesq: {pesq_list[-1]}")
+            )
+            print(f"pesq: {pesq_list[-1]}")
 
         avg_wer_gt = sum(wer_gt_list) / len(wer_gt_list)
         avg_wer_rec = sum(wer_rec_list) / len(wer_rec_list)
@@ -270,7 +226,9 @@ class CodecEvaluation:
         avg_cer_rec = sum(cer_rec_list) / len(cer_rec_list)
         avg_stoi = sum(stoi_list) / len(stoi_list)
         avg_pesq = sum(pesq_list) / len(pesq_list)
+        avg_speaker_sim = sum(speaker_sim_list) / len(speaker_sim_list)
         print(f"compute metrics done, now start to save results")
+        print(f"speaker_sim: {avg_speaker_sim}")
         print(f"wer_gt: {avg_wer_gt}")
         print(f"wer_rec: {avg_wer_rec}")
         print(f"cer_gt: {avg_cer_gt}")
@@ -280,7 +238,7 @@ class CodecEvaluation:
         return {
             "wer_gt": avg_wer_gt,
             "cer_gt": avg_cer_gt,
-            # "speaker_sim": np.mean(np.array(speaker_sim_list)),
+            "speaker_sim": avg_speaker_sim,
             "wer_rec": avg_wer_rec,
             "cer_rec": avg_cer_rec,
             "stoi": avg_stoi,
@@ -303,6 +261,7 @@ if __name__ == "__main__":
     parser.add_argument("--mode", type=str, default="reconstruct")
     parser.add_argument("--use_vocos", type=bool, default=False)
     parser.add_argument("--vocos_ckpt_dir", type=Optional[str], default=None)
+    parser.add_argument("--wav2vec_model_path_or_name", type=str, default="/sdb/model_weight/ecapa-voxceleb")
     args = parser.parse_args()
     print(f"args: {args}")
     codec_eval = CodecEvaluation(
@@ -317,6 +276,7 @@ if __name__ == "__main__":
         mode=args.mode,
         use_vocos=args.use_vocos,
         vocos_ckpt_dir=args.vocos_ckpt_dir,
+        wav2vec_model_path_or_name=args.wav2vec_model_path_or_name,
     )
     result = codec_eval.evaluate()
     print(f"result: {result}")
