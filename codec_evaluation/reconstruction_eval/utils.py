@@ -105,15 +105,9 @@ def calculate_spk_sim(
     gt_audio: torch.Tensor,
     rec_audio: torch.Tensor,
     model: EncoderClassifier,
-    sample_rate: int = 24000,
 ):
     # gt_audio: [B, T]
     # rec_audio: [B, T]
-    # if sample_rate != 16000:
-    #     resampler = torchaudio.transforms.Resample(sample_rate, 16000).to(gt_audio.device)
-    #     gt_audio = resampler(gt_audio)
-    #     rec_audio = resampler(rec_audio)
-
     gt_embedding = model.encode_batch(gt_audio)
     rec_embedding = model.encode_batch(rec_audio)
 
