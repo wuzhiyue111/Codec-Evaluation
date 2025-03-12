@@ -341,7 +341,7 @@ bash env_build.sh
     </tbody>
 </table>
 
-### Speech Probe
+### Speech and Sound Probe
 <table border="1" >
     
    <thead>
