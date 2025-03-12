@@ -577,8 +577,8 @@ bash env_build.sh
       <th>Encodec</th>
       <th>Mimi</th>
       <th>SemantiCodec</th>
-      <th>WavTokenizer</th>
       <th>SpeechTokenizer</th>
+      <th>WavTokenizer</th>
     </tr>
   </thead>
   <tbody>
