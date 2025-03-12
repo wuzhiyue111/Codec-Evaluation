@@ -4,10 +4,8 @@ import torch
 import torchaudio
 from torchmetrics.audio.pesq import PerceptualEvaluationSpeechQuality
 from torchmetrics.audio.stoi import ShortTimeObjectiveIntelligibility
-from torchmetrics.functional.audio import scale_invariant_signal_noise_ratio
-from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
 import torchaudio
-
+from speechbrain.inference.speaker import EncoderClassifier
 
 def transform_text_list_for_wer(text_list):
     """
@@ -79,7 +77,6 @@ def wer(gt_audio, rec_audio, gt_text, processor, model, device, sample_rate=2400
     except ValueError:
         wer_gt = None
         wer_rec = None
-
     return wer_gt, wer_rec
 
 def cer(gt_audio, rec_audio, gt_text, processor, model, device, sample_rate=24000):
@@ -98,26 +95,6 @@ def cer(gt_audio, rec_audio, gt_text, processor, model, device, sample_rate=2400
 
     return cer_gt, cer_rec
 
-def calculate_f0_corr(gt_audio: torch.Tensor, rec_audio: torch.Tensor, sample_rate=24000):
-    f0_gt = torchaudio.functional.detect_pitch_frequency(gt_audio, sample_rate=sample_rate)
-    f0_rec = torchaudio.functional.detect_pitch_frequency(rec_audio, sample_rate=sample_rate)
-    valid = (f0_gt > 0) & (f0_rec > 0)
-
-    # f0_rmse = torch.sqrt(torch.mean((f0_gt[valid] - f0_rec[valid]) ** 2)).item()
-    f0_corr = torch.corrcoef(torch.stack([f0_gt[valid], f0_rec[valid]]))[0, 1].item()
-
-    return f0_corr
-
-
-def calculate_si_snr(gt_audio: torch.Tensor, rec_audio: torch.Tensor):
-    gt_audio_cal = gt_audio.clone()
-    rec_audio_cal = rec_audio.clone()
-    si_snr = scale_invariant_signal_noise_ratio(rec_audio_cal, gt_audio_cal)
-    return si_snr.mean().item()
-
-def calculate_ci_sdr(gt_audio: torch.Tensor, rec_audio: torch.Tensor):
-    return calculate_si_snr(gt_audio, rec_audio)  # Simplified placeholder
-
 
 def calculate_stoi(gt_audio: torch.Tensor, rec_audio: torch.Tensor, sample_rate=24000):
     stoi = ShortTimeObjectiveIntelligibility(sample_rate).to(gt_audio.device)
@@ -127,23 +104,18 @@ def calculate_stoi(gt_audio: torch.Tensor, rec_audio: torch.Tensor, sample_rate=
 def calculate_spk_sim(
     gt_audio: torch.Tensor,
     rec_audio: torch.Tensor,
-    feature_extractor: Wav2Vec2Processor,
-    model: Wav2Vec2ForCTC,
+    model: EncoderClassifier,
     sample_rate: int = 24000,
 ):
-    if sample_rate != 16000:
-        resampler = torchaudio.transforms.Resample(sample_rate, 16000).to(gt_audio.device)
-        gt_audio = resampler(gt_audio.view(-1, gt_audio.shape[-1])).view(gt_audio.shape[0], gt_audio.shape[1], -1)
-        rec_audio = resampler(rec_audio.view(-1, rec_audio.shape[-1])).view(rec_audio.shape[0], rec_audio.shape[1], -1)
+    # gt_audio: [B, T]
+    # rec_audio: [B, T]
+    # if sample_rate != 16000:
+    #     resampler = torchaudio.transforms.Resample(sample_rate, 16000).to(gt_audio.device)
+    #     gt_audio = resampler(gt_audio)
+    #     rec_audio = resampler(rec_audio)
 
-    gt_audio = gt_audio.squeeze(1)
-    rec_audio = rec_audio.squeeze(1)
-
-    gt_inputs = feature_extractor(gt_audio, padding=True, return_tensors="pt")
-    rec_input = feature_extractor(rec_audio, padding=True, return_tensors="pt")
-
-    gt_embedding = model(gt_inputs["input_values"].squeeze(0).to(model.device)).last_hidden_state.mean(dim=1)
-    rec_embedding = model(rec_input["input_values"].squeeze(0).to(model.device)).last_hidden_state.mean(dim=1)
+    gt_embedding = model.encode_batch(gt_audio)
+    rec_embedding = model.encode_batch(rec_audio)
 
     cosine_sim = torch.nn.CosineSimilarity(dim=-1)
     similarity = cosine_sim(gt_embedding, rec_embedding)
