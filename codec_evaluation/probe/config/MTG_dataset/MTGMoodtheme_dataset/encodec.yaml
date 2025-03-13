@@ -1,10 +1,10 @@
 mode: quantized_emb
 sample_rate: 44100
 target_sec: 10
-num_outputs: 87
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/MTG_dataset/MTGGenre_dataset/wavtokenizer/${mode} # 需要更改
+num_outputs: 56
+probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/MTG_dataset/MTGMoodtheme_dataset/encodec/${mode} # 需要更改
 seed: 666
-codec_name: wavtokenizer # 需要更改
+codec_name: encodec # 需要更改
 task: multilabel
 save_result: null
 
@@ -20,7 +20,7 @@ trainer:
   val_check_interval: 1.0
 
 data:
-  _target_: codec_evaluation.probe.dataset.MTG_dataset.MTGGenre_dataset.MTGGenreModule
+  _target_: codec_evaluation.probe.dataset.MTG_dataset.MTGMoodtheme_dataset.MTGMoodthemeModule
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
@@ -54,7 +54,7 @@ model:
     kernel_size: 3
     stride: 1
   target_sec: ${target_sec}
-  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/wavTokenizer/models--novateur--WavTokenizer-large-unify-40token # 需要更改
+  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -99,6 +99,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/MTG_dataset/MTGGenre_dataset # 需要更改
+  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/MTG_dataset/MTGMoodtheme_dataset # 需要更改
   name: ${codec_name}_${mode}
   log_graph: true

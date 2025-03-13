@@ -11,7 +11,7 @@ from einops import reduce
 from codec_evaluation.utils.utils import cut_or_pad
 
 
-class MTGGenredataset(Dataset):
+class MTGInstrumentdataset(Dataset):
     def __init__(
         self,
         split,
@@ -32,7 +32,7 @@ class MTGGenredataset(Dataset):
         self.audio_dir = audio_dir
         self.task = task
 
-        self.meta_dir = os.path.join(meta_dir, f'data/splits/split-0/autotagging_genre-{self.split}.tsv')
+        self.meta_dir = os.path.join(meta_dir, f'data/splits/split-0/autotagging_instrument-{split}.tsv')
         self.metadata = open(self.meta_dir, 'r').readlines()[1:]
         self.all_paths = [line.split('\t')[3] for line in self.metadata]
         self.all_tags = [line.split('\t')[5:] for line in self.metadata]
@@ -50,13 +50,14 @@ class MTGGenredataset(Dataset):
         """
         return:
             segments: [1, wavform_length]
-            labels: [1, 87]
+            labels: [1, 40]
         """
         audio_path = self.all_paths[index]
         audio_path = audio_path.replace('.mp3', '.low.mp3')
         
         audio_file = os.path.join(self.audio_dir, audio_path)
         segments, pad_mask = self.load_audio(audio_file)
+
         class_name = self.all_tags[index]
         label = torch.zeros(len(self.class2id))
         for c in class_name:
@@ -65,6 +66,7 @@ class MTGGenredataset(Dataset):
         segments = torch.vstack(segments)
 
         return {"audio": segments, "labels":  label, "n_segments": len(pad_mask)}
+
     def load_audio(
         self,
         audio_file,
@@ -91,24 +93,24 @@ class MTGGenredataset(Dataset):
         # Normalize to [-1, 1] if needed
         if self.is_normalize:
             waveform = waveform / waveform.abs().max()
-        
+
         if waveform.shape[1] > 150 *self.sample_rate:
             waveform = waveform[:, :150 *self.sample_rate]
 
         waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length, task = self.task)
 
-        return waveform, pad_mask 
+        return waveform, pad_mask
 
     def read_class2id(self, meta_dir):
         class2id = {}
-        # for split in ['train', 'validation']:
-        data = open(os.path.join(meta_dir, f'data/splits/split-0/autotagging_genre-{self.split}.tsv'), "r").readlines()
-        for example in data[1:]:
-            tags = example.split('\t')[5:]
-            for tag in tags:
-                tag = tag.strip()
-                if tag not in class2id:
-                    class2id[tag] = len(class2id)
+        for split in ['train', 'validation']:
+            data = open(os.path.join(meta_dir, f'data/splits/split-0/autotagging_instrument-{split}.tsv'), "r").readlines()
+            for example in data[1:]:
+                tags = example.split('\t')[5:]
+                for tag in tags:
+                    tag = tag.strip()
+                    if tag not in class2id:
+                        class2id[tag] = len(class2id)
         return class2id
 
     def collate_fn(self, batch):
@@ -126,7 +128,7 @@ class MTGGenredataset(Dataset):
         }
 
 
-class MTGGenreModule(pl.LightningDataModule):
+class MTGInstrumentModule(pl.LightningDataModule):
     def __init__(self,
             dataset_args, 
             codec_name,
@@ -151,12 +153,12 @@ class MTGGenreModule(pl.LightningDataModule):
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            self.train_dataset = MTGGenredataset(split="train", **self.dataset_args)
-            self.valid_dataset = MTGGenredataset(split="validation", **self.dataset_args)
+            self.train_dataset = MTGInstrumentdataset(split="train", **self.dataset_args)
+            self.valid_dataset = MTGInstrumentdataset(split="validation", **self.dataset_args)
         if stage == "val":
-            self.valid_dataset = MTGGenredataset(split="validation", **self.dataset_args)
+            self.valid_dataset = MTGInstrumentdataset(split="validation", **self.dataset_args)
         if stage == "test":
-            self.test_dataset = MTGGenredataset(split="test", **self.dataset_args)
+            self.test_dataset = MTGInstrumentdataset(split="test", **self.dataset_args)
 
     def train_dataloader(self):
         return DataLoader(

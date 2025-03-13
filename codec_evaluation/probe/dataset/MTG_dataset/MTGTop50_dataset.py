@@ -11,7 +11,7 @@ from einops import reduce
 from codec_evaluation.utils.utils import cut_or_pad
 
 
-class MTGGenredataset(Dataset):
+class MTGTop50dataset(Dataset):
     def __init__(
         self,
         split,
@@ -21,7 +21,7 @@ class MTGGenredataset(Dataset):
         is_normalize,
         audio_dir,
         meta_dir,
-        task
+        task,
     ):
         self.split = split
         self.sample_rate = sample_rate
@@ -32,7 +32,7 @@ class MTGGenredataset(Dataset):
         self.audio_dir = audio_dir
         self.task = task
 
-        self.meta_dir = os.path.join(meta_dir, f'data/splits/split-0/autotagging_genre-{self.split}.tsv')
+        self.meta_dir = os.path.join(meta_dir, f'data/splits/split-0/autotagging_top50tags-{split}.tsv')
         self.metadata = open(self.meta_dir, 'r').readlines()[1:]
         self.all_paths = [line.split('\t')[3] for line in self.metadata]
         self.all_tags = [line.split('\t')[5:] for line in self.metadata]
@@ -50,7 +50,7 @@ class MTGGenredataset(Dataset):
         """
         return:
             segments: [1, wavform_length]
-            labels: [1, 87]
+            labels: [1, 20]
         """
         audio_path = self.all_paths[index]
         audio_path = audio_path.replace('.mp3', '.low.mp3')
@@ -65,6 +65,7 @@ class MTGGenredataset(Dataset):
         segments = torch.vstack(segments)
 
         return {"audio": segments, "labels":  label, "n_segments": len(pad_mask)}
+    
     def load_audio(
         self,
         audio_file,
@@ -101,14 +102,14 @@ class MTGGenredataset(Dataset):
 
     def read_class2id(self, meta_dir):
         class2id = {}
-        # for split in ['train', 'validation']:
-        data = open(os.path.join(meta_dir, f'data/splits/split-0/autotagging_genre-{self.split}.tsv'), "r").readlines()
-        for example in data[1:]:
-            tags = example.split('\t')[5:]
-            for tag in tags:
-                tag = tag.strip()
-                if tag not in class2id:
-                    class2id[tag] = len(class2id)
+        for split in ['train', 'validation']:
+            data = open(os.path.join(meta_dir, f'data/splits/split-0/autotagging_top50tags-{split}.tsv'), "r").readlines()
+            for example in data[1:]:
+                tags = example.split('\t')[5:]
+                for tag in tags:
+                    tag = tag.strip()
+                    if tag not in class2id:
+                        class2id[tag] = len(class2id)
         return class2id
 
     def collate_fn(self, batch):
@@ -126,7 +127,7 @@ class MTGGenredataset(Dataset):
         }
 
 
-class MTGGenreModule(pl.LightningDataModule):
+class MTGTop50Module(pl.LightningDataModule):
     def __init__(self,
             dataset_args, 
             codec_name,
@@ -151,12 +152,12 @@ class MTGGenreModule(pl.LightningDataModule):
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            self.train_dataset = MTGGenredataset(split="train", **self.dataset_args)
-            self.valid_dataset = MTGGenredataset(split="validation", **self.dataset_args)
+            self.train_dataset = MTGTop50dataset(split="train", **self.dataset_args)
+            self.valid_dataset = MTGTop50dataset(split="validation", **self.dataset_args)
         if stage == "val":
-            self.valid_dataset = MTGGenredataset(split="validation", **self.dataset_args)
+            self.valid_dataset = MTGTop50dataset(split="validation", **self.dataset_args)
         if stage == "test":
-            self.test_dataset = MTGGenredataset(split="test", **self.dataset_args)
+            self.test_dataset = MTGTop50dataset(split="test", **self.dataset_args)
 
     def train_dataloader(self):
         return DataLoader(
