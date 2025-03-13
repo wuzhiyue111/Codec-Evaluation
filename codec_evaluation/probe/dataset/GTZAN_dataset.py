@@ -14,8 +14,7 @@ class GTZANdataset(Dataset):
         self,
         split,
         sample_rate,
-        target_sec,
-        n_segments,
+        target_sec,        
         is_mono,
         is_normalize,
         audio_dir,
@@ -24,7 +23,6 @@ class GTZANdataset(Dataset):
         self.split = split
         self.sample_rate = sample_rate
         self.target_sec = target_sec
-        self.n_segments = n_segments
         self.target_length = self.target_sec * self.sample_rate
         self.is_mono = is_mono
         self.is_normalize = is_normalize
@@ -50,15 +48,18 @@ class GTZANdataset(Dataset):
         audio_path = self.metadata.iloc[index].iloc[0]
         audio_file = os.path.join(self.audio_dir,audio_path)
 
-        waveform = self.load_audio(audio_file)
-        label = torch.tensor(self.class2id[audio_path.split('/')[0]]).float()
+        segments, pad_mask= self.load_audio(audio_file)
+        label = self.class2id[audio_path.split('/')[0]]
+        labels = []
+        for mask in pad_mask:
+            if mask == 1:
+                labels.append(label)
+            else:
+                labels.append(-100)
+        labels = torch.tensor(labels)
+        segments = torch.vstack(segments)
 
-        segments = self.split_audio(waveform, self.n_segments)
-        segments = torch.stack(segments, dim=0)
-
-        labels = label.unsqueeze(0).repeat(self.n_segments, 1)
-
-        return segments, labels
+        return {"audio": segments, "labels":  labels, "n_segments": len(pad_mask)}
     
     def load_audio(
             self,
@@ -87,103 +88,79 @@ class GTZANdataset(Dataset):
         if self.is_normalize:
             waveform = waveform / waveform.abs().max()
 
-        waveform = cut_or_pad(waveform=waveform, target_length=self.target_length)
-        waveform = waveform.squeeze(0)
+        waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length)
 
-        return waveform
+        return waveform, pad_mask
     
+    def collate_fn(self, batch):
+        audio_list = [item["audio"] for item in batch if item is not None]
+        label_list = [item["labels"] for item in batch if item is not None]
+        n_segments_list = [item["n_segments"] for item in batch if item is not None]
 
-    def split_audio(self, waveform, n_segments):
-        """
-        input:
-            waveform:[T];
-            n_segments: the number of segments per audio
-        return:
-            segments:[n_segments,segment_length]
-        """
-        segment_length = self.target_length // n_segments   # length of per segment
-        segments = []
+        audio_tensor = torch.vstack(audio_list)
+        label_tensor = torch.cat(label_list,dim=0)
 
-        for i in range(n_segments):
-            start = i * segment_length
-            end = (i + 1) * segment_length
-            segment = waveform[start:end]
-            segments.append(segment)
-
-        return segments
+        return {
+            "audio": audio_tensor,
+            "labels": label_tensor,
+            "n_segments_list": n_segments_list
+        }
 
 
 class GTZANdataModule(pl.LightningDataModule):
-    def __init__(self, dataset_args, batch_size, codec_name, num_workers):
+    def __init__(self,
+            dataset_args, 
+            codec_name,
+            train_batch_size=32,
+            valid_batch_size=2,
+            test_batch_size=16,
+            train_num_workers=8,
+            valid_num_workers=4,
+            test_num_workers=4):
         super().__init__()
         self.dataset_args = dataset_args
-        self.batch_size = batch_size
+        self.train_batch_size = train_batch_size
+        self.valid_batch_size = valid_batch_size
+        self.test_batch_size = test_batch_size
         self.train_dataset = None
-        self.val_dataset = None
+        self.valid_dataset = None
+        self.test_dataset = None
         self.codec_name = codec_name
-        self.n_segments = dataset_args["n_segments"]
-        self.num_workers = num_workers
-
+        self.train_num_workers = train_num_workers
+        self.valid_num_workers = valid_num_workers
+        self.test_num_workers = test_num_workers
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
             self.train_dataset = GTZANdataset(split="train", **self.dataset_args)
-            # 创建验证集
             self.valid_dataset = GTZANdataset(split="valid", **self.dataset_args) 
-    
-    def train_collate_fn(self, batch):
-        """
-        return:
-            features_tensor:(batch_size * n_segments, length)
-            labels_tensor:(batch_size * n_segments, 10)
-            if codecname='semanticodec'
-                labels_tensor:(batch_size * n_segments * 2, 10)
-        """
-        features, labels = zip(*batch)
-        features_tensor = torch.cat(features, dim=0)
-        labels_tensor = torch.cat(labels, dim=0)
-        labels_tensor = labels_tensor.squeeze(1)  #(B,1)
+        if stage == "val":
+            self.valid_dataset = GTZANdataset(split="valid", **self.dataset_args)
+        if stage == "test":
+            self.test_dataset = GTZANdataset(split="test", **self.dataset_args)
 
-        if self.codec_name == "semanticodec":
-            labels_tensor = torch.cat([labels_tensor, labels_tensor], dim=0)
-
-        return features_tensor, labels_tensor
-    
-    def valid_collate_fn(self, batch):
-        """
-        return:
-            features_tensor:(batch_size * n_segments, length)
-            labels_tensor:(batch_size , 10)
-            if codecname='semanticodec'
-                labels_tensor:(batch_size * 2, 10)
-        """
-        features, labels = zip(*batch)
-        features_tensor = torch.cat(features, dim=0)
-        labels_tensor = torch.cat(labels, dim=0)
-        labels_tensor = labels_tensor.squeeze(1)
-        # labels_tensor = reduce(
-        #     labels_tensor, "(b g) n -> b", reduction="mean", g=self.n_segments
-        # )
-
-
-        if self.codec_name == "semanticodec":
-            labels_tensor = torch.cat([labels_tensor, labels_tensor], dim=0)
-
-        return features_tensor, labels_tensor
-    
     def train_dataloader(self):
         return DataLoader(
             dataset=self.train_dataset,
-            batch_size=self.batch_size,
+            batch_size=self.train_batch_size,
             shuffle=True,
-            collate_fn=self.train_collate_fn,
-            num_workers=self.num_workers,
+            collate_fn=self.train_dataset.collate_fn,
+            num_workers=self.train_num_workers,
         )
 
     def val_dataloader(self):
         return DataLoader(
             dataset=self.valid_dataset,
-            batch_size=2,
+            batch_size=self.valid_batch_size,
             shuffle=False,
-            collate_fn=self.valid_collate_fn,
-            num_workers=self.num_workers,
+            collate_fn=self.valid_dataset.collate_fn,
+            num_workers=self.valid_num_workers,
+        )
+    
+    def test_dataloader(self) :
+        return DataLoader(
+            dataset=self.test_dataset,
+            batch_size=self.test_batch_size,
+            shuffle=False,
+            collate_fn=self.test_dataset.collate_fn,
+            num_workers=self.test_num_workers,
         )

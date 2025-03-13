@@ -1,19 +1,21 @@
-mode: unquantized_emb
+mode: quantized_emb
 sample_rate: 44100
 target_sec: 3
-n_segments: 1
 num_outputs: 10
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/VocalSet_dataset/VocalSetTech # 需要更改
+probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/VocalSet_dataset/VocalSetTech/dac/${mode} # 需要更改
 seed: 666
 codec_name: dac # 需要更改
 task: multiclass
+save_result: null
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [5]
+  devices: [1]
   precision: 32
-  max_epochs: 100
+  max_epochs: 50
+  check_val_every_n_epoch: 5
+  limit_val_batches: 1.0
   log_every_n_steps: 5
   val_check_interval: 1.0
 
@@ -22,14 +24,17 @@ data:
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
-    n_segments: ${n_segments}
     is_mono: True
     is_normalize: False
-    audio_dir: /sdb/data1/music/mix_music/marble_dataset/data/VocalSet/audio
-    meta_dir: /sdb/data1/music/mix_music/marble_dataset/data/VocalSet
-  batch_size: 32
+    audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/VocalSet/audio
+    meta_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/VocalSet
   codec_name: ${codec_name}
-  num_workers: 16
+  train_batch_size: 256
+  valid_batch_size: 4
+  test_batch_size: 128
+  train_num_workers: 8
+  valid_num_workers: 4
+  test_num_workers: 4
 
 model:
   _target_: codec_evaluation.probe.model.lit_prober.Prober
@@ -41,16 +46,14 @@ model:
   probe_model_builder:
     _target_: codec_evaluation.probe.model.VocalSet_dataset.model.VocalSetProber
     _partial_: true
-    target_sec: ${target_sec}
-    n_segments: ${n_segments}
     num_outputs: ${num_outputs}
+    drop_out: 0.2
     channel_reduction: 16
     padding: 1
     kernel_size: 3
-    stride: 2
+    stride: 1
   target_sec: ${target_sec}
-  n_segments: ${n_segments}
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt
+  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -90,7 +93,7 @@ callbacks:
     mode: min
     save_top_k: 1
     save_last: False
-    filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
+    filename: ${codec_name}_${mode}_{epoch}-{valid_loss:.4f}
     verbose: True
 
 tensorboard:
