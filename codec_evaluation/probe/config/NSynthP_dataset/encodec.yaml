@@ -1,12 +1,13 @@
 mode: quantized_emb
 sample_rate: 16000
 target_sec: 4
-n_segments: 1
 num_outputs: 128
-probe_ckpt_dir: /home/ch/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/NSynthP_dataset/
+probe_ckpt_dir: /home/ch/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/NSynthP_dataset/encodec/${mode}
 seed: 666
 codec_name: encodec
 task: multiclass
+save_result: null
+
 
 trainer:
   _target_: pytorch_lightning.Trainer
@@ -14,6 +15,8 @@ trainer:
   devices: [4]
   precision: 32
   max_epochs: 100
+  check_val_every_n_epoch: 10
+  limit_val_batches: 1.0
   log_every_n_steps: 5
   val_check_interval: 1.0
 
@@ -22,35 +25,36 @@ data:
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
-    n_segments: ${n_segments}
     is_mono: True
-    is_normalize: True
-    audio_dir: /sdb/data1/music/symbolic_music/NSynth-dataset
-    meta_dir: /sdb/data1/music/symbolic_music/NSynth-dataset
-  batch_size: 32
+    is_normalize: False
+    audio_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music/NSynth-dataset
+    meta_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music/NSynth-dataset
   codec_name: ${codec_name}
-  num_workers: 16
+  train_batch_size: 512
+  valid_batch_size: 32
+  test_batch_size: 256
+  train_num_workers: 8
+  valid_num_workers: 4
+  test_num_workers: 4
 
 model:
   _target_: codec_evaluation.probe.model.lit_prober.Prober
   codec_name: ${codec_name}
   sample_rate: ${sample_rate}
   mode: ${mode}
+  task: ${task}
   num_outputs: ${num_outputs}
-  task: multiclass
   probe_model_builder:
     _target_: codec_evaluation.probe.model.NSynthP_dataset.model.NSynthPProber
     _partial_: true
-    target_sec: ${target_sec}
     num_outputs: ${num_outputs}
-    n_segments: ${n_segments}
+    drop_out: 0.1
     channel_reduction: 16
     padding: 1
     kernel_size: 3
-    stride: 2
+    stride: 1
   target_sec: ${target_sec}
-  n_segments: ${n_segments}
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz
+  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -89,11 +93,11 @@ callbacks:
     every_n_epochs: 1
     mode: min
     save_top_k: 1
-    filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
+    filename: ${codec_name}_${mode}_{epoch}-{valid_loss:.4f}
     verbose: True
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /home/ch/Codec-Evaluation/codec_evaluation/tb_log/nsynth_p
+  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/nsynth_p
   name: ${codec_name}_${mode}
   log_graph: true
