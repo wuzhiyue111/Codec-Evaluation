@@ -88,7 +88,7 @@ def split_audio(waveform, segment_length, task, pad_value=-100):
     segments = []
     pad_mask = []
 
-    if task != "regression":
+    if task != "regression" and task != 'multilabel':
         for start in range(0, total_length, segment_length):
             end = start + segment_length
             if end <= total_length:  

@@ -1,18 +1,21 @@
-mode: unquantized_emb
+mode: quantized_emb
 sample_rate: 44100
 target_sec: 10
 num_outputs: 2
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/EMO_dataset/ # 需要更改
+probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/EMO_dataset/encodec/${mode} # 需要更改
 seed: 666
 codec_name: encodec
 task: regression
+save_result: null
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [3]
+  devices: [0]
   precision: 32
-  max_epochs: 200
+  max_epochs: 100
+  check_val_every_n_epoch: 5
+  limit_val_batches: 1.0
   log_every_n_steps: 5
   val_check_interval: 1.0
 
@@ -23,12 +26,12 @@ data:
     target_sec: ${target_sec}
     is_mono: True
     is_normalize: False
-    audio_dir: /sdb/data1/music/mix_music/marble_dataset/data/EMO/emomusic/wav
-    meta_dir: /sdb/data1/music/mix_music/marble_dataset/data/EMO/emomusic
+    audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/EMO/emomusic/wav
+    meta_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/EMO/emomusic
   codec_name: ${codec_name}
-  train_batch_size: 4
+  train_batch_size: 16
   valid_batch_size: 1
-  test_batch_size: 4
+  test_batch_size: 16
   train_num_workers: 8
   valid_num_workers: 4
   test_num_workers: 4
@@ -50,7 +53,7 @@ model:
     kernel_size: 3
     stride: 1
   target_sec: ${target_sec}
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz # 需要更改
+  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz # 需要更改
 
   optimizer_builder:
     _target_: torch.optim.AdamW
@@ -89,7 +92,8 @@ callbacks:
     every_n_epochs: 1
     mode: min
     save_top_k: 1
-    filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
+    save_last: False
+    filename: ${codec_name}_${mode}_{epoch}-{valid_loss:.4f}
     verbose: True
 
 tensorboard:

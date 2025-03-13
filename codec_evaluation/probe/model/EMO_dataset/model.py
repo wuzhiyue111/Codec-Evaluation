@@ -100,16 +100,16 @@ class EMOProber(nn.Module):
 
     def group_mean(self, data, n_segment_list):
         if sum(n_segment_list) != len(data):
-            raise ValueError("分组大小的总和必须等于张量的长度")
+            raise ValueError("length error!")
 
         groups = torch.split(data, n_segment_list)
 
-        # 计算每组的均值
-        result = [group.float().mean() for group in groups]
-
-        # 将结果转换为张量
-        output_tensor = torch.tensor(result)
-
+        result = []
+        for group in groups:
+            # 对每一列求均值，group.shape = [n_segments, num_columns]
+            group_means = group.float().mean(dim=0)  # 按列求均值
+            result.append(group_means)
+        output_tensor = torch.stack(result, dim=0) 
         return output_tensor
 
     def forward(self, x, y, n_segment_list):
