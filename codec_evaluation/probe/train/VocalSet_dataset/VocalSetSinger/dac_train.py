@@ -6,13 +6,12 @@ import codec_evaluation
 from codec_evaluation.utils.logger import RankedLogger
 from codec_evaluation.utils.print_config import print_config_tree
 from codec_evaluation.utils.utils import find_lastest_ckpt
-from codec_evaluation.probe.dataset.VocalSetTech_dataset import VocalSetTechdataset
-
+from codec_evaluation.probe.dataset.VocalSetSinger_dataset import VocalSetSingerdataset
 
 root_path = codec_evaluation.__path__[0]
 logger = RankedLogger(__name__, rank_zero_only=True)
 
-@hydra.main(config_path=f"{root_path}/probe/config/VocalSetTech_dataset", config_name="wavtokenizer.yaml", version_base=None) # 需要更改
+@hydra.main(config_path=f"{root_path}/probe/config/VocalSetSinger_dataset", config_name="dac.yaml", version_base=None) # 需要更改
 def main(config: DictConfig) -> None:
 
     print_config_tree(config)
@@ -42,7 +41,7 @@ def main(config: DictConfig) -> None:
         logger=tensorboard_logger, 
         _convert_="partial")
     
-    latest_ckpt_path = None
+    latest_ckpt_path = find_lastest_ckpt(config.get("probe_ckpt_dir", None))
     logger.info(f"start_training, latest_ckpt_path: {latest_ckpt_path}")
     trainer.fit(
         model=model,

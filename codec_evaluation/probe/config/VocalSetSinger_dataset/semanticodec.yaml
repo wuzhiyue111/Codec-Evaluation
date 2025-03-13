@@ -1,17 +1,17 @@
 mode: quantized_emb
 sample_rate: 44100
 target_sec: 3
-num_outputs: 10
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/VocalSet_dataset/VocalSetTech/encodec/${mode} # 需要更改
+num_outputs: 20
+probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/VocalSet_dataset/VocalSetSinger/semanticodec/${mode} # 需要更改
 seed: 666
-codec_name: encodec # 需要更改
+codec_name: semanticodec # 需要更改
 task: multiclass
 save_result: null
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [1]
+  devices: [8]
   precision: 32
   max_epochs: 100
   check_val_every_n_epoch: 5
@@ -20,7 +20,7 @@ trainer:
   val_check_interval: 1.0
 
 data:
-  _target_: codec_evaluation.probe.dataset.VocalSetTech_dataset.VocalSetdataModule
+  _target_: codec_evaluation.probe.dataset.VocalSetSinger_dataset.VocalSetdataModule
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
@@ -53,8 +53,7 @@ model:
     kernel_size: 3
     stride: 1
   target_sec: ${target_sec}
-  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz # 需要更改
-
+  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/semantic # 需要更改
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -99,6 +98,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/VocalSet_dataset/VocalSetTech # 需要更改
+  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/VocalSet_dataset/VocalSetSinger # 需要更改
   name: ${codec_name}_${mode}
   log_graph: true

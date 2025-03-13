@@ -7,11 +7,10 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from einops import reduce
-
 from codec_evaluation.utils.utils import cut_or_pad
 
 
-class VocalSetTechdataset(Dataset):
+class VocalSetSingerdataset(Dataset):
     def __init__(
         self,
         split,
@@ -30,9 +29,9 @@ class VocalSetTechdataset(Dataset):
         self.is_normalize = is_normalize
         self.audio_dir = audio_dir
         self.meta_dir = meta_dir
-        self.metadata = pd.read_csv(filepath_or_buffer=os.path.join(meta_dir, f'{split}_t.txt'), 
+        self.metadata = pd.read_csv(filepath_or_buffer=os.path.join(meta_dir, f'{split}_s.txt'), 
                                     names = ['audio_path'])
-        self.class2id = {'belt': 0, 'breathy': 1, 'inhaled': 2, 'lip_trill': 3, 'spoken': 4, 'straight': 5, 'trill': 6, 'trillo': 7, 'vibrato': 8, 'vocal_fry': 9}
+        self.class2id = {'f1':0, 'f2':1, 'f3':2, 'f4':3, 'f5':4, 'f6':5, 'f7':6, 'f8':7, 'f9':8, 'm1':9, 'm2':10, 'm3':11, 'm4':12, 'm5':13, 'm6':14, 'm7':15, 'm8':16, 'm9':17, 'm10':18, 'm11':19}
         self.id2class = {v: k for k, v in self.class2id.items()}
 
     def __len__(self):
@@ -45,12 +44,12 @@ class VocalSetTechdataset(Dataset):
         """
         return:
             segments: [1, wavform_length]
-            labels: [1, 10]
+            labels: [1, 20]
         """
         audio_path = self.metadata.iloc[index].iloc[0]
         audio_file = os.path.join(self.audio_dir, audio_path)
         segments, pad_mask = self.load_audio(audio_file)
-        label = self.class2id[audio_path.split('/')[0]]
+        label = self.class2id[audio_path.split('/')[1].split('_')[0]]
 
         labels = []
         labels.extend([label] * len(pad_mask))
@@ -59,7 +58,6 @@ class VocalSetTechdataset(Dataset):
         segments = torch.vstack(segments)
 
         return {"audio": segments, "labels":  labels, "n_segments": len(pad_mask)}
-
 
     def load_audio(
         self,
@@ -92,6 +90,7 @@ class VocalSetTechdataset(Dataset):
 
         return waveform, pad_mask
 
+
     def collate_fn(self, batch):
         audio_list = [item["audio"] for item in batch if item is not None]
         label_list = [item["labels"] for item in batch if item is not None]
@@ -105,7 +104,6 @@ class VocalSetTechdataset(Dataset):
             "labels": label_tensor,
             "n_segments_list": n_segments_list
         }
-    
 
 
 class VocalSetdataModule(pl.LightningDataModule):
@@ -134,12 +132,12 @@ class VocalSetdataModule(pl.LightningDataModule):
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            self.train_dataset = VocalSetTechdataset(split="train", **self.dataset_args)
-            self.valid_dataset = VocalSetTechdataset(split="valid", **self.dataset_args)
+            self.train_dataset = VocalSetSingerdataset(split="train", **self.dataset_args)
+            self.valid_dataset = VocalSetSingerdataset(split="valid", **self.dataset_args)
         if stage == "val":
-            self.valid_dataset = VocalSetTechdataset(split="valid", **self.dataset_args)
+            self.valid_dataset = VocalSetSingerdataset(split="valid", **self.dataset_args)
         if stage == "test":
-            self.test_dataset = VocalSetTechdataset(split="test", **self.dataset_args)
+            self.test_dataset = VocalSetSingerdataset(split="test", **self.dataset_args)
 
     def train_dataloader(self):
         return DataLoader(
