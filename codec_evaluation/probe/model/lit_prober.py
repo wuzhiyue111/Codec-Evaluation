@@ -73,7 +73,7 @@ class Prober(pl.LightningModule):
         length = torch.ones(waveforms.shape[0])
         all_features = self.codec(waveforms, length)
         # import pdb; pdb.set_trace()
-        if self.codec_name == 'semanticodec':
+        if self.codec_name == 'semanticodec' or self.codec_name == 'mimi':
             assert expect_lenth is not None, "expect_lenth is required for semanticodec"
             if all_features.dim() == 4:
                 all_features = rearrange(all_features, 'b d c t -> b (d c) t')
@@ -251,7 +251,7 @@ class Prober(pl.LightningModule):
     def on_train_epoch_end(self, outputs = None):
         self.log_metrics('train')
     
-    def on_validation_epoch_end(self, outputs = None):
+    def on_validation_epoch_end(self, outputs = None):        
         self.log_metrics('valid')
 
     def on_test_epoch_end(self, outputs = None):
