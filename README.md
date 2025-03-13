@@ -323,26 +323,12 @@ bash env_build.sh
             <th colspan="2">libritts</th>
             <th colspan="1">Vocalsound</th>
             <th colspan="1">MELD</th>
-            <th colspan="1"></th>
-            <th colspan="1"></th>
-	    <th colspan="1"></th>
-	    <th colspan="1"></th>
-	    <th colspan="1"></th>
-	    <th colspan="2"></th>
         </tr>
 	<tr>
 	    <td align=center>WER</td>
             <td align=center>CER</td>
 	    <td align=center>Acc</td>
             <td align=center>Acc</td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
     </thead>
     <tbody>
         <tr>
@@ -352,14 +338,6 @@ bash env_build.sh
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
@@ -367,14 +345,6 @@ bash env_build.sh
             <td align=center>0.369</td>
             <td align=center>0.535</td>
             <td align=center>0.483</td>
-	    <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
         </tr>
         <tr>
             <td align=center rowspan="2">Encodec</td>
@@ -383,14 +353,6 @@ bash env_build.sh
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
@@ -398,14 +360,6 @@ bash env_build.sh
             <td align=center></td>
 	    <td align=center>0.57</td>
 	    <td align=center>0.481</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
         </tr>
         <tr>
             <td align=center rowspan="2">SemantiCodec</td>
@@ -414,14 +368,6 @@ bash env_build.sh
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
-            <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>\
-	    <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
@@ -429,14 +375,6 @@ bash env_build.sh
             <td align=center></td>
             <td align=center>0.723</td>
             <td align=center>0.485</td>
-            <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
         </tr>
         <tr>
             <td align=center rowspan="2">WavTokenizer</td>
@@ -445,14 +383,6 @@ bash env_build.sh
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
@@ -460,14 +390,6 @@ bash env_build.sh
             <td align=center>0.416</td>
             <td align=center>0.524</td>
             <td align=center>0.484</td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center> </td>
-	    <td align=center> </td>
         </tr>
 	<tr>
 	    <td align=center rowspan="2">Mimi</td>
@@ -476,14 +398,6 @@ bash env_build.sh
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
 	</tr>
 	<tr>
             <td align=center>quantized_emb</td>
@@ -491,14 +405,6 @@ bash env_build.sh
             <td align=center>0.22</td>
             <td align=center>0.824</td>
             <td align=center>0.481</td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center> </td>
-	    <td align=center> </td>
         </tr>
 	<tr>
 	    <td align=center rowspan="2">SpeechTokenizer</td>
@@ -507,14 +413,6 @@ bash env_build.sh
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
 	</tr>
 	<tr>
             <td align=center>quantized_emb</td>
@@ -522,14 +420,6 @@ bash env_build.sh
             <td align=center>0.164</td>
             <td align=center>0.772</td>
             <td align=center>0.498</td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center> </td>
-	    <td align=center> </td>
         </tr>
     </tbody>
 </table>
