@@ -13,7 +13,7 @@ trainer:
   accelerator: gpu
   devices: [3]
   precision: 32
-  max_epochs: 500
+  max_epochs: 50
   check_val_every_n_epoch: 5
   limit_val_batches: 1.0
   log_every_n_steps: 5
