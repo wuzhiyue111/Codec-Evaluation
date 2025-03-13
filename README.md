@@ -120,60 +120,29 @@ bash env_build.sh
     </tr>
     <tr>
       <th>PESQ</th>
-      <th>Speaker_Sim</th>
-      <th>WER</th>
-      <th>CER</th>
       <th>STOI</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>DAC</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>2.66</td>
+      <td>0.86</td>
     </tr>
     <tr>
       <td>Encodec</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>Mimi</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>2.27</td>
+      <td>0.85</td>
     </tr>
     <tr>
       <td>SemantiCodec</td>
       <td></td>
       <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
     </tr>
     <tr>
       <td>WavTokenizer</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>SpeechTokenizer</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>1.14</td>
+      <td>0.49</td>
     </tr>
   </tbody>
 </table>
