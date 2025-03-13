@@ -2,17 +2,20 @@ mode: quantized_emb
 sample_rate: 44100
 target_sec: 10
 num_outputs: 24
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/GS_dataset/ # 需要更改
+probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/GS_dataset/semanticodec/${mode} # 需要更改
 seed: 666
 codec_name: semanticodec # 需要更改
 task: multiclass
+save_result: null
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [4]
+  devices: [4,5]
   precision: 32
-  max_epochs: 200
+  max_epochs: 100
+  check_val_every_n_epoch: 5
+  limit_val_batches: 1.0
   log_every_n_steps: 5
   val_check_interval: 1.0
 
@@ -23,15 +26,15 @@ data:
     target_sec: ${target_sec}
     is_mono: True
     is_normalize: False
-    audio_dir: /sdb/data1/music/mix_music/marble_dataset/data/GS/giantsteps_clips/wav
-    meta_path: /sdb/data1/music/mix_music/marble_dataset/data/GS/giantsteps_clips/meta.json
+    audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/GS/giantsteps_clips/wav
+    meta_path: /mnt/sda/a6000/sdb/data1/marble_dataset/data/GS/giantsteps_clips/meta.json
   codec_name: ${codec_name}
-  train_batch_size: 4
+  train_batch_size: 16
   valid_batch_size: 1
-  test_batch_size: 4
-  train_num_workers: 8
-  valid_num_workers: 4
-  test_num_workers: 4
+  test_batch_size: 16
+  train_num_workers: 4
+  valid_num_workers: 2
+  test_num_workers: 2
 
 model:
   _target_: codec_evaluation.probe.model.lit_prober.Prober
@@ -50,7 +53,7 @@ model:
     kernel_size: 3
     stride: 1
   target_sec: ${target_sec}
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/semantic # 需要更改
+  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/semantic # 需要更改
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -89,7 +92,7 @@ callbacks:
     every_n_epochs: 1
     mode: min
     save_top_k: 1
-    save_last: True
+    save_last: False
     filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
     verbose: True
 

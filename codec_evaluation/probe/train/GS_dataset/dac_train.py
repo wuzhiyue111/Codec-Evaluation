@@ -39,24 +39,21 @@ def main(config: DictConfig) -> None:
         config.trainer, 
         callbacks=callbacks, 
         logger=tensorboard_logger, 
-        _convert_="partial", 
-        use_distributed_sampler=False, # Custom bucket sampler, the use_distributed_sampler need to be set to False
-    )
-
+        _convert_="partial")
     
-    # latest_ckpt_path = None
-    # logger.info(f"start_training, latest_ckpt_path: {latest_ckpt_path}")
-    # trainer.fit(
-    #     model=model,
-    #     datamodule=datamodule,
-    #     ckpt_path=latest_ckpt_path,
-    # )
-    # logger.info("training_finished")
+    latest_ckpt_path = None
+    logger.info(f"start_training, latest_ckpt_path: {latest_ckpt_path}")
+    trainer.fit(
+        model=model,
+        datamodule=datamodule,
+        ckpt_path=latest_ckpt_path,
+    )
+    logger.info("training_finished")
 
-    if torch.cuda.is_avaliable():
+    if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
-    latest_ckpt_path = find_lastest_ckpt(config.get("probe_ckpt_dir", None), config.get("mode"))
+    latest_ckpt_path = find_lastest_ckpt(config.get("probe_ckpt_dir", None))
     if latest_ckpt_path is None:
         logger.error("No checkpoint found for testing!")
         return

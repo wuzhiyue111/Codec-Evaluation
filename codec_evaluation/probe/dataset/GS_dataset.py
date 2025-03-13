@@ -6,7 +6,6 @@ import json
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
-
 from codec_evaluation.utils.utils import find_audios, cut_or_pad
 
 
@@ -39,7 +38,7 @@ class GSdataset(Dataset):
         self.id2class = {v: k for k, v in self.class2id.items()}
 
     def __len__(self):
-        return len(self.audio_files)
+        return len(self.audio_names_without_ext)
 
     def __getitem__(self, index):
         return self.get_item(index)
