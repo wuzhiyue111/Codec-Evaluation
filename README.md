@@ -301,8 +301,8 @@ bash env_build.sh
             <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
-	    <td align=center>0.25</td>
-	    <td align=center> </td>
+	    <td align=center>0.344</td>
+	    <td align=center>0.451</td>
 	    <td align=center>0.328</td>
 	    <td align=center> </td>
 	    <td align=center> </td>
