@@ -13,8 +13,7 @@ def longest_common_substring_strict(a, b):
         if current_length > max_length:
             max_length = current_length
             start_index = i
+    if max_length == 0:
+        return -1
     
-    # 提取最长公共子串（如果存在）
-    lcs = a[start_index:start_index + max_length] if max_length > 0 else []
-    
-    return max_length, lcs, start_index, start_index
+    return max_length
