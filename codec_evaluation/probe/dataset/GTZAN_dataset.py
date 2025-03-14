@@ -8,22 +8,36 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from codec_evaluation.utils.utils import find_audios, cut_or_pad
 from einops import reduce
+from torch.nn.utils.rnn import pad_sequence
 
 class GTZANdataset(Dataset):
     def __init__(
         self,
         split,
-        sample_rate,
-        target_sec,        
-        is_mono,
-        is_normalize,
         audio_dir,
         meta_dir,
+        sample_rate,
+        target_sec,        
+        is_mono = True,
+        is_normalize = False,
     ):
+        """
+            split: train, valid, test
+            sample_rate: audio sample rate
+            target_sec: target segment length (seconds)
+            is_mono: whether to convert to mono
+            is_normalize: whether to normalize the audio
+            audio_dir: audio root path
+            meta_dir: meta root path
+        """
         self.split = split
         self.sample_rate = sample_rate
         self.target_sec = target_sec
-        self.target_length = self.target_sec * self.sample_rate
+        if self.target_sec is not None:
+            self.target_length = self.target_sec * self.sample_rate
+        else:
+            self.target_length = None
+
         self.is_mono = is_mono
         self.is_normalize = is_normalize
         self.audio_dir = audio_dir
@@ -38,7 +52,7 @@ class GTZANdataset(Dataset):
 
     def __getitem__(self, index):
         return self.getitem(index)
-    
+
     def getitem(self, index):
         """
             return:
@@ -57,10 +71,11 @@ class GTZANdataset(Dataset):
             else:
                 labels.append(-100)
         labels = torch.tensor(labels)
-        segments = torch.vstack(segments)
+        if self.target_length is not None:
+            segments = torch.vstack(segments)
 
         return {"audio": segments, "labels":  labels, "n_segments": len(pad_mask)}
-    
+
     def load_audio(
             self,
             audio_file,
@@ -79,7 +94,7 @@ class GTZANdataset(Dataset):
         except Exception as e:
             print(f"Error loading audio file {audio_file}:{e}")
             return None
-        
+
         # Convert to mono if needed
         if waveform.shape[0] > 1 and self.is_mono:
             waveform = torch.mean(waveform, dim=0, keepdim=True)
@@ -88,16 +103,24 @@ class GTZANdataset(Dataset):
         if self.is_normalize:
             waveform = waveform / waveform.abs().max()
 
-        waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length)
+        if self.target_length is not None:
+            waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length)
+        else:
+            pad_mask = [1]
 
         return waveform, pad_mask
-    
+
     def collate_fn(self, batch):
         audio_list = [item["audio"] for item in batch if item is not None]
         label_list = [item["labels"] for item in batch if item is not None]
         n_segments_list = [item["n_segments"] for item in batch if item is not None]
 
-        audio_tensor = torch.vstack(audio_list)
+        if self.target_length is not None:
+            audio_tensor = torch.vstack(audio_list)
+        else:
+            audio_list = [audio.squeeze(0) for audio in audio_list]
+            audio_tensor = pad_sequence(audio_list, batch_first=True)
+
         label_tensor = torch.cat(label_list,dim=0)
 
         return {
@@ -155,7 +178,7 @@ class GTZANdataModule(pl.LightningDataModule):
             collate_fn=self.valid_dataset.collate_fn,
             num_workers=self.valid_num_workers,
         )
-    
+
     def test_dataloader(self) :
         return DataLoader(
             dataset=self.test_dataset,
