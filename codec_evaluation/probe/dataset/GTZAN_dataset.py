@@ -37,6 +37,7 @@ class GTZANdataset(Dataset):
             self.target_length = self.target_sec * self.sample_rate
         else:
             self.target_length = None
+
         self.is_mono = is_mono
         self.is_normalize = is_normalize
         self.audio_dir = audio_dir

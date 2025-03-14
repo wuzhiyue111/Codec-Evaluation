@@ -1,9 +1,11 @@
 import hydra
+import torch
 import pytorch_lightning as pl
 from omegaconf import DictConfig
 import codec_evaluation
 from codec_evaluation.utils.logger import RankedLogger
 from codec_evaluation.utils.print_config import print_config_tree
+from codec_evaluation.utils.utils import find_lastest_ckpt
 from codec_evaluation.probe.dataset.NSynthI_dataset import NSynthIdataModule
 
 root_path = codec_evaluation.__path__[0]
@@ -37,11 +39,10 @@ def main(config: DictConfig) -> None:
         config.trainer, 
         callbacks=callbacks, 
         logger=tensorboard_logger, 
-        _convert_="partial", 
-        use_distributed_sampler=False, # Custom bucket sampler, the use_distributed_sampler need to be set to False
+        _convert_="partial"
     )
 
-    # latest_ckpt_path = find_lastest_ckpt(config.get("probe_ckpt_dir", None))
+    
     latest_ckpt_path = None
     logger.info(f"start_training, latest_ckpt_path: {latest_ckpt_path}")
     trainer.fit(
@@ -51,6 +52,28 @@ def main(config: DictConfig) -> None:
     )
     logger.info("training_finished")
 
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    latest_ckpt_path = find_lastest_ckpt(config.get("probe_ckpt_dir", None))
+    if latest_ckpt_path is None:
+        logger.error("No checkpoint found for testing!")
+        return
+
+    logger.info(f"start_Testing, latest_ckpt_path: {latest_ckpt_path}")
+    trainer.test(
+        model=model,
+        datamodule=datamodule,
+        ckpt_path=latest_ckpt_path,
+    )
+    logger.info("test_finished!")
+    logger.info(f"acc: {model.test_step_outputs['acc']}")
+    # # 保存结果
+    # if config.save_asr_result is not None:
+    #     with open(f"{config.save_asr_result}", "w") as f:
+    #         for r in model.test_step_outputs["acc"]:
+    #             json.dump(r, f, indent=4)
+    #             f.write("\n")
 
 if __name__ == "__main__":
     main()
