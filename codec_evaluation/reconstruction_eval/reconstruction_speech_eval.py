@@ -115,6 +115,7 @@ class CodecEvaluation:
                     self.sample_rate, self.codec_sample_rate
                 ).to(gt_audio_test.device)
                 gt_audio_test = resampler(gt_audio_test)
+            max_length = gt_audio_test.shape[-1]
 
             # save to list
             texts = batch["text"]
@@ -122,13 +123,8 @@ class CodecEvaluation:
                 text_list.append(text)
 
             gt_audio = batch["audio"].to(self.device)
-            audio_lengths = batch["audio_length"]
-            max_length = audio_lengths.max().item()
 
-            if self.codec_sample_rate != self.sample_rate:
-                max_length = int(max_length * (self.codec_sample_rate / self.sample_rate))
-
-            # prevent the more than max_length
+            # prevent the more than max_length | prevent rectify the gt_audio
             rec_audio = self.codec(gt_audio)[:, :max_length]
 
             # prevent the less than gt_audio
