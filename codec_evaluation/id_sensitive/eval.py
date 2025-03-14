@@ -118,21 +118,14 @@ class IDSensitiveEvaluation:
     def get_id(self, sig1, sig2):
         sig1 = sig1.to(self.device)
         sig2 = sig2.to(self.device)
-        if self.codec_name == "wavtokenizer":
-            id_1, _ = self.codec_encode(sig1, length=None)
-            id_1 = id_1.movedim(-1, 0)
-            id_2, _ = self.codec_encode(sig2, length=None)
-            id_2 = id_2.movedim(-1, 0)
-        else:
-            id_1, _= self.codec_encode(sig1, length=None)
-            id_1 = id_1.movedim(-1, -2)
-            id_2, _ = self.codec_encode(sig2, length=None)
-            id_2 = id_2.movedim(-1, -2)
+        id_1, _= self.codec_encode(sig1, length=None)
+        id_1 = id_1.movedim(-1, -2)
+        id_2, _ = self.codec_encode(sig2, length=None)
+        id_2 = id_2.movedim(-1, -2)
         return id_1, id_2
     
     @torch.inference_mode
     def evaluate(self, task):
-        all_results = []
         if task == "MRC":
             gt_audio_list = []
             rec_audio_dict = {}
@@ -187,8 +180,8 @@ class IDSensitiveEvaluation:
                     lcs_results = self.get_lcs(id_1, id_2)
                     same_id_list.append(same_id_results)
                     lcs_list.append(lcs_results)
-            print("Same ID Results:", same_id_results)
-            print("LCS Results:", lcs_results)
+            print("Same ID Results:", same_id_list)
+            print("LCS Results:", lcs_list)
             # 绘制 Same ID Results 图表
             plt.figure(figsize=(10, 6))
             plt.plot(same_id_list, marker='o')
@@ -209,7 +202,15 @@ class IDSensitiveEvaluation:
             plt.savefig('lcs_results.png')
             plt.close()
 
+            return {
+                "task": task,
+                "same_id_list": same_id_list,
+                "lcs_list": lcs_list,
+            }
+
         elif task == "OB2":
+            same_id_list = []
+            lcs_list = []
             for batch in tqdm(self.dataloader, desc="dataloader audio"):
                 gt_audio_test = batch["audio"].clone()
                 for i in range(len(gt_audio_test)):
@@ -219,10 +220,17 @@ class IDSensitiveEvaluation:
                     id_1, id_2 = self.get_id(sig1, sig2)
                     same_id_results = self.get_same_id(id_1, id_2)
                     lcs_results = self.get_lcs(id_1, id_2)
+                    same_id_list.append(same_id_results)
+                    lcs_list.append(lcs_results)
                 print("Same ID Results:", same_id_results)
-                print("LCS Results:", lcs_results)        
+                print("LCS Results:", lcs_results) 
 
-        return all_results
+            return {
+                "task": task,
+                "same_id_list": same_id_list,
+                "lcs_list": lcs_list,
+            }
+
 
 if __name__ == "__main__":
     """
