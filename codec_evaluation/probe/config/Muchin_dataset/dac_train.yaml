@@ -7,7 +7,7 @@ codec_name: dac
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [1]
+  devices: [0]
   precision: 32
   max_epochs: 20
   limit_val_batches: 10
@@ -21,9 +21,9 @@ data:
   train_split: 0.8
   valid_split: 0.05
   test_split: 0.1
-  train_batch_size: 32
+  train_batch_size: 16
   valid_batch_size: 2
-  test_batch_size: 32
+  test_batch_size: 16
   train_num_workers: 8
   valid_num_workers: 2
   test_num_workers: 8
@@ -42,7 +42,7 @@ model:
     vocab_size: 10000
     dropout: 0.1
     conformer_head: 8
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz
+  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt
 
   optimizer_builder:
       _target_: torch.optim.AdamW
