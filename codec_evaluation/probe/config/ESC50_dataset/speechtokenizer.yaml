@@ -2,16 +2,16 @@ mode: quantized_emb
 sample_rate: 44100
 target_sec: 5
 num_outputs: 50
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/ESC50_dataset/semanticodec/${mode} # 需要更改
+probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/ESC50_dataset/speechtokenizer/${mode} # 需要更改
 seed: 666
-codec_name: semanticodec
+codec_name: speechtokenizer # 需要更改
 task: multiclass
 save_result: null
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [1]
+  devices: [0]
   precision: 32
   max_epochs: 100
   log_every_n_steps: 5
@@ -55,15 +55,15 @@ model:
     kernel_size: 3
     stride: 1
   target_sec: ${target_sec}
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/semantic # 需要更改
-  
+  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/speechtokenizer # 需要更改
+
   optimizer_builder:
-    _target_: torch.optim.AdamW
-    _partial_: true
-    lr: 1e-4
-    betas: [0.8, 0.99]
-    eps: 1e-5
-    weight_decay: 0.08
+      _target_: torch.optim.AdamW
+      _partial_: true
+      lr: 1e-4
+      betas: [0.8, 0.99]
+      eps: 1e-5
+      weight_decay: 0.08
     
   lr_scheduler_builder:
     _target_: torch.optim.lr_scheduler.LambdaLR
