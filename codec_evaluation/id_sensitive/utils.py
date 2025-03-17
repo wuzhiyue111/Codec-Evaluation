@@ -14,6 +14,7 @@ def longest_common_substring_strict(a, b):
             max_length = current_length
             start_index = i
     if max_length == 0:
-        return -1
+        return 0
     
     return max_length
+
