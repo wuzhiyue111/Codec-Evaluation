@@ -1,0 +1,91 @@
+mode: quantized_emb
+sample_rate: 44100
+probe_root_dir: /sdb/tmp/user/wsy/codec_eval/probe_ckpt/Muchin_dataset/mimi/${mode} 
+seed: 666
+codec_name: mimi
+
+trainer:
+  _target_: pytorch_lightning.Trainer
+  accelerator: gpu
+  devices: [2]
+  precision: 32
+  max_epochs: 20
+  log_every_n_steps: 20
+  val_check_interval: 1.0
+  limit_val_batches: 10
+
+data:
+  _target_: codec_evaluation.probe.dataset.Muchin_dataset.Muchin_ctc.Muchin_ctc_module
+  audio_dir: /sdb/data1/benchmark/muchin/muchin_split
+  meta_path: /sdb/data1/benchmark/muchin/muchin_ctc.json
+  train_split: 0.8
+  valid_split: 0.05
+  test_split: 0.1
+  train_batch_size: 32
+  valid_batch_size: 2
+  test_batch_size: 32
+  train_num_workers: 8
+  valid_num_workers: 2
+  test_num_workers: 8
+
+model:
+  _target_: codec_evaluation.probe.model.ctc_lit_prober.CtcLitProber
+  codec_name: ${codec_name}
+  sample_rate: ${sample_rate}
+  mode: ${mode}
+  probe_model_builder:
+    _target_: codec_evaluation.probe.model.LibriTTS_dataset.model.Ctc_probe_model
+    _partial_: true
+    tokenizer:
+      _target_: transformers.Speech2TextProcessor.from_pretrained
+      pretrained_model_name_or_path: /sdb/model_weight/s2t-small-librispeech-asr
+    vocab_size: 10000
+    dropout: 0.1
+    conformer_head: 8
+  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/mimi/models--kyutai--mimi
+
+  optimizer_builder:
+      _target_: torch.optim.AdamW
+      _partial_: true
+      lr: 1e-4
+      betas: [0.8, 0.99]
+      eps: 1e-5
+      weight_decay: 0.08
+
+  lr_scheduler_builder:
+    _target_: torch.optim.lr_scheduler.LambdaLR
+    _partial_: true
+    lr_lambda:
+      _target_: codec_evaluation.utils.schedule.get_cosine_schedule_with_warmup_lr_lambda
+      _partial_: true
+      num_warmup_steps: 200
+      num_training_steps: 4000
+      final_lr_ratio: 0.2
+
+callbacks:
+  learning_rate_monitor:
+    _target_: pytorch_lightning.callbacks.LearningRateMonitor
+    logging_interval: step
+
+  rich_progress_bar:
+    _target_: pytorch_lightning.callbacks.RichProgressBar
+
+  model_summary:
+    _target_: pytorch_lightning.callbacks.ModelSummary
+    max_depth: 1
+
+  model_checkpoint:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    monitor: val_loss
+    dirpath: ${probe_root_dir}/ckpt
+    every_n_epochs: 1
+    mode: min
+    save_top_k: 1
+    filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
+    verbose: True
+
+tensorboard:
+  _target_: pytorch_lightning.loggers.TensorBoardLogger
+  save_dir: /sdb/tmp/user/wsy/codec_eval/tb_log/Muchin_dataset
+  name: ${codec_name}_${mode}
+  log_graph: true
