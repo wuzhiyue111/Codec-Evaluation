@@ -1,6 +1,6 @@
 mode: quantized_emb
 sample_rate: 44100
-probe_root_dir: /sdb/tmp/user/wsy/codec_eval/probe_ckpt/Muchin_dataset/mimi/${mode} 
+probe_ckpt_dir: /sdb/tmp/user/wsy/codec_eval/probe_ckpt/Muchin_dataset/mimi/${mode} 
 seed: 666
 codec_name: mimi
 
@@ -34,12 +34,12 @@ model:
   sample_rate: ${sample_rate}
   mode: ${mode}
   probe_model_builder:
-    _target_: codec_evaluation.probe.model.LibriTTS_dataset.model.Ctc_probe_model
+    _target_: codec_evaluation.probe.model.Muchin_dataset.model.Ctc_probe_model
     _partial_: true
     tokenizer:
-      _target_: transformers.Speech2TextProcessor.from_pretrained
-      pretrained_model_name_or_path: /sdb/model_weight/s2t-small-librispeech-asr
-    vocab_size: 10000
+      _target_: transformers.Wav2Vec2Processor.from_pretrained
+      pretrained_model_name_or_path: /sdb/model_weight/wav2vec2-large-chinese-zh-cn
+    vocab_size: 5171
     dropout: 0.1
     conformer_head: 8
   model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/mimi/models--kyutai--mimi
@@ -77,7 +77,7 @@ callbacks:
   model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
     monitor: val_loss
-    dirpath: ${probe_root_dir}/ckpt
+    dirpath: ${probe_ckpt_dir}
     every_n_epochs: 1
     mode: min
     save_top_k: 1

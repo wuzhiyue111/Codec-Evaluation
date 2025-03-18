@@ -42,14 +42,14 @@ def main(config: DictConfig) -> None:
         use_distributed_sampler=False, # Custom bucket sampler, the use_distributed_sampler need to be set to False
     )
 
-    latest_ckpt_path = None
-    logger.info(f"start_training, latest_ckpt_path: {latest_ckpt_path}")
-    trainer.fit(
-        model=model,
-        datamodule=datamodule,
-        ckpt_path=latest_ckpt_path,
-    )
-    logger.info("training_finished")
+    # latest_ckpt_path = None
+    # logger.info(f"start_training, latest_ckpt_path: {latest_ckpt_path}")
+    # trainer.fit(
+    #     model=model,
+    #     datamodule=datamodule,
+    #     ckpt_path=latest_ckpt_path,
+    # )
+    # logger.info("training_finished")
 
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
@@ -58,12 +58,14 @@ def main(config: DictConfig) -> None:
     if latest_ckpt_path is None:
         logger.error("No checkpoint found for testing!")
         return
-
+    checkpoint = torch.load(latest_ckpt_path)
+    model.load_state_dict(checkpoint['state_dict'], strict=False)
+    model.eval()
+    
     logger.info(f"start_Testing, latest_ckpt_path: {latest_ckpt_path}")
     trainer.test(
         model=model,
         datamodule=datamodule,
-        ckpt_path=latest_ckpt_path,
     )
     logger.info("testing_finished")
     logger.info(f"wer: {model.test_step_outputs['wer']}")

@@ -1,13 +1,13 @@
 mode: quantized_emb
 sample_rate: 44100
-probe_root_dir: /sdb/tmp/user/wsy/codec_eval/probe_ckpt/Muchin_dataset/dac/${mode} 
+probe_ckpt_dir: /sdb/tmp/user/wsy/codec_eval/probe_ckpt/Muchin_dataset/dac/${mode}
 seed: 666
 codec_name: dac
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [0]
+  devices: [1]
   precision: 32
   max_epochs: 20
   limit_val_batches: 10
@@ -21,12 +21,12 @@ data:
   train_split: 0.8
   valid_split: 0.05
   test_split: 0.1
-  train_batch_size: 16
-  valid_batch_size: 2
-  test_batch_size: 16
-  train_num_workers: 8
+  train_batch_size: 2
+  valid_batch_size: 1
+  test_batch_size: 2
+  train_num_workers: 4
   valid_num_workers: 2
-  test_num_workers: 8
+  test_num_workers: 4
 
 model:
   _target_: codec_evaluation.probe.model.ctc_lit_prober.CtcLitProber
@@ -34,12 +34,12 @@ model:
   sample_rate: ${sample_rate}
   mode: ${mode}
   probe_model_builder:
-    _target_: codec_evaluation.probe.model.LibriTTS_dataset.model.Ctc_probe_model
+    _target_: codec_evaluation.probe.model.Muchin_dataset.model.Ctc_probe_model
     _partial_: true
     tokenizer:
-      _target_: transformers.Speech2TextProcessor.from_pretrained
-      pretrained_model_name_or_path: /sdb/model_weight/s2t-small-librispeech-asr
-    vocab_size: 10000
+      _target_: transformers.Wav2Vec2Processor.from_pretrained
+      pretrained_model_name_or_path: /sdb/model_weight/wav2vec2-large-chinese-zh-cn
+    vocab_size: 5171
     dropout: 0.1
     conformer_head: 8
   model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt
@@ -77,11 +77,11 @@ callbacks:
   model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
     monitor: val_loss
-    dirpath: ${probe_root_dir}/ckpt
+    dirpath: ${probe_ckpt_dir}
     every_n_epochs: 1
     mode: min
     save_top_k: 1
-    filename: ${codec_name}_${mode}_{epoch}-{valid_loss:.4f}
+    filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
     verbose: True
 
 tensorboard:
