@@ -229,7 +229,7 @@ bash env_build.sh
 	    <td align=center>0.419</td>
 	    <td align=center>0.349</td>
             <td align=center>0.088</td>
-	    <td align=center> </td>
+	    <td align=center>0.581</td>
 	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center></td>
@@ -274,7 +274,7 @@ bash env_build.sh
 	    <td align=center>0.299</td>
 	    <td align=center>0.301</td>
 	    <td align=center>0.088</td>
-	    <td align=center></td>
+	    <td align=center>0.558</td>
 	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center></td>
@@ -364,7 +364,7 @@ bash env_build.sh
 	    <td align=center>0.130</td>
 	    <td align=center>0.287</td>
 	    <td align=center>0.090</td>
-            <td align=center> </td>
+            <td align=center>0.829</td>
 	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center></td>
