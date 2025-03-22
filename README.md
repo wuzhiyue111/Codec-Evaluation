@@ -155,7 +155,7 @@ bash env_build.sh
         <tr>
             <th rowspan="3">Codec</th>
 	    <th rowspan="3">Mode</th>
-            <th colspan="12">Dataset</th>
+            <th colspan="19">Dataset</th>
         </tr>
         <tr>
             <th colspan="2">emomusic</th>
@@ -166,6 +166,7 @@ bash env_build.sh
 	    <th colspan="1">VocalSetSinger</th>
 	    <th colspan="1">VocalSetTech</th>
 	    <th colspan="1">GS</th>
+	    <th colspan="1">Muchin</th>
 	    <th colspan="2">MTGGenre</th>
 	    <th colspan="2">MTGInstrument</th>
 	    <th colspan="2">MTGMoodtheme</th>
@@ -181,7 +182,8 @@ bash env_build.sh
 	    <td align=center>Acc</td>
 	    <td align=center>Acc</td>
 	    <td align=center>Acc</td>
-	    <td align=center>Acc</td>
+	    <td align=center>Acc</td>	   
+	    <td align=center>CER</td>
 	    <td align=center>AP</td>
 	    <td align=center>AUCROC</td>
 	    <td align=center>AP</td>
@@ -211,6 +213,7 @@ bash env_build.sh
 	    <td align=center></td>
 	    <td align=center></td>
             <td align=center></td>
+	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
         </tr>
@@ -234,6 +237,7 @@ bash env_build.sh
             <td align=center></td>
 	    <td align=center> </td>
 	    <td align=center> </td>
+	    <td align=center> </td>
         </tr>
         <tr>
             <td align=center rowspan="2">Encodec</td>
@@ -254,6 +258,7 @@ bash env_build.sh
 	    <td align=center></td>
 	    <td align=center></td>
             <td align=center></td>
+	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
         </tr>
@@ -277,6 +282,7 @@ bash env_build.sh
             <td align=center></td>
 	    <td align=center> </td>
 	    <td align=center> </td>
+	    <td align=center> </td>
         </tr>
         <tr>
             <td align=center rowspan="2">SemantiCodec</td>
@@ -299,6 +305,7 @@ bash env_build.sh
             <td align=center></td>
 	    <td align=center> </td>
 	    <td align=center> </td>
+	    <td align=center> </td>
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
@@ -312,12 +319,13 @@ bash env_build.sh
 	    <td align=center>0.344</td>
 	    <td align=center>0.451</td>
 	    <td align=center>0.328</td>
-	    <td align=center> </td>
+	    <td align=center>0.139</td>
 	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center></td>
 	    <td align=center></td>
             <td align=center></td>
+	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
         </tr>
@@ -340,6 +348,7 @@ bash env_build.sh
 	    <td align=center></td>
 	    <td align=center></td>
             <td align=center></td>
+	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
         </tr>
@@ -363,6 +372,7 @@ bash env_build.sh
             <td align=center></td>
 	    <td align=center> </td>
 	    <td align=center> </td>
+	    <td align=center> </td>
         </tr>
     </tbody>
 </table>
@@ -380,20 +390,17 @@ bash env_build.sh
             <th colspan="2">libritts</th>
             <th colspan="1">Vocalsound</th>
             <th colspan="1">MELD</th>
-	    <th colspan="1">Muchin</th>
         </tr>
 	<tr>
 	    <td align=center>WER</td>
             <td align=center>CER</td>
 	    <td align=center>Acc</td>
             <td align=center>Acc</td>
-	    <td align=center>CER</td>
     </thead>
     <tbody>
         <tr>
             <td align=center rowspan="2">DAC</td>
             <td align=center>unquantized_emb</td>
-            <td align=center></td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -405,7 +412,6 @@ bash env_build.sh
             <td align=center>0.369</td>
             <td align=center>0.535</td>
             <td align=center>0.483</td>
-	    <td align=center></td>
         </tr>
         <tr>
             <td align=center rowspan="2">Encodec</td>
@@ -414,7 +420,6 @@ bash env_build.sh
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
-            <td align=center></td>	
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
@@ -422,7 +427,6 @@ bash env_build.sh
             <td align=center>0.369</td>
 	    <td align=center>0.57</td>
 	    <td align=center>0.481</td>
-            <td align=center></td>
         </tr>
         <tr>
             <td align=center rowspan="2">SemantiCodec</td>
@@ -431,7 +435,6 @@ bash env_build.sh
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
-	    <td align=center></td>
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
@@ -439,7 +442,6 @@ bash env_build.sh
             <td align=center>0.183</td>
             <td align=center>0.723</td>
             <td align=center>0.485</td>
-	    <td align=center>0.139</td>
         </tr>
         <tr>
             <td align=center rowspan="2">WavTokenizer</td>
@@ -448,7 +450,6 @@ bash env_build.sh
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
-	    <td align=center></td>
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
@@ -456,7 +457,6 @@ bash env_build.sh
             <td align=center>0.416</td>
             <td align=center>0.524</td>
             <td align=center>0.484</td>
-	    <td align=center></td>
         </tr>
 	<tr>
 	    <td align=center rowspan="2">Mimi</td>
@@ -465,7 +465,6 @@ bash env_build.sh
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
-	    <td align=center></td>
 	</tr>
 	<tr>
             <td align=center>quantized_emb</td>
@@ -473,7 +472,6 @@ bash env_build.sh
             <td align=center>0.22</td>
             <td align=center>0.824</td>
             <td align=center>0.481</td>
-	    <td align=center></td>
         </tr>
 	<tr>
 	    <td align=center rowspan="2">SpeechTokenizer</td>
@@ -482,7 +480,6 @@ bash env_build.sh
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
-	    <td align=center></td>
 	</tr>
 	<tr>
             <td align=center>quantized_emb</td>
@@ -490,7 +487,6 @@ bash env_build.sh
             <td align=center>0.164</td>
             <td align=center>0.772</td>
             <td align=center>0.498</td>
-	    <td align=center></td>
         </tr>
     </tbody>
 </table>
