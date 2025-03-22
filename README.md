@@ -418,8 +418,8 @@ bash env_build.sh
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
+            <td align=center>0.584</td>
+            <td align=center>0.369</td>
 	    <td align=center>0.57</td>
 	    <td align=center>0.481</td>
             <td align=center></td>
@@ -435,8 +435,8 @@ bash env_build.sh
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
+            <td align=center>0.445</td>
+            <td align=center>0.183</td>
             <td align=center>0.723</td>
             <td align=center>0.485</td>
 	    <td align=center>0.139</td>
