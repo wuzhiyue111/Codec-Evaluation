@@ -38,9 +38,7 @@ def main(config: DictConfig) -> None:
         config.trainer, 
         callbacks=callbacks, 
         logger=tensorboard_logger, 
-        _convert_="partial", 
-        use_distributed_sampler=False, # Custom bucket sampler, the use_distributed_sampler need to be set to False
-    )
+        _convert_="partial")
 
     latest_ckpt_path = None
     logger.info(f"start_training, latest_ckpt_path: {latest_ckpt_path}")
@@ -69,7 +67,6 @@ def main(config: DictConfig) -> None:
         datamodule=datamodule,
     )
     logger.info("testing_finished")
-    logger.info(f"wer: {model.test_step_outputs['wer']}")
     logger.info(f"cer: {model.test_step_outputs['cer']}")
 
     # 保存结果

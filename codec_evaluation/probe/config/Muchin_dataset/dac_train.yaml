@@ -18,15 +18,14 @@ data:
   _target_: codec_evaluation.probe.dataset.Muchin_dataset.Muchin_ctc.Muchin_ctc_module
   audio_dir: /sdb/data1/benchmark/muchin/muchin_split
   meta_path: /sdb/data1/benchmark/muchin/muchin_ctc.json
-  train_split: 0.8
-  valid_split: 0.05
+  train_split: 0.9
   test_split: 0.1
-  train_batch_size: 2
-  valid_batch_size: 1
-  test_batch_size: 2
-  train_num_workers: 4
+  train_batch_size: 8
+  valid_batch_size: 2
+  test_batch_size: 8
+  train_num_workers: 16
   valid_num_workers: 2
-  test_num_workers: 4
+  test_num_workers: 16
 
 model:
   _target_: codec_evaluation.probe.model.ctc_lit_prober.CtcLitProber
