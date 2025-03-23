@@ -32,6 +32,7 @@ model:
   codec_name: ${codec_name}
   sample_rate: ${sample_rate}
   mode: ${mode}
+  language: ch
   probe_model_builder:
     _target_: codec_evaluation.probe.model.Muchin_dataset.model.Ctc_probe_model
     _partial_: true
