@@ -19,6 +19,7 @@ class CtcLitProber(LightningModule):
         codec_name: str,
         sample_rate: int,
         model_ckpt_dir: str,
+        language: str,
         mode: str = "quantized_emb",
         probe_model_builder: Any = None,
         optimizer_builder: Any = None,
@@ -42,6 +43,7 @@ class CtcLitProber(LightningModule):
         logger.info(f"{codec_name} dim: {self.dim}")
         self.probe_model: Ctc_probe_model = probe_model_builder(
             codec_dim = self.dim)
+        self.language = language
         self.codec_name = codec_name
         self.optimizer_builder = optimizer_builder
         self.lr_scheduler_builder = lr_scheduler_builder
@@ -136,7 +138,7 @@ class CtcLitProber(LightningModule):
     def post_process_text_for_wer(self, text_list):
         # 如果输入是list，先合并成字符串
         # 过滤掉特殊token
-        filtered = [word for word in text_list if word not in ["", "<pad>", "</s>", "<unk>"]]
+        filtered = [word for word in text_list if word not in ["", "<pad>", "</s>", "<unk>", "[PAD]", "[UNK]"]]
         text = " ".join(filtered)
         text = transform_text_list_for_wer([text])[0]
         return text
@@ -144,7 +146,7 @@ class CtcLitProber(LightningModule):
     def post_process_text_for_cer(self, text_list):
         # 如果输入是list，先合并成字符串
         # 过滤掉特殊token
-        filtered = [word for word in text_list if word not in ["", "<pad>", "</s>", "<unk>"]]
+        filtered = [word for word in text_list if word not in ["", "<pad>", "</s>", "<unk>", "[PAD]", "[UNK]"]]
         text = " ".join(filtered)
         text = transform_text_list_for_cer([text])[0]
         return text
@@ -197,4 +199,7 @@ class CtcLitProber(LightningModule):
         avg_wer = sum(wer_list) / len(wer_list)
         avg_cer = sum(cer_list) / len(cer_list)
 
-        self.test_step_outputs = {"wer": avg_wer, "cer": avg_cer, "result": result}
+        if self.language == 'en':
+            self.test_step_outputs = {"wer": avg_wer, "cer": avg_cer}
+        else:
+            self.test_step_outputs = {"cer": avg_cer}

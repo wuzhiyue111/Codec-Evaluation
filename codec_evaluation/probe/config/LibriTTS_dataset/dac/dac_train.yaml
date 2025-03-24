@@ -2,17 +2,17 @@ mode: quantized_emb
 sample_rate: 24000
 probe_root_dir: /sdb/tmp/user/wzy/codec_eval/ctc_libritts
 seed: 666
-codec_name: encodec
+codec_name: dac
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
   devices: [1]
   precision: 32
-  max_epochs: 5
+  max_epochs: 20
+  limit_val_batches: 10
   log_every_n_steps: 20
   val_check_interval: 1.0
-  limit_val_batches: 5
 
 data:
   _target_: codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc.LibriTTS_ctc_module
@@ -39,7 +39,7 @@ model:
     vocab_size: 10000
     dropout: 0.1
     conformer_head: 8
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz
+  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -74,7 +74,7 @@ callbacks:
   model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
     monitor: val_loss
-    dirpath: ${probe_root_dir}/ckpt
+    dirpath: ${probe_ckpt_dir}
     every_n_epochs: 1
     mode: min
     save_top_k: 1
@@ -83,6 +83,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: ${probe_root_dir}/tb_log
+  save_dir: /sdb/tmp/user/wsy/codec_eval/tb_log/Muchin_dataset
   name: ${codec_name}_${mode}
   log_graph: true
