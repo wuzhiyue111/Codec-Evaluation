@@ -80,12 +80,6 @@ class IDSensitiveEvaluation:
             **kwargs,
         )
 
-        if task == "OS":
-            self.codec_encode.sample_rate = self.sample_rate 
-        elif task == "MRC":
-            self.codec_encode.sample_rate = self.codec_encode.orig_sample_rate
-            self.codec_reconstruct.sample_rate = self.codec_encode.orig_sample_rate
-
         self.num_codebooks = num_codebooks
         self.codec_name = codec_name
         self.codec_sample_rate = self.codec_encode.orig_sample_rate
@@ -162,8 +156,11 @@ class IDSensitiveEvaluation:
         return rec_audio_dict, gt_audio_dict
 
     def data_process(self, same_id_dict_round):
+        """
+            same_id_dict_round: {round_1: [codebook_1:[] codebook_2:[],...], round_2: [],...}
+            return: result_codebook_same_id: {codebook_1: [round_1:[],round_2:[]...], codebook_2: [],...}
+        """
         round_list = [f'round_{i+1}' for i in range(10)]
-
         avg_same_id_dict = {} # {round_1: [avg_codebook_1, avg_codebook_2, ...], round_2: [], ...}
         for i in range(10): # round
             avg_same_id_dict[round_list[i]] = []
@@ -198,22 +195,11 @@ class IDSensitiveEvaluation:
             gt_audio_lengths = []
             for batch in tqdm(self.dataloader, desc="reconstruct audio"):
                 gt_audio_test = batch["audio"].clone().to(self.device)  # shape [B, T]
-                gt_audio = batch["audio"].to(self.device)   # shape [B, T]
-                if self.sample_rate != self.codec_sample_rate:
-                    resampler = torchaudio.transforms.Resample(
-                        self.sample_rate, self.codec_sample_rate
-                    ).to(self.device)
-                    gt_audio_test = resampler(gt_audio_test)
-                    gt_audio = resampler(gt_audio)
-                    resample_ratio = self.sample_rate / self.codec_sample_rate
-                    gt_audio_length = (batch["audio_length"] / resample_ratio).long()
-                else:
-                    gt_audio = gt_audio
-                    gt_audio_length = batch["audio_length"]
-
+                gt_audio_length = batch["audio_length"] 
                 gt_audio_lengths.append(gt_audio_length)
                 max_length = gt_audio_test.shape[-1]
-                
+                gt_audio = batch["audio"].to(self.device)   # shape [B, T]
+
                 rec_audio_dict, gt_audio_dict = self.multi_round_reconstruction(
                     gt_audio_clone=gt_audio_test,
                     gt_audio=gt_audio,
@@ -221,7 +207,6 @@ class IDSensitiveEvaluation:
                     rec_audio_dict=rec_audio_dict,
                     gt_audio_dict=gt_audio_dict,
                 )
-                # break
             torch.cuda.empty_cache()
             print(f"Reconstruct done! Next, carry out the MRC task.")
 
@@ -269,21 +254,22 @@ class IDSensitiveEvaluation:
             plot_os_avg_same_id(percent_same_id_avg_list, self.num_codebooks, self.codec_name, self.task)
             return f"codebook same id: {percent_same_id_avg_list}"
 
+
 if __name__ == "__main__":
     seed_all(666)
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--codec_name", type=str, default="semanticodec")
+    parser.add_argument("--codec_name", type=str, default="speechtokenizer")
     parser.add_argument(
         "--model_ckpt_dir",
         type=str,
-        default="/sdb/model_weight/codec_evaluation/codec_ckpt/semantic",
+        default="/sdb/model_weight/codec_evaluation/codec_ckpt/speechtokenizer",
     )
     parser.add_argument("--device", type=str, default="cuda:2")
     parser.add_argument("--sample_rate", type=int, default=24000)
-    parser.add_argument("--num_codebooks", type=int, default=2)
-    parser.add_argument("--need_resample", type=bool, default=False)
+    parser.add_argument("--num_codebooks", type=int, default=8)
+    parser.add_argument("--need_resample", type=bool, default=True)
     parser.add_argument("--task", type=str, default="MRC")
     parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_workers", type=int, default=8)
