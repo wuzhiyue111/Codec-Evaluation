@@ -3,15 +3,17 @@ import torchaudio
 import random
 import numpy as np
 import torch
-import os
 import codec_evaluation
 from typing import Optional
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 from torch.utils.data.dataloader import DataLoader
 root_path = codec_evaluation.__path__[0]
 from codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc import (
     LibriTTS_ctc_dataset,
+)
+from codec_evaluation.utils.utils import (
+    plot_mrc_avg_same_id,
+    plot_os_avg_same_id,
 )
 
 def seed_all(seed):
@@ -23,8 +25,6 @@ def seed_all(seed):
     np.random.seed(seed)
     torch.backends.cudnn.deterministic = False
     torch.backends.cudnn.benchmark = False
-
-seed_all(666)
 
 class IDSensitiveEvaluation:
     def __init__(
@@ -40,6 +40,7 @@ class IDSensitiveEvaluation:
         batch_size: int = 24,
         num_workers: int = 8,
         shift_time: int = 2,
+        subset_step: int = 1200,
         **kwargs,
     ):
         """
@@ -49,11 +50,13 @@ class IDSensitiveEvaluation:
             num_codebooks: number of codebooks
             need_resample: boolean, whether to resample the audio after decoding
             dataset_audio_dir: dataset audio directory
-            task: task name "MRC" or "OS2"  MRC: multi-round reconstruction, OS2: offset-2ms 
+            task: task name "MRC" or "OS"  MRC: multi-round reconstruction, OS: offset
             num_workers: number of workers
             shift_time: shift time in ms
             kwargs: other arguments
         """
+        assert task in ["MRC", "OS"], f"Invaild task: {task}. Task must be either 'MRC' or 'OS'." 
+
         self.device = device
         self.codec_encode = init_codec(
             modelname=codec_name,
@@ -65,7 +68,6 @@ class IDSensitiveEvaluation:
             model_ckpt_dir=model_ckpt_dir,
             **kwargs,
         )
-        self.codec_encode.sample_rate = self.codec_encode.orig_sample_rate
 
         self.codec_reconstruct = init_codec(
             modelname=codec_name,
@@ -78,6 +80,12 @@ class IDSensitiveEvaluation:
             **kwargs,
         )
 
+        if task == "OS":
+            self.codec_encode.sample_rate = self.sample_rate 
+        elif task == "MRC":
+            self.codec_encode.sample_rate = self.codec_encode.orig_sample_rate
+            self.codec_reconstruct.sample_rate = self.codec_encode.orig_sample_rate
+
         self.num_codebooks = num_codebooks
         self.codec_name = codec_name
         self.codec_sample_rate = self.codec_encode.orig_sample_rate
@@ -85,9 +93,10 @@ class IDSensitiveEvaluation:
         self.batch_size = batch_size
         self.device = device
         self.shift_time = shift_time
+        self.subset_step = subset_step
         self.task = task
         dataset = LibriTTS_ctc_dataset(audio_dir=dataset_audio_dir)
-        dataset = torch.utils.data.Subset(dataset, range(1200))
+        dataset = torch.utils.data.Subset(dataset, range(subset_step))
         self.dataloader = DataLoader(
             dataset,
             batch_size=batch_size,
@@ -95,21 +104,35 @@ class IDSensitiveEvaluation:
             num_workers=num_workers,
             collate_fn=dataset.dataset.collate_fn,
         )
-    def get_offset_2ms_audio(self, audio_tensor, sample_rate):
+    def get_offset_audio(self, audio_tensor, sample_rate):      
+        """
+            audio_tensor: [B, T]
+            sample_rate: audio sample rate
+            return: [B, T]
+        """   
         shift_samples = int(sample_rate * self.shift_time / 1000)
         y_shifted = torch.roll(audio_tensor, shifts=shift_samples, dims=1)
         y_shifted[:, :shift_samples] = 0
         return y_shifted
 
     def get_same_id(self, gt_id, rec_id):
+        """
+            gt_id: [1, K, T/hop_length]
+            rec_id: [1, K, T/hop_length]
+            return: same id list
+        """
         results = []
         for i in range(gt_id.shape[1]):
             same = (gt_id[0, i, :] == rec_id[0, i, :]).sum().item()
             results.append(same)
         return results
 
-
     def get_id(self, gt, rec):
+        """
+            gt: [B, T]
+            rec: [B, T]
+            return: gt_id: [1, K, T/hop_length] rec_id: [1, K, T/hop_length]
+        """
         gt = gt.to(self.device)
         rec = rec.to(self.device)
         gt_id, _ = self.codec_encode(gt, length=None)
@@ -119,12 +142,20 @@ class IDSensitiveEvaluation:
         return gt_id, rec_id
 
     def multi_round_reconstruction(self, gt_audio_clone, gt_audio, max_length, rec_audio_dict, gt_audio_dict):
+        """
+            gt_audio_clone: [B, T]
+            gt_audio: [B, T]
+            max_length: max length of the gt_audio_clone
+            rec_audio_dict: {round_1: [], round_2: [], round_3: [],...}
+            gt_audio_dict: {round_1: [], round_2: [], round_3: [],...}
+        """
         for i in range(10):
-            rec_audio = self.codec_reconstruct(gt_audio)[:, :max_length]
+            rec_audio = self.codec_reconstruct(gt_audio)[:, :max_length]    # shape [B, T]
             min_length = min(gt_audio.shape[-1], rec_audio.shape[-1])
             for idx, rec_a in enumerate(rec_audio):
                 rec_audio_dict[f"round_{i + 1}"].append(rec_a[:min_length].unsqueeze(0).to("cpu"))
                 gt_audio_dict[f"round_{i + 1}"].append(gt_audio_clone[idx][:min_length].unsqueeze(0).to("cpu"))
+                
             gt_audio = rec_audio
             max_length = gt_audio.shape[-1]
 
@@ -154,90 +185,35 @@ class IDSensitiveEvaluation:
 
         return result_codebook_same_id
 
-    def plot_mrc_avg_same_id(self, avg_same_id_dict):
-        num_codebooks = len(avg_same_id_dict)
-        num_rounds = len(next(iter(avg_same_id_dict.values())))
-        bar_width = 0.8 / num_rounds
-        x_labels = list(avg_same_id_dict.keys())
-        x_positions = np.arange(num_codebooks)
-
-        for i in range(num_rounds):
-            values = [float(avg_same_id_dict[codebook][i].strip('%')) for codebook in x_labels]
-            positions = x_positions + i * bar_width
-            plt.bar(positions, values, width=bar_width, label=f"Round {i + 1}")
-
-        plt.figure(figsize=(12, 6))
-        plt.xticks(x_positions + (bar_width * (num_rounds - 1)) / 2, x_labels)
-        plt.xlabel("Codebooks")
-        plt.ylabel("Codebook ID Proportion(%)", rotation=90, labelpad=3, fontweight='bold')
-        plt.title(f"{self.codec_name} - {self.task} - Average Codebook Same ID Across 10 Rounds")
-        plt.legend(title="Reconstruction Rounds")
-        plt.ylim(0, 100)
-        y_ticks = np.arange(0, 101, 10)
-        plt.yticks(y_ticks, [f"{tick}%" for tick in y_ticks])
-        save_dir = os.path.join(root_path, "id_sensitive", f"{self.task}_results")
-        os.makedirs(save_dir, exist_ok=True)
-        save_path = os.path.join(save_dir, f"{self.codec_name}_mrc_avg_same_id.png")
-        plt.savefig(save_path)
-
-    def plot_os2_avg_same_id(self, percent_same_id_avg_list):
-        x_labels = ["Codebook Same ID"]
-        codebook_labels = [f"codebook{i + 1}" for i in range(self.num_codebooks)]
-        bar_width = 0.1  
-        percent_same_id_avg_list = [float(p.strip('%')) / 100 for p in percent_same_id_avg_list]
-        _, ax = plt.subplots()
-
-        total_display_width = 0.8
-        total_width = bar_width * self.num_codebooks
-        offset = (total_display_width - total_width) / 2  
-
-        for i in range(self.num_codebooks):
-            positions = [offset + j + i * bar_width for j in range(len(x_labels))]
-            values = [percent_same_id_avg_list[i]]
-            bars = ax.bar(positions, values, width=bar_width, label=codebook_labels[i])
-            ax.bar_label(bars, padding=3, labels=[f"{percent_same_id_avg_list[i] * 100:.1f}"])
-
-        ax.set_xticks([offset + i + (bar_width * (self.num_codebooks - 1)) / 2 for i in range(len(x_labels))])
-        ax.set_xticklabels(x_labels)
-        ax.set_ylabel("Codebook ID Proportion(%)", rotation=90, labelpad=3, fontweight='bold')
-        ax.set_title(f"{self.codec_name} - {self.task} - Codebook Same Id Average(%)")
-        ax.legend()
-        ax.set_ylim(0, 1)
-        ax.set_yticks([i / 5 for i in range(6)])
-        ax.set_yticklabels([f"{i * 20}" for i in range(6)])
-        save_dir = os.path.join(root_path, "id_sensitive", f"{self.task}_results")
-        os.makedirs(save_dir, exist_ok=True)
-        save_path = os.path.join(save_dir, f"{self.codec_name}_os2_avg_same_id_results.png")
-        plt.savefig(save_path)
-
     @torch.inference_mode
     def evaluate(self, task):
         if task == "MRC":
             gt_audio_dict = {}
             rec_audio_dict = {}
             for i in range(10):
-                gt_audio_dict[f"round_{i + 1}"] = []
-                rec_audio_dict[f"round_{i + 1}"] = []
+                gt_audio_dict[f"round_{i + 1}"] = []    # {round_1: [], round_2: [], round_3: [], ...}
+                rec_audio_dict[f"round_{i + 1}"] = []   # {round_1: [], round_2: [], round_3: [], ...}
 
             print(f"dataset length: {len(self.dataloader)}, now start to reconstruct")
             gt_audio_lengths = []
             for batch in tqdm(self.dataloader, desc="reconstruct audio"):
                 gt_audio_test = batch["audio"].clone().to(self.device)  # shape [B, T]
-                # resample to codec sample rate
-                if self.codec_sample_rate != self.sample_rate:
+                gt_audio = batch["audio"].to(self.device)   # shape [B, T]
+                if self.sample_rate != self.codec_sample_rate:
                     resampler = torchaudio.transforms.Resample(
                         self.sample_rate, self.codec_sample_rate
                     ).to(self.device)
                     gt_audio_test = resampler(gt_audio_test)
+                    gt_audio = resampler(gt_audio)
                     resample_ratio = self.sample_rate / self.codec_sample_rate
                     gt_audio_length = (batch["audio_length"] / resample_ratio).long()
                 else:
+                    gt_audio = gt_audio
                     gt_audio_length = batch["audio_length"]
 
                 gt_audio_lengths.append(gt_audio_length)
                 max_length = gt_audio_test.shape[-1]
-                gt_audio = batch["audio"].to(self.device)
-
+                
                 rec_audio_dict, gt_audio_dict = self.multi_round_reconstruction(
                     gt_audio_clone=gt_audio_test,
                     gt_audio=gt_audio,
@@ -245,11 +221,11 @@ class IDSensitiveEvaluation:
                     rec_audio_dict=rec_audio_dict,
                     gt_audio_dict=gt_audio_dict,
                 )
-
+                # break
             torch.cuda.empty_cache()
             print(f"Reconstruct done! Next, carry out the MRC task.")
 
-            same_id_dict_round = {}
+            same_id_dict_round = {}     # {round_1: [codebook_1:[] codebook_2:[], ...], round_2: [], ...}
             for i in range(10): # round
                 same_id_dict_round[f"round_{i + 1}"] = {}
                 for j in range(self.num_codebooks): # codebook
@@ -264,15 +240,15 @@ class IDSensitiveEvaluation:
                         gt_audio_length = all_lengths[i]
                         gt = gt[:, :gt_audio_length]
                         rec = rec[:, :gt_audio_length]
-                        id_1, id_2 = self.get_id(gt, rec)   
-                        same_id_result_list = self.get_same_id(id_1, id_2)    
+                        gt_id, rec_id = self.get_id(gt, rec)   
+                        same_id_result_list = self.get_same_id(gt_id, rec_id)    
                         for idx,same_id in enumerate(same_id_result_list): # codebook
-                            same_id_dict_round[key][f"codebook_{idx + 1}"].append("{:.2f}%".format((same_id / id_1.shape[2]) * 100))
+                            same_id_dict_round[key][f"codebook_{idx + 1}"].append("{:.2f}%".format((same_id / gt_id.shape[2]) * 100))
             avg_same_id_dict = self.data_process(same_id_dict_round)
-            self.plot_mrc_avg_same_id(avg_same_id_dict)
+            plot_mrc_avg_same_id(avg_same_id_dict, self.codec_name, self.task)
             return avg_same_id_dict
         
-        elif task == "OS2":
+        elif task == "OS":
             same_id_sums = [0] * self.num_codebooks
             total_samples = 0
             for batch in tqdm(self.dataloader, desc="dataloader audio"):
@@ -283,40 +259,36 @@ class IDSensitiveEvaluation:
                     gt_audio_length = all_gt_audio_lengths[i]
                     gt_audio = gt_audio.unsqueeze(0)
                     gt_audio = gt_audio[:, :gt_audio_length]
-                    os_audio = self.get_offset_2ms_audio(gt_audio, self.sample_rate)
+                    os_audio = self.get_offset_audio(gt_audio, self.sample_rate)
                     gt_id, rec_id = self.get_id(gt_audio, os_audio)
                     same_id_results = self.get_same_id(gt_id, rec_id)
                     total_samples += 1
                     for j in range(self.num_codebooks):
                         same_id_sums[j] += (same_id_results[j] / gt_id.shape[2])
             percent_same_id_avg_list = [f"{(val / total_samples) * 100:.2f}%" for val in same_id_sums]
-            self.plot_os2_avg_same_id(percent_same_id_avg_list)
+            plot_os_avg_same_id(percent_same_id_avg_list, self.num_codebooks, self.codec_name, self.task)
             return f"codebook same id: {percent_same_id_avg_list}"
 
 if __name__ == "__main__":
-    """
-    if task == "MRC"
-        test sample_rate = codec's sample_rate
-    elif task == "OS2":
-        test sample_rate = example.wav's sample_rate
-    """
+    seed_all(666)
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--codec_name", type=str, default="speechtokenizer")
+    parser.add_argument("--codec_name", type=str, default="semanticodec")
     parser.add_argument(
         "--model_ckpt_dir",
         type=str,
-        default="/sdb/model_weight/codec_evaluation/codec_ckpt/speechtokenizer",
+        default="/sdb/model_weight/codec_evaluation/codec_ckpt/semantic",
     )
-    parser.add_argument("--device", type=str, default="cuda:3")
-    parser.add_argument("--sample_rate", type=int, default=16000)
-    parser.add_argument("--num_codebooks", type=int, default=8)
+    parser.add_argument("--device", type=str, default="cuda:2")
+    parser.add_argument("--sample_rate", type=int, default=24000)
+    parser.add_argument("--num_codebooks", type=int, default=2)
     parser.add_argument("--need_resample", type=bool, default=False)
     parser.add_argument("--task", type=str, default="MRC")
     parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument("--shift_time", type=int, default=2)
+    parser.add_argument("--subset_step", type=int, default=1200)
     parser.add_argument(
         "--dataset_audio_dir",
         type=str,
@@ -339,6 +311,7 @@ if __name__ == "__main__":
         use_vocos=args.use_vocos,
         vocos_ckpt_dir=args.vocos_ckpt_dir,
         shift_time=args.shift_time,
+        subset_step=args.subset_step,
         task=args.task
     )
     result = codec_eval.evaluate(args.task)
