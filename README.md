@@ -230,14 +230,14 @@ bash env_build.sh
 	    <td align=center>0.349</td>
             <td align=center>0.088</td>
 	    <td align=center>0.581</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
+	    <td align=center>0.0295</td>
+	    <td align=center>0.530</td>
+	    <td align=center>0.108</td>
+	    <td align=center>0.638</td>
+            <td align=center>0.076</td>
+	    <td align=center>0.651</td>
+	    <td align=center>0.141</td>
+	    <td align=center>0.687</td>
         </tr>
         <tr>
             <td align=center rowspan="2">Encodec</td>
@@ -275,14 +275,14 @@ bash env_build.sh
 	    <td align=center>0.301</td>
 	    <td align=center>0.088</td>
 	    <td align=center>0.558</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
+	    <td align=center>0.035</td>
+	    <td align=center>0.528</td>
+	    <td align=center>0.104</td>
+	    <td align=center>0.620</td>
+            <td align=center>0.057</td>
+	    <td align=center>0.642</td>
+	    <td align=center>0.137</td>
+	    <td align=center>0.701</td>
         </tr>
         <tr>
             <td align=center rowspan="2">SemantiCodec</td>
@@ -320,14 +320,14 @@ bash env_build.sh
 	    <td align=center>0.451</td>
 	    <td align=center>0.328</td>
 	    <td align=center>0.139</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
+	    <td align=center>0.035</td>
+	    <td align=center>0.526</td>
+	    <td align=center>0.149</td>
+	    <td align=center>0.720</td>
+            <td align=center>0.099</td>
+	    <td align=center>0.723</td>
+	    <td align=center>0.230</td>
+	    <td align=center>0.795</td>
         </tr>
         <tr>
             <td align=center rowspan="2">WavTokenizer</td>
@@ -365,14 +365,14 @@ bash env_build.sh
 	    <td align=center>0.287</td>
 	    <td align=center>0.090</td>
             <td align=center>0.829</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
+	    <td align=center>0.034</td>
+	    <td align=center>0.530</td>
+	    <td align=center>0.107</td>
+	    <td align=center>0.635</td>
+            <td align=center>0.056</td>
+	    <td align=center>0.627</td>
+	    <td align=center>0.137</td>
+	    <td align=center>0.698</td>
         </tr>
     </tbody>
 </table>
