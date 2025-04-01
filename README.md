@@ -51,10 +51,10 @@
     - multi codec deploy reference: https://github.com/lucadellalib/audiocodecs
 - [ ] clean different dataset in marble benchmark
     - add code to redeploy marble in our benchmark
-    - add code in marble base to evaluate our index 
+    - add code in marble base to evaluate our index
+    - package default behavior: load ckpt or dataset from default base dir (like: ~/.codec_evaluation) or os environment var (like CODEC_EVALUATION_DATA_DIR) rather than absolute path
 - [ ] define the evaluation metrics of codec, codebooks
     - test ID sensitive in same semantic
-    - 
 
 ## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Compass/3D/compass_3d.png" alt="compass" width="30" height="30"> Env Build
 The following explains how to quickly create the required environment and install codec_evaluation for use.
@@ -676,9 +676,3 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
         </tr>
     </tbody>
 </table>
-
-
-
-
-
-

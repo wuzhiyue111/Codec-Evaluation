@@ -181,3 +181,6 @@ tb_log/
 __pycache__
 *.jsonl
 lightning_logs/
+.ruff_cache
+.conda
+.pypi

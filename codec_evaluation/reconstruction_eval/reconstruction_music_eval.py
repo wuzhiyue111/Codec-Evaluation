@@ -1,3 +1,4 @@
+import argparse
 import os
 import random
 import numpy as np
@@ -179,9 +180,7 @@ class CodecEvaluation:
         }
 
 
-if __name__ == "__main__":
-    import argparse
-
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--codec_name", type=str, default="encodec")
     parser.add_argument(
@@ -223,3 +222,9 @@ if __name__ == "__main__":
     )
     result = codec_eval.evaluate()
     print(f"result: {result}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    main()
