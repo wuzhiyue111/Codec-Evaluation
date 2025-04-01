@@ -256,10 +256,8 @@ class IDSensitiveEvaluation:
             return f"codebook same id: {percent_same_id_avg_list}"
 
 
-if __name__ == "__main__":
+def main():
     seed_all(666)
-    import argparse
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--codec_name", type=str, default="speechtokenizer")
     parser.add_argument(
