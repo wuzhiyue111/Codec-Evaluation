@@ -44,7 +44,7 @@ model:
   task: ${task}
   num_outputs: ${num_outputs}
   probe_model_builder:
-    _target_: codec_evaluation.probe.model.vocalsound_dataset.model.vocalsoundProber
+    _target_: codec_evaluation.probe.model.multiclass_model.MulticlassProber
     _partial_: true
     num_outputs: ${num_outputs}
     drop_out: 0.1

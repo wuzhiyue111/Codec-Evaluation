@@ -9,13 +9,7 @@ from codec_evaluation.utils.utils import find_lastest_ckpt
 from codec_evaluation.utils.print_config import print_config_tree
 
 root_path = codec_evaluation.__path__[0]
-logger = RankedLogger(__name__, rank_zero_only=True)
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--dataset_name', type=str, default="EMO_dataset", help='dataset name')
-parser.add_argument('--config_name', type=str, default="dac", help='congig name')
-
-args = parser.parse_args()
 def main(dataset_name, config_name):
     with hydra.initialize_config_dir(
         config_dir=f"{root_path}/probe/config/{dataset_name}",
@@ -87,4 +81,11 @@ def main(dataset_name, config_name):
     #             f.write("\n")
 
 if __name__ == "__main__":
+    logger = RankedLogger(__name__, rank_zero_only=True)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset_name', type=str, default="EMO_dataset", help='dataset name')
+    parser.add_argument('--config_name', type=str, default="dac", help='congig name')
+
+    args = parser.parse_args()
     main(args.dataset_name, args.config_name)

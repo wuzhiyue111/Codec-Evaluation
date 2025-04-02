@@ -110,9 +110,8 @@ class ESC50dataModule(pl.LightningDataModule):
             self,
             dataset_args, 
             codec_name,
-            train_split: 0.70,
-            valid_split: 0.15,
-            test_split: 0.15,
+            train_split: 0.9,
+            test_split: 0.1,
             train_batch_size=16,
             valid_batch_size=16,
             test_batch_size=16,
@@ -122,7 +121,6 @@ class ESC50dataModule(pl.LightningDataModule):
         super().__init__()
         self.dataset_args = dataset_args
         self.train_split = train_split
-        self.valid_split = valid_split
         self.test_split = test_split
         self.train_batch_size = train_batch_size
         self.valid_batch_size = valid_batch_size
@@ -136,18 +134,17 @@ class ESC50dataModule(pl.LightningDataModule):
         self.test_num_workers = test_num_workers
         self.dataset = ESC50dataset(**self.dataset_args)
         self.train_size = int(len(self.dataset) * self.train_split)
-        self.vaild_size = int(len(self.dataset) * self.valid_split)
-        self.test_size = len(self.dataset) - self.vaild_size - self.train_size
+        self.test_size = len(self.dataset) - self.train_size
 
     def setup(self, stage=None):
         
-        train_dataset, valid_dataset, test_dataset = random_split(self.dataset, 
-                                                                  [self.train_size, self.vaild_size, self.test_size])
+        train_dataset, test_dataset = random_split(self.dataset, 
+                                                                  [self.train_size, self.test_size])
         if stage == "fit" or stage is None:
             self.train_dataset = train_dataset
-            self.valid_dataset = valid_dataset
+            self.valid_dataset = test_dataset
         if stage == "val":
-            self.valid_dataset = valid_dataset
+            self.valid_dataset = test_dataset
         if stage == "test":
             self.test_dataset = test_dataset
 

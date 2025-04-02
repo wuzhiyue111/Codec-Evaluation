@@ -14,6 +14,7 @@ trainer:
   devices: [0]
   precision: 32
   max_epochs: 100
+  limit_val_batches: 10
   log_every_n_steps: 5
   val_check_interval: 1.0
 
@@ -28,9 +29,8 @@ data:
     audio_dir: /sdb/data1/sound/ESC-50-master/audio
     meta_path: /sdb/data1/sound/ESC-50-master/meta/esc50.csv
   codec_name: ${codec_name}
-  train_split: 0.70
-  valid_split: 0.15
-  test_split: 0.15
+  train_split: 0.9
+  test_split: 0.1
   train_batch_size: 128
   valid_batch_size: 2
   test_batch_size: 128
@@ -46,7 +46,7 @@ model:
   task: ${task}
   num_outputs: ${num_outputs}
   probe_model_builder:
-    _target_: codec_evaluation.probe.model.ESC50_dataset.model.ESC50Prober
+    _target_: codec_evaluation.probe.model.multiclass_model.MulticlassProber
     _partial_: true
     num_outputs: ${num_outputs}
     drop_out: 0.1

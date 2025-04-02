@@ -34,7 +34,7 @@ model:
   mode: ${mode}
   language: ch
   probe_model_builder:
-    _target_: codec_evaluation.probe.model.Muchin_dataset.model.Ctc_probe_model
+    _target_: codec_evaluation.probe.model.ctc_model.Ctc_Probe
     _partial_: true
     tokenizer:
       _target_: transformers.Wav2Vec2Processor.from_pretrained
