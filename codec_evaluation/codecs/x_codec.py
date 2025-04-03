@@ -1,0 +1,202 @@
+"""X-codec (see https://arxiv.org/pdf/2408.17175)."""
+
+import os
+import sys
+import torch
+import torchaudio.transforms as T
+import codec_evaluation
+from omegaconf import OmegaConf
+import torch.nn.functional as F
+root_path = codec_evaluation.__path__[0]
+sys.path.append(root_path)
+
+
+from codec_evaluation.codecs.codec import Codec
+
+__all__ = ["XCodec"]
+
+class XCodec(Codec):
+    def __init__(
+        self,
+        sample_rate,
+        need_resample=True,
+        mode="reconstruct",
+        num_codebooks=8,
+        model_ckpt_dir=None,
+    ):
+        """
+        sample_rate: sample rate of the input signal
+        need_resample: boolean, whether to resample the audio after decoding
+        mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
+            encode: encode the audio to id tokens
+            decode: decode the id tokens to audio
+            reconstruct: encode -> decode
+            unquantized_emb: encode -> unquantized embedding
+            quantized_emb: encode + quantizer -> quantized embedding
+        model_ckpt_dir: path to the model checkpoint
+        """
+        # Workaround to avoid name collisions with installed modules
+        root_dir = os.path.dirname(os.path.realpath(__file__))
+        sys_path = [x for x in sys.path]
+        sys.path = [x for x in sys.path if root_dir not in x]
+        from codec_evaluation.codecs.xcodec.models.soundstream_semantic import SoundStream
+
+        sys.path = sys_path
+
+        super().__init__(sample_rate, 16000, mode)
+        self.num_codebooks = num_codebooks
+
+        config_path = os.path.join(model_ckpt_dir, 'config_hubert_general.yaml')
+        if not os.path.isfile(config_path):
+            sys.exit(f"{config_path} file does not exist.")
+        config = OmegaConf.load(config_path)
+        generator_config = config.generator.config
+        self.model = SoundStream(**generator_config)
+        model_file = os.path.join(model_ckpt_dir, 'xcodec_hubert_general_audio_v2.pth')
+        parameter_dict = torch.load(model_file)
+        self.model.load_state_dict(parameter_dict)  
+
+        self.vocab_size = 1024
+        self.need_resample = need_resample
+        self.hop_length = self.model.hop_length
+        self.dim = 128
+        self.token_rate = self.model.frame_rate
+
+        # Delete the decoder to save memory overhead.
+        if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
+            self.model.decoder_2 = None
+            self.model.decoder_semantic = None
+        elif mode == "decode":
+            self.model.encoder = None
+            self.model.encoder_semantic = None
+
+    # override
+    @torch.no_grad()
+    def embs(self):
+        # H means the dimension of the embedding
+        # See https://github.com/zhenye234/xcodec/blob/main/quantization/core_vq.py#L356
+        device = next(iter(self.model.state_dict().values())).device
+        toks = torch.arange(self.vocab_size, device=device)
+        toks = (
+            toks[None, :, None].expand(self.num_codebooks, -1, -1).clone()
+        )  # [K, C, 1]
+        embs = []
+        for i, indices in enumerate(toks):
+            layer = self.model.quantizer.vq.layers[i]
+            quantized = layer.decode(indices)  # [C, H, 1]
+            embs.append(quantized)
+        assert (self.model.quantizer.decode(toks) == sum(embs)).all()
+        embs = torch.stack(embs)[..., 0]  # [K, C, H] 
+        return embs
+    
+    # override
+    def _sig_to_unquantized_emb(self, sig, length):
+        """
+            sig: [B, T]
+            return: [B, D, N]   [2, 1024, 468]
+        """
+        # e_semantic_input = self.model.get_regress_target(sig[:, None]).detach()
+        # e_semantic = self.model.encoder_semantic(e_semantic_input.transpose(1, 2))
+        # e_acoustic = self.model.encoder(sig[:, None])
+        # if e_acoustic.shape[2] != e_semantic.shape[2]:
+        #     # e_acoustic = self.encoder(F.pad(x[:,0,:], (160, 160)).unsqueeze(0)) 
+        #     e_acoustic = self.model.encoder(F.pad(sig[:, None][:,[0],:], (160, 160)))
+        # e= torch.cat([e_acoustic, e_semantic], dim=1)
+        # unquantized_feats = self.model.fc_prior(e.transpose(1, 2)).transpose(1, 2)
+        unquantized_feats = self.model.encode(sig[:, None])[0]
+        return unquantized_feats
+    
+    # override
+    def _sig_to_quantized_emb(self, sig, length):
+        """
+            sig: [B, T]
+            return: [B, D, N]   [2, 1024, 468]
+        """
+        _, toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]
+        quantized_feats = self.model.quantizer.decode(toks)
+        # e_semantic_input = self.model.get_regress_target(sig[:, None]).detach()
+
+        # e_semantic = self.model.encoder_semantic(e_semantic_input.transpose(1, 2))
+        # e_acoustic = self.model.encoder(sig[:, None])
+        # if e_acoustic.shape[2] != e_semantic.shape[2]:
+        #      # e_acoustic = self.encoder(F.pad(x[:,0,:], (160, 160)).unsqueeze(0)) 
+        #      e_acoustic = self.model.encoder(F.pad(sig[:, None][:,[0],:], (160, 160)))
+        # e= torch.cat([e_acoustic, e_semantic], dim=1)
+        # e = self.model.fc_prior(e.transpose(1, 2)).transpose(1, 2)
+        # quantized, codes, bandwidth, commit_loss  = self.model.quantizer(e, self.model.frame_rate, 4.0)
+        # quantized_semantic = self.model.fc_post1(quantized.transpose(1, 2)).transpose(1, 2)
+        # quantized_acoustic = self.model.fc_post2(quantized.transpose(1, 2)).transpose(1, 2)
+        # quantized_feats = torch.cat([quantized_acoustic, quantized_semantic], dim=1)
+        return quantized_feats
+
+    # override
+    def _sig_to_toks(self, sig, length):
+        """
+            sig: [B, T]
+            return: [B, N, K]  [2, 701, 8]
+        """  
+        _, toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]
+        toks = toks.movedim(-3, -1)  
+        return toks, None
+
+    # override
+    def _toks_to_sig(self, toks, length, padding_mask=None):
+        """
+            toks: [B, N, K]
+            return: [B, T]   [2, 3200]
+        """
+        toks = toks.movedim(-1, -3)  # [K, B, N]
+        sig = self.model.decode(toks)[:, 0]
+        return sig
+
+if __name__ == "__main__":
+    import torchaudio
+
+    use_cuda = torch.cuda.is_available()
+    device = "cuda" if use_cuda else "cpu"
+    batch_size = 2
+    num_codebooks = 8
+
+    sig, sample_rate = torchaudio.load(os.path.join(root_path, "codecs", "example.wav"))
+    sig = sig.unsqueeze(0)
+    sig = torch.cat([sig, sig], dim=0).to(device).squeeze(1)  # [B=2, T]
+
+    for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
+        codec = (
+            XCodec(
+                sample_rate,
+                mode=mode,
+                num_codebooks=num_codebooks,
+                model_ckpt_dir="/sdb/model_weight/codec_evaluation/codec_ckpt/xcodec",
+                need_resample=False,
+            )
+            .eval()
+            .to(device)
+        )
+        embs = codec.embs()
+        print(
+            f"{mode} mode, the codec has {embs.shape[0]} codebooks, each codebook has {embs.shape[1]} entries, each entry has {embs.shape[2]} dimensions"
+        )
+        if mode == "decode":
+            input = torch.zeros(batch_size, 10, num_codebooks).long().to(device)
+            with torch.no_grad():
+                output = codec(input)
+        else:
+            with torch.no_grad():
+                output = codec(sig)
+
+        if mode == "reconstruct":
+            save_dir = os.path.join(root_path, "codecs", "reconstruction_wav")
+            os.makedirs(save_dir, exist_ok=True)
+            save_path = os.path.join(save_dir, f"xcodec_reconstruction.wav")
+            torchaudio.save(
+                save_path,
+                output[0].unsqueeze(0).cpu() if use_cuda else output[0].unsqueeze(0),
+                codec.orig_sample_rate,
+            )
+            print(f"{mode} mode has been saved to {save_path}")
+        elif mode == "encode":
+            print(f"{mode} mode, the output shape is {output[0].shape}")
+        else:
+            print(f"{mode} mode, the output shape is {output.shape}")
+
