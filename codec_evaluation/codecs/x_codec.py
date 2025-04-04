@@ -6,7 +6,6 @@ import torch
 import torchaudio.transforms as T
 import codec_evaluation
 from omegaconf import OmegaConf
-import torch.nn.functional as F
 root_path = codec_evaluation.__path__[0]
 sys.path.append(root_path)
 
@@ -25,15 +24,11 @@ class XCodec(Codec):
         model_ckpt_dir=None,
     ):
         """
-        sample_rate: sample rate of the input signal
-        need_resample: boolean, whether to resample the audio after decoding
-        mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
-            encode: encode the audio to id tokens
-            decode: decode the id tokens to audio
-            reconstruct: encode -> decode
-            unquantized_emb: encode -> unquantized embedding
-            quantized_emb: encode + quantizer -> quantized embedding
-        model_ckpt_dir: path to the model checkpoint
+            sample_rate: sample rate of the input signal
+            need_resample: boolean, whether to resample the audio after decoding
+            mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
+            num_codebooks: number of codebooks
+            model_ckpt_dir: path to the model checkpoint
         """
         # Workaround to avoid name collisions with installed modules
         root_dir = os.path.dirname(os.path.realpath(__file__))
@@ -95,15 +90,7 @@ class XCodec(Codec):
             sig: [B, T]
             return: [B, D, N]   [2, 1024, 468]
         """
-        # e_semantic_input = self.model.get_regress_target(sig[:, None]).detach()
-        # e_semantic = self.model.encoder_semantic(e_semantic_input.transpose(1, 2))
-        # e_acoustic = self.model.encoder(sig[:, None])
-        # if e_acoustic.shape[2] != e_semantic.shape[2]:
-        #     # e_acoustic = self.encoder(F.pad(x[:,0,:], (160, 160)).unsqueeze(0)) 
-        #     e_acoustic = self.model.encoder(F.pad(sig[:, None][:,[0],:], (160, 160)))
-        # e= torch.cat([e_acoustic, e_semantic], dim=1)
-        # unquantized_feats = self.model.fc_prior(e.transpose(1, 2)).transpose(1, 2)
-        unquantized_feats = self.model.encode(sig[:, None])[0]
+        unquantized_feats, _ = self.model.encode(sig[:, None])
         return unquantized_feats
     
     # override
@@ -114,19 +101,6 @@ class XCodec(Codec):
         """
         _, toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]
         quantized_feats = self.model.quantizer.decode(toks)
-        # e_semantic_input = self.model.get_regress_target(sig[:, None]).detach()
-
-        # e_semantic = self.model.encoder_semantic(e_semantic_input.transpose(1, 2))
-        # e_acoustic = self.model.encoder(sig[:, None])
-        # if e_acoustic.shape[2] != e_semantic.shape[2]:
-        #      # e_acoustic = self.encoder(F.pad(x[:,0,:], (160, 160)).unsqueeze(0)) 
-        #      e_acoustic = self.model.encoder(F.pad(sig[:, None][:,[0],:], (160, 160)))
-        # e= torch.cat([e_acoustic, e_semantic], dim=1)
-        # e = self.model.fc_prior(e.transpose(1, 2)).transpose(1, 2)
-        # quantized, codes, bandwidth, commit_loss  = self.model.quantizer(e, self.model.frame_rate, 4.0)
-        # quantized_semantic = self.model.fc_post1(quantized.transpose(1, 2)).transpose(1, 2)
-        # quantized_acoustic = self.model.fc_post2(quantized.transpose(1, 2)).transpose(1, 2)
-        # quantized_feats = torch.cat([quantized_acoustic, quantized_semantic], dim=1)
         return quantized_feats
 
     # override
