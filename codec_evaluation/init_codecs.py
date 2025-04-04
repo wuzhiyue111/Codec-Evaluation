@@ -4,6 +4,7 @@ from codec_evaluation.codecs.mimi import Mimi
 from codec_evaluation.codecs.semanticodec import SemantiCodec
 from codec_evaluation.codecs.speechtokenizer import SpeechTokenizer
 from codec_evaluation.codecs.wavtokenizer import WavTokenizer
+from codec_evaluation.codecs.x_codec import XCodec
 
 def init_codec(
         modelname: str, 
@@ -86,6 +87,14 @@ def init_codec(
             need_resample=need_resample,
             mode=mode,
             model_ckpt_dir=model_ckpt_dir,
+        ).to(device)
+    elif modelname =='xcodec':
+        model = XCodec(
+            sample_rate=sample_rate,
+            mode=mode,
+            num_codebooks=num_codebooks,
+            model_ckpt_dir=model_ckpt_dir,
+            need_resample=need_resample
         ).to(device)
     else:
         raise ValueError(f"Invalid model name: {modelname}")
