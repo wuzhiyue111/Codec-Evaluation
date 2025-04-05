@@ -5,6 +5,7 @@ from codec_evaluation.codecs.semanticodec import SemantiCodec
 from codec_evaluation.codecs.speechtokenizer import SpeechTokenizer
 from codec_evaluation.codecs.wavtokenizer import WavTokenizer
 from codec_evaluation.codecs.x_codec import XCodec
+from codec_evaluation.codecs.qwen2audioencoder import Qwen2AudioEncoder
 
 def init_codec(
         modelname: str, 
@@ -34,7 +35,7 @@ def init_codec(
     """
     modes = ["encode", "decode", "reconstruct", "unquantized_emb","quantized_emb"]
     if mode not in modes:
-        raise ValueError(f"Mode must be one of the following: {modes}")
+        raise ValueError(f"Mode must be one of the following: {modes}, qwen2audioencoder have only support unquantized_emb.")
 
     if modelname == 'dac':
         model = DAC(
@@ -95,6 +96,14 @@ def init_codec(
             num_codebooks=num_codebooks,
             model_ckpt_dir=model_ckpt_dir,
             need_resample=need_resample
+        ).to(device)
+    elif modelname == "qwen2audioencoder":
+        model = Qwen2AudioEncoder(
+            sample_rate=sample_rate,
+            mode=mode,
+            need_resample=need_resample,
+            model_ckpt_dir=model_ckpt_dir,
+            feature_extractor_config_path=kwargs.get("feature_extractor_config_path", None)
         ).to(device)
     else:
         raise ValueError(f"Invalid model name: {modelname}")
