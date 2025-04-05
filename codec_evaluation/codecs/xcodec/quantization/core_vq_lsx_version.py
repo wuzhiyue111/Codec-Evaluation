@@ -47,7 +47,6 @@ import torch.nn.functional as F
 import torch.distributed as dist
 
 from .distrib import broadcast_tensors, rank, is_distributed
-from ..utils.utils import is_primary
 from ..utils.ddp_utils import SyncFunction
 
 
