@@ -102,8 +102,7 @@ class Muchin_ctc_module(pl.LightningDataModule):
         self.test_size = len(self.dataset) - self.train_size
 
     def setup(self, stage=None):
-        train_dataset, test_dataset = random_split(self.dataset, 
-                                                                  [self.train_size, self.test_size])
+        train_dataset, test_dataset = random_split(self.dataset, [self.train_size, self.test_size])
         if stage == "fit" or stage is None:
             self.train_dataset = train_dataset
             self.valid_dataset = test_dataset
