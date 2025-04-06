@@ -6,6 +6,7 @@ from codec_evaluation.codecs.speechtokenizer import SpeechTokenizer
 from codec_evaluation.codecs.wavtokenizer import WavTokenizer
 from codec_evaluation.codecs.x_codec import XCodec
 from codec_evaluation.codecs.qwen2audioencoder import Qwen2AudioEncoder
+from codec_evaluation.codecs.hubert import Hubert
 
 def init_codec(
         modelname: str, 
@@ -99,6 +100,14 @@ def init_codec(
         ).to(device)
     elif modelname == "qwen2audioencoder":
         model = Qwen2AudioEncoder(
+            sample_rate=sample_rate,
+            mode=mode,
+            need_resample=need_resample,
+            model_ckpt_dir=model_ckpt_dir,
+            feature_extractor_config_path=kwargs.get("feature_extractor_config_path", None)
+        ).to(device)
+    elif modelname == "hubert":
+        model = Hubert(
             sample_rate=sample_rate,
             mode=mode,
             need_resample=need_resample,
