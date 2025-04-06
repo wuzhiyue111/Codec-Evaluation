@@ -1,3 +1,4 @@
+import logging
 import hydra
 import torch
 import pytorch_lightning as pl
@@ -9,6 +10,8 @@ from codec_evaluation.utils.utils import find_lastest_ckpt
 from codec_evaluation.utils.print_config import print_config_tree
 
 root_path = codec_evaluation.__path__[0]
+logger = RankedLogger(__name__, rank_zero_only=True)
+logging.basicConfig(level=logging.INFO)
 
 def main(dataset_name, config_name):
     with hydra.initialize_config_dir(
@@ -71,7 +74,7 @@ def main(dataset_name, config_name):
         datamodule=datamodule,
     )
     logger.info("testing_finished")
-    logger.info(f"{model.test_step_outputs=}")
+    logger.info(f"result:{model.test_step_outputs=}")
 
     # 保存结果
     # if config.save_asr_result is not None:
@@ -81,7 +84,6 @@ def main(dataset_name, config_name):
     #             f.write("\n")
 
 if __name__ == "__main__":
-    logger = RankedLogger(__name__, rank_zero_only=True)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_name', type=str, default="EMO_dataset", help='dataset name')
