@@ -69,15 +69,8 @@ class Hubert(Codec):
             sig: [B, T]
             return: [B, D, N]
         """
-        batch_size = sig.shape[0]
-
-        raw_audio_list = []
-        for i in range(batch_size):
-            audio_sample = sig[i].cpu()
-            raw_audio_list.append(audio_sample)
-
         features = self.feature_extractor(
-            raw_audio_list,
+            sig,
             sampling_rate=self.orig_sample_rate,
             return_tensors="pt",
             padding=True,
@@ -126,8 +119,8 @@ if __name__ == "__main__":
             sample_rate,
             mode=mode,
             need_resample=False,    # means the output sample rate is the same as codec's sample rate
-            model_ckpt_dir="/sdb/model_weight/codec_evaluation/codec_ckpt/hubert/hubert-base-ls960",
-            feature_extractor_config_path="/sdb/model_weight/codec_evaluation/codec_ckpt/hubert/hubert-base-ls960/preprocessor_config.json"
+            model_ckpt_dir=None,#"/sdb/model_weight/codec_evaluation/codec_ckpt/hubert/hubert-base-ls960",
+            feature_extractor_config_path=None#"/sdb/model_weight/codec_evaluation/codec_ckpt/hubert/hubert-base-ls960/preprocessor_config.json"
         )
         .eval()
         .to(device)
