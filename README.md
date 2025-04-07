@@ -219,17 +219,17 @@ bash env_build.sh
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center>0.47</td>
-            <td align=center>0.06</td>
-            <td align=center>0.345</td>
+            <td align=center>0.470</td>
+            <td align=center>0.064</td>
+            <td align=center>0.353</td>
             <td align=center>0.203</td>
 	    <td align=center>0.785</td>
 	    <td align=center>0.604</td>
 	    <td align=center>0.468</td>
 	    <td align=center>0.419</td>
-	    <td align=center>0.349</td>
+	    <td align=center>0.376</td>
             <td align=center>0.088</td>
-	    <td align=center>0.581</td>
+	    <td align=center>0.579</td>
 	    <td align=center>0.0295</td>
 	    <td align=center>0.530</td>
 	    <td align=center>0.108</td>
@@ -264,17 +264,17 @@ bash env_build.sh
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center>0.48</td>
-            <td align=center>0.08</td>
-            <td align=center>0.341</td>
-            <td align=center>0.172</td>
-            <td align=center>0.739</td>
-	    <td align=center>0.543</td>
+            <td align=center>0.467</td>
+            <td align=center>0.066</td>
+            <td align=center>0.339</td>
+            <td align=center>0.184</td>
+            <td align=center>0.759</td>
+	    <td align=center>0.537</td>
 	    <td align=center>0.547</td>
 	    <td align=center>0.299</td>
 	    <td align=center>0.301</td>
-	    <td align=center>0.088</td>
-	    <td align=center>0.558</td>
+	    <td align=center>0.102</td>
+	    <td align=center>0.507</td>
 	    <td align=center>0.035</td>
 	    <td align=center>0.528</td>
 	    <td align=center>0.104</td>
@@ -309,17 +309,17 @@ bash env_build.sh
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center>0.48</td>
-            <td align=center>0.31</td>
-            <td align=center>0.501</td>
-            <td align=center>0.323</td>
-            <td align=center>0.880</td>
+            <td align=center>0.507</td>
+            <td align=center>0.316</td>
+            <td align=center>0.502</td>
+            <td align=center>0.318</td>
+            <td align=center>0.877</td>
 	    <td align=center>0.658</td>
 	    <td align=center>0.764</td>
 	    <td align=center>0.344</td>
 	    <td align=center>0.451</td>
-	    <td align=center>0.328</td>
-	    <td align=center>0.139</td>
+	    <td align=center>0.343</td>
+	    <td align=center>0.578</td>
 	    <td align=center>0.035</td>
 	    <td align=center>0.526</td>
 	    <td align=center>0.149</td>
@@ -354,17 +354,17 @@ bash env_build.sh
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center>0.47</td>
-            <td align=center>0.07</td>
-            <td align=center>0.37</td>
-            <td align=center>0.174</td>
-            <td align=center>0.746</td>
-	    <td align=center>0.541</td>
+            <td align=center>0.455</td>
+            <td align=center>0.066</td>
+            <td align=center>0.329</td>
+            <td align=center>0.168</td>
+            <td align=center>0.739</td>
+	    <td align=center>0.537</td>
 	    <td align=center>0.444</td>
 	    <td align=center>0.130</td>
 	    <td align=center>0.287</td>
-	    <td align=center>0.090</td>
-            <td align=center>0.829</td>
+	    <td align=center>0.093</td>
+            <td align=center>0.721</td>
 	    <td align=center>0.034</td>
 	    <td align=center>0.530</td>
 	    <td align=center>0.107</td>
@@ -425,7 +425,7 @@ bash env_build.sh
             <td align=center>quantized_emb</td>
             <td align=center>0.584</td>
             <td align=center>0.369</td>
-	    <td align=center>0.57</td>
+	    <td align=center>0.574</td>
 	    <td align=center>0.481</td>
         </tr>
         <tr>
@@ -441,7 +441,7 @@ bash env_build.sh
             <td align=center>0.445</td>
             <td align=center>0.183</td>
             <td align=center>0.723</td>
-            <td align=center>0.485</td>
+            <td align=center>0.482</td>
         </tr>
         <tr>
             <td align=center rowspan="2">WavTokenizer</td>
@@ -470,7 +470,7 @@ bash env_build.sh
             <td align=center>quantized_emb</td>
             <td align=center>0.499</td>
             <td align=center>0.22</td>
-            <td align=center>0.824</td>
+            <td align=center>0.833</td>
             <td align=center>0.481</td>
         </tr>
 	<tr>
@@ -485,7 +485,7 @@ bash env_build.sh
             <td align=center>quantized_emb</td>
             <td align=center>0.433</td>
             <td align=center>0.164</td>
-            <td align=center>0.772</td>
+            <td align=center>0.776</td>
             <td align=center>0.498</td>
         </tr>
     </tbody>
