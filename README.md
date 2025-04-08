@@ -224,7 +224,7 @@ bash env_build.sh
             <td align=center>0.353</td>
             <td align=center>0.203</td>
 	    <td align=center>0.785</td>
-	    <td align=center>0.604</td>
+	    <td align=center>0.602</td>
 	    <td align=center>0.468</td>
 	    <td align=center>0.419</td>
 	    <td align=center>0.376</td>
