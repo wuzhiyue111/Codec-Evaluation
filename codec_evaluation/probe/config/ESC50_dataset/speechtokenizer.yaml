@@ -11,7 +11,7 @@ save_result: null
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [0]
+  devices: [3]
   precision: 32
   max_epochs: 100
   limit_val_batches: 10
@@ -31,12 +31,13 @@ data:
   codec_name: ${codec_name}
   train_split: 0.9
   test_split: 0.1
-  train_batch_size: 256
+  train_batch_size: 128
   valid_batch_size: 2
   test_batch_size: 128
-  train_num_workers: 64
+  train_num_workers: 32
   valid_num_workers: 4
   test_num_workers: 32
+
 
 model:
   _target_: codec_evaluation.probe.model.lit_prober.Prober
