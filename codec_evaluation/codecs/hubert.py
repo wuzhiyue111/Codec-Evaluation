@@ -24,9 +24,13 @@ class Hubert(Codec):
         """
             sample_rate: sample rate of the input signal
             need_resample: boolean, whether to resample the audio after decoding
-            mode: "encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"
+            mode: "unquantized_emb"
             model_ckpt_dir: path to the model checkpoint
+            feature_extractor_config_path: path to the feature extractor config file
         """
+        modes = ["unquantized_emb"]
+        if mode not in modes:
+            raise ValueError(f"Mode must be one of the following: {modes}, hubert have only support unquantized_emb.")
         try:
             # Workaround to avoid name collisions with installed modules
             root_path = os.path.dirname(os.path.realpath(__file__))
@@ -61,7 +65,7 @@ class Hubert(Codec):
         """
             this encoder doesn't have codebooks, raise NotImplementedError
         """
-        raise NotImplementedError("hubert doesn't have codebooks")
+        pass
 
     # override
     def _sig_to_unquantized_emb(self, sig, length=None):
@@ -85,21 +89,21 @@ class Hubert(Codec):
         """
             not application for this encoder, raise NotImplementedError
         """
-        raise NotImplementedError("hubert encoder doesn't support quantized_emb")
+        pass
 
     # override
     def _sig_to_toks(self, sig, length=None):
         """
             not application for this encoder, raise NotImplementedError
         """
-        raise NotImplementedError("hubert encoder doesn't support encoding signal to tokens")
+        pass
 
     # override
     def _toks_to_sig(self, toks, length=None):
         """
             not application for this encoder, raise NotImplementedError
         """
-        raise NotImplementedError("hubert encoder doesn't support decoding tokens to signal")
+        pass
 
 
 if __name__ == "__main__":
@@ -119,8 +123,8 @@ if __name__ == "__main__":
             sample_rate,
             mode=mode,
             need_resample=False,    # means the output sample rate is the same as codec's sample rate
-            model_ckpt_dir=None,#"/sdb/model_weight/codec_evaluation/codec_ckpt/hubert/hubert-base-ls960",
-            feature_extractor_config_path=None#"/sdb/model_weight/codec_evaluation/codec_ckpt/hubert/hubert-base-ls960/preprocessor_config.json"
+            model_ckpt_dir="/sdb/model_weight/codec_evaluation/codec_ckpt/hubert/hubert-base-ls960",
+            feature_extractor_config_path="/sdb/model_weight/codec_evaluation/codec_ckpt/hubert/hubert-base-ls960/preprocessor_config.json"
         )
         .eval()
         .to(device)
