@@ -7,6 +7,7 @@ from codec_evaluation.codecs.wavtokenizer import WavTokenizer
 from codec_evaluation.codecs.x_codec import XCodec
 from codec_evaluation.codecs.qwen2audioencoder import Qwen2AudioEncoder
 from codec_evaluation.codecs.hubert import Hubert
+from codec_evaluation.codecs.yue import YuE
 
 def init_codec(
         modelname: str, 
@@ -36,7 +37,7 @@ def init_codec(
     """
     modes = ["encode", "decode", "reconstruct", "unquantized_emb","quantized_emb"]
     if mode not in modes:
-        raise ValueError(f"Mode must be one of the following: {modes}, qwen2audioencoder have only support unquantized_emb.")
+        raise ValueError(f"Mode must be one of the following: {modes}, qwen2audioencoder/hubert have only support unquantized_emb.")
 
     if modelname == 'dac':
         model = DAC(
@@ -113,6 +114,14 @@ def init_codec(
             need_resample=need_resample,
             model_ckpt_dir=model_ckpt_dir,
             feature_extractor_config_path=kwargs.get("feature_extractor_config_path", None)
+        ).to(device)
+    elif modelname == "yue":
+        model = YuE(
+            sample_rate=sample_rate,
+            mode=mode,
+            num_codebooks=num_codebooks,
+            model_ckpt_dir=model_ckpt_dir,
+            need_resample=need_resample
         ).to(device)
     else:
         raise ValueError(f"Invalid model name: {modelname}")
