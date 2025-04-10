@@ -28,7 +28,7 @@ class YuE(Codec):
             num_codebooks: number of codebooks
             model_ckpt_dir: path to the model checkpoint
         """
-        from codec_evaluation.codecs.YuE.inference.xcodec_mini_infer.models.soundstream_hubert_new import SoundStream
+        from codec_evaluation.codecs.YuE.models.soundstream_hubert_new import SoundStream
 
         super().__init__(sample_rate, 16000, mode)
         self.num_codebooks = num_codebooks
