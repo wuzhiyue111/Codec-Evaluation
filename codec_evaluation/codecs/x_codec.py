@@ -43,11 +43,13 @@ class XCodec(Codec):
 
         config_path = os.path.join(model_ckpt_dir, 'config_hubert_general.yaml')
         if not os.path.isfile(config_path):
-            sys.exit(f"{config_path} file does not exist.")
+            raise FileNotFoundError(f"{config_path} file does not exist.")
         config = OmegaConf.load(config_path)
         generator_config = config.generator.config
         self.model = SoundStream(**generator_config)
         model_file = os.path.join(model_ckpt_dir, 'xcodec_hubert_general_audio_v2.pth')
+        if not os.path.exists(model_file):
+            raise FileNotFoundError(f"Model file not found: {model_file}.")
         parameter_dict = torch.load(model_file)
         self.model.load_state_dict(parameter_dict)  
 
@@ -99,7 +101,8 @@ class XCodec(Codec):
             sig: [B, T]
             return: [B, D, N]   [2, 1024, 468]
         """
-        _, toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]
+        _, toks = self.model.encode(sig[:, None])
+        toks = toks[: self.num_codebooks]  # [K, B, N]
         quantized_feats = self.model.quantizer.decode(toks)
         return quantized_feats
 
@@ -107,10 +110,10 @@ class XCodec(Codec):
     def _sig_to_toks(self, sig, length):
         """
             sig: [B, T]
-            return: [B, N, K]  [2, 701, 8]
+            return: [B, N, K]  [2, 468, 8]
         """  
-        _, toks = self.model.encode(sig[:, None])[: self.num_codebooks]  # [K, B, N]
-        toks = toks.movedim(-3, -1)  
+        _, toks = self.model.encode(sig[:, None])  # [K, B, N]
+        toks = toks[: self.num_codebooks].movedim(-3, -1)  
         return toks, None
 
     # override
