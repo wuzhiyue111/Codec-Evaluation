@@ -108,6 +108,26 @@ bash env_build.sh
       <td>0.12</td>
       <td>0.89</td>
     </tr>
+    <tr>
+      <td>XCodec</td>
+      <td>3.23</td>
+      <td>0.94</td>
+      <td>0.154</td>
+      <td>0.185</td>
+      <td>0.09</td>
+      <td>0.106</td>
+      <td>0.91</td>
+    </tr>
+    <tr>
+      <td>YeU</td>
+      <td>3.17</td>
+      <td>0.94</td>
+      <td>0.154</td>
+      <td>0.195</td>
+      <td>0.09</td>
+      <td>0.113</td>
+      <td>0.90</td>
+    </tr>
   </tbody>
 </table>
 
