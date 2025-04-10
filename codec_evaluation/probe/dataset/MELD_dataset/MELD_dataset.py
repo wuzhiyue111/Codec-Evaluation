@@ -3,22 +3,21 @@ from pytorch_lightning.utilities.types import EVAL_DATALOADERS
 import torch
 import torchaudio
 import pandas as pd
-import numpy as np
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
+from codec_evaluation.utils.logger import RankedLogger
+from codec_evaluation.utils.utils import cut_or_pad
 
-from codec_evaluation.utils.utils import find_audios, cut_or_pad
-
+logger = RankedLogger(__name__, rank_zero_only=True)
 
 class MELDdataset(Dataset):
     def __init__(
         self,
         split,
         sample_rate,
-        target_sec,        
+        target_sec,       
         is_mono,
-        is_normalize,
         audio_dir,
         meta_dir,
     ):
@@ -27,7 +26,6 @@ class MELDdataset(Dataset):
         self.target_sec = target_sec
         self.target_length = self.target_sec * self.sample_rate
         self.is_mono = is_mono
-        self.is_normalize = is_normalize
         self.audio_dir = os.path.join(audio_dir, f'{split}')
         self.audio_file = None
 
@@ -45,7 +43,7 @@ class MELDdataset(Dataset):
         try:
             return self.get_item(index)
         except Exception as e:
-            print(f"Error loading audio file {self.audio_file}: {e}")
+            logger.error(f"Error loading audio file {self.audio_file}: {e}")
             return None
         
     def get_item(self, index):
@@ -74,22 +72,11 @@ class MELDdataset(Dataset):
         return:
             waveform:[1,T]
         """
-        if len(audio_file) == 0:
-            raise FileNotFoundError("No audio files found in the specified directory.")
 
-        try:
-            waveform, _ = torchaudio.load(audio_file)
-        except Exception as e:
-            print(f"Error loading audio file {audio_file}: {e}")
-            return None
+        waveform, _ = torchaudio.load(audio_file)
 
-        # Convert to mono if needed
         if waveform.shape[0] > 1 and self.is_mono:
             waveform = torch.mean(waveform, dim=0, keepdim=True)
-
-        # Normalize to [-1, 1] if needed
-        if self.is_normalize:
-            waveform = waveform / waveform.abs().max()
 
         waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length)
 
@@ -119,15 +106,13 @@ class MELDdataModule(pl.LightningDataModule):
             test_batch_size=16,
             train_num_workers=8,
             valid_num_workers=4,
-            test_num_workers=4):
+            test_num_workers=4
+        ):
         super().__init__()
         self.dataset_args = dataset_args
         self.train_batch_size = train_batch_size
         self.valid_batch_size = valid_batch_size
         self.test_batch_size = test_batch_size
-        self.train_dataset = None
-        self.valid_dataset = None
-        self.test_dataset = None
         self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.valid_num_workers = valid_num_workers

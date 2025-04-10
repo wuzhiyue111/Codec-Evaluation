@@ -7,7 +7,7 @@ import os
 from typing import Dict, Any
 from asr_decoder import CTCDecoder
 from jiwer import wer, cer
-from codec_evaluation.probe.model.LibriTTS_dataset.model import Ctc_probe_model
+from codec_evaluation.probe.model.ctc_model import Ctc_Probe
 from codec_evaluation.reconstruction_eval.utils import transform_text_list_for_wer, transform_text_list_for_cer
 from einops import rearrange
 
@@ -41,7 +41,7 @@ class CtcLitProber(LightningModule):
             self.dim = self.codec_model.dim
 
         logger.info(f"{codec_name} dim: {self.dim}")
-        self.probe_model: Ctc_probe_model = probe_model_builder(
+        self.probe_model: Ctc_Probe = probe_model_builder(
             codec_dim = self.dim)
         self.language = language
         self.codec_name = codec_name

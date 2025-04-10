@@ -1,5 +1,4 @@
 import os
-from pytorch_lightning.utilities.types import EVAL_DATALOADERS
 import torch
 import torchaudio
 import numpy as np
@@ -9,7 +8,9 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from torch.utils.data import random_split
 from codec_evaluation.utils.utils import cut_or_pad
+from codec_evaluation.utils.logger import RankedLogger
 
+logger = RankedLogger(__name__, rank_zero_only=True)
 
 class ESC50dataset(Dataset):
     def __init__(
@@ -17,7 +18,6 @@ class ESC50dataset(Dataset):
         sample_rate,
         target_sec,
         is_mono,
-        is_normalize,
         audio_dir,
         meta_path,
         task,
@@ -26,7 +26,6 @@ class ESC50dataset(Dataset):
         self.target_sec = target_sec
         self.target_length = self.target_sec * self.sample_rate
         self.is_mono = is_mono
-        self.is_normalize = is_normalize
         self.audio_dir = audio_dir
         self.audio_file = None
         self.task = task
@@ -40,7 +39,7 @@ class ESC50dataset(Dataset):
         try:
             return self.get_item(index)
         except Exception as e:
-            print(f"Error loading audio file {self.audio_file}: {e}")
+            logger.error(f"Error loading audio file {self.audio_file}: {e}")
             return None
         
     def get_item(self, index):
@@ -69,22 +68,10 @@ class ESC50dataset(Dataset):
         return:
             waveform:[T]
         """
-        if len(audio_file) == 0:
-            raise FileNotFoundError("No audio files found in the specified directory.")
+        waveform, _ = torchaudio.load(audio_file)
 
-        try:
-            waveform, _ = torchaudio.load(audio_file)
-        except Exception as e:
-            print(f"Error loading audio file {audio_file}: {e}")
-            return None
-
-        # Convert to mono if needed
         if waveform.shape[0] > 1 and self.is_mono:
             waveform = torch.mean(waveform, dim=0, keepdim=True)
-
-        # Normalize to [-1, 1] if needed
-        if self.is_normalize:
-            waveform = waveform / waveform.abs().max()
 
         waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length, task = self.task)
 
@@ -125,9 +112,6 @@ class ESC50dataModule(pl.LightningDataModule):
         self.train_batch_size = train_batch_size
         self.valid_batch_size = valid_batch_size
         self.test_batch_size = test_batch_size
-        self.train_dataset = None
-        self.valid_dataset = None
-        self.test_dataset = None
         self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.valid_num_workers = valid_num_workers
@@ -135,18 +119,7 @@ class ESC50dataModule(pl.LightningDataModule):
         self.dataset = ESC50dataset(**self.dataset_args)
         self.train_size = int(len(self.dataset) * self.train_split)
         self.test_size = len(self.dataset) - self.train_size
-
-    def setup(self, stage=None):
-        
-        train_dataset, test_dataset = random_split(self.dataset, 
-                                                                  [self.train_size, self.test_size])
-        if stage == "fit" or stage is None:
-            self.train_dataset = train_dataset
-            self.valid_dataset = test_dataset
-        if stage == "val":
-            self.valid_dataset = test_dataset
-        if stage == "test":
-            self.test_dataset = test_dataset
+        self.train_dataset, self.test_dataset = random_split(self.dataset, [self.train_size, self.test_size])
 
     def train_dataloader(self):
         return DataLoader(
@@ -159,7 +132,7 @@ class ESC50dataModule(pl.LightningDataModule):
 
     def val_dataloader(self):
         return DataLoader(
-            dataset=self.valid_dataset,
+            dataset=self.test_dataset,
             batch_size=self.valid_batch_size,
             shuffle=False,
             collate_fn=self.dataset.collate_fn,

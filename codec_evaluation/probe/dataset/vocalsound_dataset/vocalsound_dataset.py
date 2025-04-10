@@ -1,15 +1,14 @@
 import os
-from pytorch_lightning.utilities.types import EVAL_DATALOADERS
 import torch
 import torchaudio
-import numpy as np
 import json
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
+from codec_evaluation.utils.utils import cut_or_pad
+from codec_evaluation.utils.logger import RankedLogger
 
-from codec_evaluation.utils.utils import find_audios, cut_or_pad
-
+logger = RankedLogger(__name__, rank_zero_only=True)
 
 class vocalsounddataset(Dataset):
     def __init__(
@@ -18,7 +17,6 @@ class vocalsounddataset(Dataset):
         sample_rate,
         target_sec,        
         is_mono,
-        is_normalize,
         audio_dir,
         meta_dir,
     ):
@@ -27,7 +25,6 @@ class vocalsounddataset(Dataset):
         self.target_sec = target_sec
         self.target_length = self.target_sec * self.sample_rate
         self.is_mono = is_mono
-        self.is_normalize = is_normalize
         self.audio_dir = audio_dir
 
         self.meta_dir = meta_dir
@@ -41,13 +38,17 @@ class vocalsounddataset(Dataset):
         return len(self.metadata["data"])
 
     def __getitem__(self, index):
-        return self.get_item(index)
+        try:
+            return self.get_item(index)
+        except Exception as e:
+            logger.error(f"Error loading audio file {os.path.basename(self.metadata["data"][index]["wav"])}: {e}")
+            return None
 
     def get_item(self, index):
         """
         return:
-            segments: [1,T]
-            labels: [1]
+            segments: [n,T]
+            labels: [n]
         """
         
         audio_path = os.path.basename(self.metadata["data"][index]["wav"])
@@ -71,24 +72,13 @@ class vocalsounddataset(Dataset):
         input:
             audio_file:one of audio_file path
         return:
-            waveform:[1,T]
+            waveform:[n,T]
         """
-        if len(audio_file) == 0:
-            raise FileNotFoundError("No audio files found in the specified directory.")
+        
+        waveform, _ = torchaudio.load(audio_file)
 
-        try:
-            waveform, _ = torchaudio.load(audio_file)
-        except Exception as e:
-            print(f"Error loading audio file {audio_file}: {e}")
-            return None
-
-        # Convert to mono if needed
         if waveform.shape[0] > 1 and self.is_mono:
             waveform = torch.mean(waveform, dim=0, keepdim=True)
-
-        # Normalize to [-1, 1] if needed
-        if self.is_normalize:
-            waveform = waveform / waveform.abs().max()
 
         waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length)
 
@@ -125,9 +115,6 @@ class vocalsounddataModule(pl.LightningDataModule):
         self.train_batch_size = train_batch_size
         self.valid_batch_size = valid_batch_size
         self.test_batch_size = test_batch_size
-        self.train_dataset = None
-        self.valid_dataset = None
-        self.test_dataset = None
         self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.valid_num_workers = valid_num_workers

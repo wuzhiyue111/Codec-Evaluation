@@ -1,15 +1,15 @@
 import os
-from pytorch_lightning.utilities.types import TRAIN_DATALOADERS
 import torchaudio
 import torch
-
 import pytorch_lightning as pl
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-from codec_evaluation.utils.utils import find_audios, cut_or_pad
-from einops import reduce
-import numpy as np
+from codec_evaluation.utils.utils import cut_or_pad
 import json
+from codec_evaluation.utils.logger import RankedLogger
+
+logger = RankedLogger(__name__, rank_zero_only=True)
+
 class NSynthPdataset(Dataset):
     def __init__(
         self,
@@ -17,7 +17,6 @@ class NSynthPdataset(Dataset):
         sample_rate,
         target_sec,        
         is_mono,
-        is_normalize,
         audio_dir,
         meta_dir,
     ):
@@ -26,7 +25,6 @@ class NSynthPdataset(Dataset):
         self.target_sec = target_sec
         self.target_length = self.target_sec * self.sample_rate
         self.is_mono = is_mono
-        self.is_normalize = is_normalize
         self.audio_dir = audio_dir
 
         self.meta_dir = os.path.join(meta_dir, f'nsynth-{split}/examples.json')
@@ -41,7 +39,7 @@ class NSynthPdataset(Dataset):
         try:
             return self.getitem(index)
         except Exception as e:
-            print(f"Error in __getitem__: {e}")
+            logger.error(f"Error loading audio file {self.audio_paths[index]}: {e}")
             return None
     
     def getitem(self, index):
@@ -75,24 +73,12 @@ class NSynthPdataset(Dataset):
         input:
             audio_file:one of audio_file path
         return:
-            waveform:[T]
+            waveform:[n, T]
         """
-        if len(audio_file) == 0:
-            raise FileNotFoundError("No audio files found in the specified directory.")
+        waveform, _ = torchaudio.load(audio_file)
 
-        try:
-            waveform, _ = torchaudio.load(audio_file)
-        except Exception as e:
-            print(f"Error loading audio file {audio_file}:{e}")
-            return None
-        
-        # Convert to mono if needed
         if waveform.shape[0] > 1 and self.is_mono:
             waveform = torch.mean(waveform, dim=0, keepdim=True)
-
-        # Normalize to [-1, 1] if needed
-        if self.is_normalize:
-            waveform = waveform / waveform.abs().max()
 
         waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length)
 
@@ -129,9 +115,6 @@ class NSynthPdataModule(pl.LightningDataModule):
         self.train_batch_size = train_batch_size
         self.valid_batch_size = valid_batch_size
         self.test_batch_size = test_batch_size
-        self.train_dataset = None
-        self.valid_dataset = None
-        self.test_dataset = None
         self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.valid_num_workers = valid_num_workers
@@ -140,7 +123,6 @@ class NSynthPdataModule(pl.LightningDataModule):
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
             self.train_dataset = NSynthPdataset(split="train", **self.dataset_args)
-            # 创建验证集
             self.valid_dataset = NSynthPdataset(split="valid", **self.dataset_args) 
         if stage == "val":
             self.valid_dataset = NSynthPdataset(split="valid", **self.dataset_args)

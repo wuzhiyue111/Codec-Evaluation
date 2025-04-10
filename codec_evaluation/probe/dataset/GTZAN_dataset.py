@@ -1,14 +1,15 @@
 import os
-from pytorch_lightning.utilities.types import TRAIN_DATALOADERS
 import torchaudio
 import torch
 import pandas as pd
 import pytorch_lightning as pl
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-from codec_evaluation.utils.utils import find_audios, cut_or_pad
-from einops import reduce
+from codec_evaluation.utils.utils import cut_or_pad
 from torch.nn.utils.rnn import pad_sequence
+from codec_evaluation.utils.logger import RankedLogger
+
+logger = RankedLogger(__name__, rank_zero_only=True)
 
 class GTZANdataset(Dataset):
     def __init__(
@@ -18,8 +19,7 @@ class GTZANdataset(Dataset):
         meta_dir,
         sample_rate,
         target_sec,        
-        is_mono = True,
-        is_normalize = False,
+        is_mono ,
     ):
         """
             split: train, valid, test
@@ -39,7 +39,6 @@ class GTZANdataset(Dataset):
             self.target_length = None
 
         self.is_mono = is_mono
-        self.is_normalize = is_normalize
         self.audio_dir = audio_dir
         self.meta_dir = meta_dir
         self.metadata = pd.read_csv(filepath_or_buffer=os.path.join(meta_dir, f'{split}_filtered.txt'), 
@@ -51,7 +50,10 @@ class GTZANdataset(Dataset):
         return len(self.metadata)
 
     def __getitem__(self, index):
-        return self.getitem(index)
+        try:
+            return self.getitem(index)
+        except Exception as e:
+            logger.error(f"Error loading audio file {self.metadata.iloc[index].iloc[0]}: {e}")
 
     def getitem(self, index):
         """
@@ -86,22 +88,10 @@ class GTZANdataset(Dataset):
         return:
             waveform:[T]
         """
-        if len(audio_file) == 0:
-            raise FileNotFoundError("No audio files found in the specified directory.")
+        waveform, _ = torchaudio.load(audio_file)
 
-        try:
-            waveform, _ = torchaudio.load(audio_file)
-        except Exception as e:
-            print(f"Error loading audio file {audio_file}:{e}")
-            return None
-
-        # Convert to mono if needed
         if waveform.shape[0] > 1 and self.is_mono:
             waveform = torch.mean(waveform, dim=0, keepdim=True)
-
-        # Normalize to [-1, 1] if needed
-        if self.is_normalize:
-            waveform = waveform / waveform.abs().max()
 
         if self.target_length is not None:
             waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length)
@@ -145,9 +135,6 @@ class GTZANdataModule(pl.LightningDataModule):
         self.train_batch_size = train_batch_size
         self.valid_batch_size = valid_batch_size
         self.test_batch_size = test_batch_size
-        self.train_dataset = None
-        self.valid_dataset = None
-        self.test_dataset = None
         self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.valid_num_workers = valid_num_workers

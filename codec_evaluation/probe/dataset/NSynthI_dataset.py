@@ -1,14 +1,10 @@
 import os
-from pytorch_lightning.utilities.types import TRAIN_DATALOADERS
 import torchaudio
 import torch
-
 import pytorch_lightning as pl
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-from codec_evaluation.utils.utils import find_audios, cut_or_pad
-from einops import reduce
-import numpy as np
+from codec_evaluation.utils.utils import cut_or_pad
 import json
 class NSynthIdataset(Dataset):
     def __init__(
@@ -86,24 +82,13 @@ class NSynthIdataset(Dataset):
         input:
             audio_file:one of audio_file path
         return:
-            waveform:[T]
+            waveform:[n,T]
         """
-        if len(audio_file) == 0:
-            raise FileNotFoundError("No audio files found in the specified directory.")
 
-        try:
-            waveform, _ = torchaudio.load(audio_file)
-        except Exception as e:
-            print(f"Error loading audio file {audio_file}:{e}")
-            return None
-        
-        # Convert to mono if needed
+        waveform, _ = torchaudio.load(audio_file)
+
         if waveform.shape[0] > 1 and self.is_mono:
             waveform = torch.mean(waveform, dim=0, keepdim=True)
-
-        # Normalize to [-1, 1] if needed
-        if self.is_normalize:
-            waveform = waveform / waveform.abs().max()
 
         waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length)
 
@@ -139,9 +124,6 @@ class NSynthIdataModule(pl.LightningDataModule):
         self.train_batch_size = train_batch_size
         self.valid_batch_size = valid_batch_size
         self.test_batch_size = test_batch_size
-        self.train_dataset = None
-        self.valid_dataset = None
-        self.test_dataset = None
         self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.valid_num_workers = valid_num_workers

@@ -25,7 +25,6 @@ data:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    is_normalize: False
     task: ${task}
     audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/MTG/audio-low
     meta_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/MTG/mtg-jamendo-dataset
