@@ -111,7 +111,7 @@ bash env_build.sh
     <tr>
       <td>XCodec</td>
       <td>3.23</td>
-      <td>0.94</td>
+      <td>0.942</td>
       <td>0.154</td>
       <td>0.185</td>
       <td>0.09</td>
@@ -121,7 +121,7 @@ bash env_build.sh
     <tr>
       <td>YuE</td>
       <td>3.17</td>
-      <td>0.94</td>
+      <td>0.938</td>
       <td>0.154</td>
       <td>0.195</td>
       <td>0.09</td>
