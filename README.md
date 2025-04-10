@@ -119,7 +119,7 @@ bash env_build.sh
       <td>0.91</td>
     </tr>
     <tr>
-      <td>YeU</td>
+      <td>YuE</td>
       <td>3.17</td>
       <td>0.94</td>
       <td>0.154</td>
