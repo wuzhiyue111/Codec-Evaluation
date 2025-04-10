@@ -144,6 +144,16 @@ bash env_build.sh
       <td>1.14</td>
       <td>0.49</td>
     </tr>
+    <tr>
+       <td>XCodec</td>
+       <td>1.85</td>
+       <td>0.76</td>
+    </tr>
+    <tr>
+       <td>YuE</td>
+       <td>1.84</td>
+       <td>0.75</td>
+    </tr>
   </tbody>
 </table>
 
