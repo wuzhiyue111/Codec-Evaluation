@@ -25,7 +25,6 @@ data:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    is_normalize: False
     audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/GTZAN/genres
     meta_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/GTZAN
   codec_name: ${codec_name}

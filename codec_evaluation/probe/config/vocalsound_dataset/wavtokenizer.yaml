@@ -25,7 +25,6 @@ data:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    is_normalize: False
     audio_dir: /mnt/sda/a6000/sdb/data1/vocalsound_16k/audio_16k
     meta_dir: /mnt/sda/a6000/sdb/data1/vocalsound_16k/datafiles
   codec_name: ${codec_name}

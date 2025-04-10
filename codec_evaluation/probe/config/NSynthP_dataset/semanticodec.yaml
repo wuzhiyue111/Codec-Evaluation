@@ -24,7 +24,6 @@ data:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    is_normalize: False
     audio_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music/NSynth-dataset
     meta_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music/NSynth-dataset
   codec_name: ${codec_name}

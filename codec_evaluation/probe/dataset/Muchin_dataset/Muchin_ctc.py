@@ -8,7 +8,6 @@ import pytorch_lightning as pl
 from codec_evaluation.utils.logger import RankedLogger
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import random_split
-from codec_evaluation.utils.utils import find_audios
 
 logger = RankedLogger(__name__, rank_zero_only=True)
 
@@ -91,25 +90,13 @@ class Muchin_ctc_module(pl.LightningDataModule):
         self.test_batch_size = test_batch_size
         self.train_split = train_split
         self.test_split = test_split
-        self.train_dataset = None
-        self.valid_dataset = None
-        self.test_dataset = None
         self.train_num_workers = train_num_workers
         self.valid_num_workers = valid_num_workers
         self.test_num_workers = test_num_workers
         self.dataset = Muchin_ctc_dataset(audio_dir, meta_path)
         self.train_size = int(len(self.dataset) * self.train_split)
         self.test_size = len(self.dataset) - self.train_size
-
-    def setup(self, stage=None):
-        train_dataset, test_dataset = random_split(self.dataset, [self.train_size, self.test_size])
-        if stage == "fit" or stage is None:
-            self.train_dataset = train_dataset
-            self.valid_dataset = test_dataset
-        if stage == "val":
-            self.valid_dataset = test_dataset
-        if stage == "test":
-            self.test_dataset = test_dataset
+        self.train_dataset, self.test_dataset = random_split(self.dataset, [self.train_size, self.test_size])
 
     def train_dataloader(self):
         return DataLoader(
@@ -122,7 +109,7 @@ class Muchin_ctc_module(pl.LightningDataModule):
 
     def val_dataloader(self):
         return DataLoader(
-            dataset=self.valid_dataset,
+            dataset=self.test_dataset,
             batch_size=self.valid_batch_size,
             shuffle=False,
             collate_fn=self.dataset.collate_fn,

@@ -25,7 +25,6 @@ data:
     target_sec: ${target_sec}
     task: ${task}
     is_mono: True
-    is_normalize: False
     audio_dir: /sdb/data1/sound/ESC-50-master/audio
     meta_path: /sdb/data1/sound/ESC-50-master/meta/esc50.csv
   codec_name: ${codec_name}

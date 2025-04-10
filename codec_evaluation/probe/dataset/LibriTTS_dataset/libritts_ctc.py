@@ -9,7 +9,6 @@ from codec_evaluation.utils.utils import find_audios
 
 logger = RankedLogger(__name__, rank_zero_only=True)
 
-
 class LibriTTS_ctc_dataset(Dataset):
     def __init__(
         self,
@@ -25,7 +24,7 @@ class LibriTTS_ctc_dataset(Dataset):
         try:
             return self.get_item(index)
         except Exception as e:
-            print(f"Error loading audio file {self.all_paths[index]}: {e}")
+            logger.error(f"Error loading audio file {self.all_paths[index]}: {e}")
             return None
 
     def load_text(self, text_path):
@@ -89,9 +88,6 @@ class LibriTTS_ctc_module(pl.LightningDataModule):
         self.train_audio_dir = train_audio_dir
         self.valid_audio_dir = valid_audio_dir
         self.test_audio_dir = test_audio_dir
-        self.train_dataset = None
-        self.valid_dataset = None
-        self.test_dataset = None
         self.train_num_workers = train_num_workers
         self.valid_num_workers = valid_num_workers
         self.test_num_workers = test_num_workers
