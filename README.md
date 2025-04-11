@@ -135,12 +135,13 @@ bash env_build.sh
 <table border="1" align="center">
   <thead>
     <tr>
-      <th rowspan="2">Codec</th>
+      <th rowspan="3">Codec</th>
       <th colspan="5">Metrics</th>
     </tr>
     <tr>
       <th>PESQ</th>
       <th>STOI</th>
+      <th>SISNR</th>
     </tr>
   </thead>
   <tbody>
@@ -168,6 +169,7 @@ bash env_build.sh
        <td>XCodec</td>
        <td>1.85</td>
        <td>0.76</td>
+       <td>-0.296</td>
     </tr>
     <tr>
        <td>YuE</td>
