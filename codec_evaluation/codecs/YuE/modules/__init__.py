@@ -17,6 +17,5 @@ from .conv import (
     SConv1d,
     SConvTranspose1d,
 )
-from .lstm import SLSTM
-from .seanet import SEANetEncoder, SEANetDecoder
+
 

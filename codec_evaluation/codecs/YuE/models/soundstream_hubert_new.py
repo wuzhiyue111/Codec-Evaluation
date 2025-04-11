@@ -11,7 +11,7 @@ import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
 
-from ..modules.seanet import SEANetEncoder, SEANetDecoder
+# from ..modules.seanet import SEANetEncoder, SEANetDecoder
 from ..quantization  import ResidualVectorQuantizer#,VectorQuantize
 from transformers import  AutoModel
 # from transformers import WhisperProcessor, WhisperForConditionalGeneration
