@@ -14,7 +14,7 @@
 </div>
 
 <!-- Welcome words -->
-<h1 style="color: #FFA500;">Welcome to LeBeGut's GitHub ! 🍀</h1>
+<h1 style="color: #FFA500;">🎧 Welcome to AudioCodecBench 🎵</h1>
 
 
 
