@@ -1,6 +1,6 @@
 <div align="center">
 	<!-- Welcome words -->
-	<h1 style="color: #FFA500;">🎧 Welcome to AudioCodecBench 🎵</h1>
+	<h1 style="color: #FFA500; font-size: 150%;">🎧 Welcome to AudioCodecBench 🎵</h1>
 	<!-- Dynamic Emojis -->
 	<div style="display: flex; justify-content: center; align-items: center;">
 	  <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Waving%20Hand.png" alt="Waving Hand" width="50" height="50" />
@@ -89,7 +89,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.114</td>
       <td>0.925</td>
-      <td></td>
+      <td>6.902</td>
     </tr>
     <tr>
       <td>Mimi</td>
