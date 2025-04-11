@@ -175,6 +175,7 @@ bash env_build.sh
        <td>YuE</td>
        <td>1.84</td>
        <td>0.75</td>
+       <td>-0.296</td>
     </tr>
   </tbody>
 </table>
