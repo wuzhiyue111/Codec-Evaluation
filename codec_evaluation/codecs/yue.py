@@ -106,7 +106,7 @@ class YuE(Codec):
             return: [B, N, K]  [2, 468, 8]
         """
         toks, _ = self.model.encode(sig[:, None])  # [K, B, N]
-        toks = toks[: self.num_codebooks].movedim(-3, -1)  # [K, B, N]
+        toks = toks[: self.num_codebooks].movedim(-3, -1)  # [B, N, K]
         return toks, None
         
 
