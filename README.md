@@ -158,16 +158,19 @@ bash env_build.sh
       <td>DAC</td>
       <td>2.66</td>
       <td>0.86</td>
+      <td>0.980</td>
     </tr>
     <tr>
       <td>Encodec</td>
       <td>2.27</td>
       <td>0.85</td>
+      <td>5.891</td>
     </tr>
     <tr>
       <td>SemantiCodec</td>
       <td>1.32</td>
       <td>0.60</td>
+      <td>-3.086</td>
     </tr>
     <tr>
       <td>WavTokenizer</td>
