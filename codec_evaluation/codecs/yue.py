@@ -28,7 +28,7 @@ class YuE(Codec):
             num_codebooks: number of codebooks
             model_ckpt_dir: path to the model checkpoint
         """
-        from codec_evaluation.codecs.YuE.inference.xcodec_mini_infer.models.soundstream_hubert_new import SoundStream
+        from codec_evaluation.codecs.YuE.models.soundstream_hubert_new import SoundStream
 
         super().__init__(sample_rate, 16000, mode)
         self.num_codebooks = num_codebooks
@@ -106,7 +106,7 @@ class YuE(Codec):
             return: [B, N, K]  [2, 468, 8]
         """
         toks, _ = self.model.encode(sig[:, None])  # [K, B, N]
-        toks = toks[: self.num_codebooks].movedim(-3, -1)  # [K, B, N]
+        toks = toks[: self.num_codebooks].movedim(-3, -1)  # [B, N, K]
         return toks, None
         
 
