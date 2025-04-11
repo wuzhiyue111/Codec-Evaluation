@@ -1,6 +1,6 @@
 <div align="center">
 	<!-- Welcome words -->
-	<h1 style="color: #FFA500; ">🎧 Welcome to AudioCodecBench 🎵</h1>
+	<h1 style="color: #FFA500; font-size: 32px; text-shadow: 1px 1px 3px rgba(0,0,0,0.3);">🎧 Welcome to AudioCodecBench 🎵</h1>
 	<!-- Dynamic Emojis -->
 	<div style="display: flex; justify-content: center; align-items: center;">
 	  <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Waving%20Hand.png" alt="Waving Hand" width="50" height="50" />
