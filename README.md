@@ -1,21 +1,6 @@
 <div align="center">
 	<!-- Welcome words -->
-	<div style="
-  color: #FFA500;
-  font-size: 48px;
-  font-weight: bold;
-  animation: pulse 2s infinite;
-">
-  🎧 Welcome to AudioCodecBench 🎵
-</div>
-
-<style>
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-  }
-</style>
+	<h1 style="color: #FFA500;">🎧 Welcome to AudioCodecBench GitHub ! 🎵</h1>
 	<!-- Dynamic Emojis -->
 	<div style="display: flex; justify-content: center; align-items: center;">
 	  <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Waving%20Hand.png" alt="Waving Hand" width="50" height="50" />
