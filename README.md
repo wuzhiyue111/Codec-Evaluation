@@ -58,7 +58,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.125</td>
       <td>0.94</td>
-      <td></td>
+      <td>0.149</td>
     </tr>
     <tr>
       <td>Encodec</td>
