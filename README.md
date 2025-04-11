@@ -35,7 +35,7 @@ bash env_build.sh
   <thead>
     <tr>
       <th rowspan="2">Codec</th>
-      <th colspan="5">Metrics</th>
+      <th colspan="8">Metrics</th>
     </tr>
     <tr>
       <th>PESQ</th>
@@ -45,6 +45,7 @@ bash env_build.sh
       <th>CER_GT</th>
       <th>CER_REC</th>
       <th>STOI</th>
+      <th>SISNR</th>
     </tr>
   </thead>
   <tbody>
@@ -57,6 +58,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.125</td>
       <td>0.94</td>
+      <td></td>
     </tr>
     <tr>
       <td>Encodec</td>
@@ -67,6 +69,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.114</td>
       <td>0.925</td>
+      <td></td>
     </tr>
     <tr>
       <td>Mimi</td>
@@ -77,6 +80,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.173</td>
       <td>0.88</td>
+      <td></td>
     </tr>
     <tr>
       <td>SemantiCodec</td>
@@ -87,6 +91,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.195</td>
       <td>0.86</td>
+      <td></td>
     </tr>
     <tr>
       <td>WavTokenizer</td>
@@ -97,6 +102,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.325</td>
       <td>0.83</td>
+      <td></td>
     </tr>
     <tr>
       <td>SpeechTokenizer</td>
@@ -107,6 +113,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.12</td>
       <td>0.89</td>
+      <td></td>
     </tr>
     <tr>
       <td>XCodec</td>
@@ -117,6 +124,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.106</td>
       <td>0.91</td>
+      <td></td>
     </tr>
     <tr>
       <td>YuE</td>
@@ -127,6 +135,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.113</td>
       <td>0.90</td>
+      <td></td>
     </tr>
   </tbody>
 </table>
@@ -164,12 +173,13 @@ bash env_build.sh
       <td>WavTokenizer</td>
       <td>1.14</td>
       <td>0.49</td>
+      <td>-0.464</td>
     </tr>
     <tr>
        <td>XCodec</td>
        <td>1.85</td>
        <td>0.76</td>
-       <td>-0.296</td>
+       <td>-0.065</td>
     </tr>
     <tr>
        <td>YuE</td>
