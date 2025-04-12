@@ -138,21 +138,21 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
   MRC tasks evaluate the codec's ability to fit noise by introducing noise iteratively, helping to determine whether the codebook information is more semantically or acoustically oriented.
   Navigate to the `Codec-Evaluation/id_sensitive` directory, and run the following command in the terminal to execute the task:
   ```
-  python python evaluate_codec.py
-  		  --codec_name speechtokenizer
-		  --model_ckpt_dir /sdb/model_weight/codec_evaluation/codec_ckpt/speechtokenizer
-		  --device gpu:0
-		  --sample_rate 24000
-		  --num_codebooks 8
-		  --need_resample True
-		  --task MRC
-		  --batch_size 24
-		  --num_workers 8
-		  --shift_time 2
-		  --subset_step 1200
-		  --dataset_audio_dir /sdb/data1/speech/24kHz/LibriTTS/test-other
-		  --use_vocos False
-		  --vocos_ckpt_dir None
+  python evaluate_codec.py
+	  --codec_name speechtokenizer
+	  --model_ckpt_dir /sdb/model_weight/codec_evaluation/codec_ckpt/speechtokenizer
+	  --device gpu:0
+	  --sample_rate 24000
+	  --num_codebooks 8
+	  --need_resample True
+	  --task MRC
+	  --batch_size 24
+	  --num_workers 8
+	  --shift_time 2
+	  --subset_step 1200
+	  --dataset_audio_dir /sdb/data1/speech/24kHz/LibriTTS/test-other
+	  --use_vocos False
+	  --vocos_ckpt_dir None
   ```
 
 - ###### Offset(OS)
