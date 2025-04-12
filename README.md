@@ -56,13 +56,15 @@
 
 ## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Compass/3D/compass_3d.png" alt="compass" width="30" height="30"> Env Build
 The following explains how to quickly create the required environment and install for use.
-'''
-conda create -n codec_eval python==3.10 -y
+
+### Setup environment and dependencies
+It is strongly recommended to use conda for managing your Python environment.
+
+'''conda create -n codec_eval python==3.10 -y
 conda activate codec_eval
 git clone https://github.com/wuzhiyue111/Codec-Evaluation.git
 cd Codec-Evaluation
-bash env_build.sh
-'''
+bash env_build.sh'''
 
 ## Reconstruction Metric
 ### Speech
