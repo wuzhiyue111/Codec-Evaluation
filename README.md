@@ -78,7 +78,7 @@ The following will introduce how to conduct evaluations using codecs and downstr
 ### Audio codec
 Currently, 10 codecs have been added to the repository. Each codec program has five modes, namely `encode`, `decode`, `reconstruct`, `unquantized_emb`, and `unquantized_emb`. In the code, we've designed two ways to load model weights: local and remote. Users can choose either loading method according to their own needs. 
 
-<table align="center">
+<table>
   <tr>
     <th>Codec</th>
     <th>DAC</th>
@@ -94,16 +94,16 @@ Currently, 10 codecs have been added to the repository. Each codec program has f
   </tr>
   <tr>
     <td>Sample-rate</td>
-    <td style="text-align:center;">24kHz</td>
-    <td style="text-align:center;">24kHz</td>
-    <td style="text-align:center;">24kHz</td>
-    <td style="text-align:center;">24kHz</td>
-    <td style="text-align:center;">16kHz</td>
-    <td style="text-align:center;">16kHz</td>
-    <td style="text-align:center;">16kHz</td>
-    <td style="text-align:center;">16kHz</td>
-    <td style="text-align:center;">16kHz</td>
-    <td style="text-align:center;">16kHz</td>
+    <td><center>24kHz</center></td>
+    <td><center>24kHz</center></td>
+    <td><center>24kHz</center></td>
+    <td><center>24kHz</center></td>
+    <td><center>16kHz</center></td>
+    <td><center>16kHz</center></td>
+    <td><center>16kHz</center></td>
+    <td><center>16kHz</center></td>
+    <td><center>16kHz</center></td>
+    <td><center>16kHz</center></td>
   </tr>
   <tr>
     <td>Modes</td>
