@@ -30,9 +30,9 @@
   arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
 </a>
 
-<a>
-  <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Dove.png" alt="Dove" width="20" height="20"> arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
-</a>
+
+<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Dove.png" alt="Dove" width="20" height="20"> arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
+
 
 
 ## Purpose
