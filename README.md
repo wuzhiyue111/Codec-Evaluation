@@ -117,7 +117,7 @@ Currently, 10 codecs have been added to the repository. Each codec program has f
   </tr>
 </table>
 
-### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> Add audio codec and init
+### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> Add and init audio codec
 If users need to test their own codecs, they can quickly deploy their own codecs by following the methods below.
 
 - Package the codec model as a source code library function and place it in the directory `Codec-Evaluation/codec_evaluation/codecs`.
@@ -131,6 +131,8 @@ If users need to test their own codecs, they can quickly deploy their own codecs
 
 ### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> ID sensitive
 Regarding the testing and analysis of ID sensitivity, it is carried out from the perspectives of the following three tasks. 
+
+#### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Books/3D/books_3d.png" alt="books" width="30" height="30"> MRC and OS tasks
 
 ## Reconstruction Metric
 ### Speech
