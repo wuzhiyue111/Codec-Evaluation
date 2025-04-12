@@ -24,7 +24,7 @@
 
 # AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
 &emsp;&emsp;__AudioCodecBench__ evaluates audio codecs in terms of reconstruction quality and the adaptability of generated representations to large language model(LLM) modeling, by performing tasks such as reconstruction (adding noise to assess the codec’s ability to fit noise and to determine whether the codebook information tends to encode noise), audio offset (simulating phase shifts to evaluate noise fitting ability), mutual information (analyzing the correlation between codebook tokens before and after reconstruction to assess the stability of information representation), and downstream probe tasks (simulating large language model-style modeling).<br>
- <a href="https://www.overleaf.com/project/67e23cf832acf0f4e121f472">
+ <a href="https://www.overleaf.com/project/67f66ad3dd19f43edfd9d439">
   <img src="https://camo.githubusercontent.com/a8d50b4cb0bebfa879fca60626080da8012c5a24a1fe3d3db641e19485b0851f/68747470733a2f2f7374617469632e61727869762e6f72672f7374617469632f62726f7773652f302e332e342f696d616765732f69636f6e732f66617669636f6e2d31367831362e706e67" alt="arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation">
   arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
 </a>
