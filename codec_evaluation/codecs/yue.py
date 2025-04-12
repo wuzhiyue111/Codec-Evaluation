@@ -49,7 +49,7 @@ class YuE(Codec):
         self.vocab_size = 1024
         self.need_resample = need_resample
         self.hop_length = 320
-        self.dim = 128
+        self.dim = 1024
         self.token_rate = self.model.frame_rate
 
         # Delete the decoder to save memory overhead.

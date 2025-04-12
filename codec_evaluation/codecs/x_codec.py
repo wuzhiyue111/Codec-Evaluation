@@ -56,7 +56,7 @@ class XCodec(Codec):
         self.vocab_size = 1024
         self.need_resample = need_resample
         self.hop_length = self.model.hop_length
-        self.dim = 128
+        self.dim = 1024
         self.token_rate = self.model.frame_rate
 
         # Delete the decoder to save memory overhead.
