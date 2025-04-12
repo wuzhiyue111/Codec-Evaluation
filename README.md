@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/36f3ed4b-4397-480b-ba64-8f676b61197e)<div align="center">
+<div align="center">
 	<!-- Welcome words -->
 	<h1 style="color: #FFA500;font-size: 36px;">
 	<img src="https://media.tenor.com/92w2JUO-fk4AAAAi/musical-notes.gif" alt="yf" width="70" height="50" />
