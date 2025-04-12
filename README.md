@@ -80,26 +80,37 @@ Currently, 10 codecs have been added to the repository. Each codec program has f
 
 <table>
   <tr>
-    <th rowspan="2">codec</th>
-    <th colspan="10"> </th>
+    <th>codec</th>
+    <th>col1</th>
+    <th>col2</th>
+    <th>col3</th>
+    <th>col4</th>
+    <th>col5</th>
+    <th>col6</th>
+    <th>col7</th>
+    <th>col8</th>
+    <th>col9</th>
+    <th>col10</th>
   </tr>
   <tr>
-    <th>sample-rate</th>
-    <th>1</th>
-    <th>2</th>
-    <th>3</th>
-    <th>4</th>
-    <th>5</th>
-    <th>6</th>
-    <th>7</th>
-    <th>8</th>
-    <th>9</th>
+    <td>sample-rate</td>
+    <td>val1</td>
+    <td>val2</td>
+    <td>val3</td>
+    <td>val4</td>
+    <td>val5</td>
+    <td>val6</td>
+    <td>val7</td>
+    <td>val8</td>
+    <td>val9</td>
+    <td>val10</td>
   </tr>
   <tr>
     <td>modes</td>
     <td colspan="10">your merged content here</td>
   </tr>
 </table>
+
 
 
 ## Reconstruction Metric
