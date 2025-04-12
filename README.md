@@ -75,7 +75,7 @@ We strongly recommended to use conda for managing your Python environment.
 ## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Straight%20ruler/3D/straight_ruler_3d.png" alt="ruler" width="30" height="30"> Usage
 The following will introduce how to conduct evaluations using codecs and downstream tasks. 
 
-### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30">Audio codec and init
+### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30">Audio codec 
 Currently, 10 codecs have been added to the repository. Each codec program has five modes, namely `encode`, `decode`, `reconstruct`, `unquantized_emb`, and `unquantized_emb`. In the code, we've designed two ways to load model weights: local and remote. Users can choose either loading method according to their own needs. 
 
 <table>
@@ -117,7 +117,7 @@ Currently, 10 codecs have been added to the repository. Each codec program has f
   </tr>
 </table>
 
-### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> Add audio codec
+### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> Add audio codec and init
 If users need to test their own codecs, they can quickly deploy their own codecs by following the methods below.
 
 - Package the codec model as a source code library function and place it in the directory `Codec-Evaluation/codec_evaluation/codecs`.
@@ -127,7 +127,9 @@ If users need to test their own codecs, they can quickly deploy their own codecs
   ```
   python ~/Codec-Evaluation/codec_evaluation/codecs/codec.py
   ```
-- Add a codec initialization function in `codec_evaluation/init_codecs.py` to facilitate the initialization and invocation of the codec for downstream tasks. 
+- Add a codec initialization function in `codec_evaluation/init_codecs.py` to facilitate the initialization and invocation of the codec for downstream tasks.
+
+### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> MRC and OS tasks
 
 ## Reconstruction Metric
 ### Speech
