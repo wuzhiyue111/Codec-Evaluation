@@ -80,7 +80,7 @@ Currently, 10 codecs have been added to the repository. Each codec program has f
 
 <table>
   <tr>
-    <th>codec</th>
+    <th>Codec</th>
     <th>DAC</th>
     <th>Encodec</th>
     <th>Mimi</th>
@@ -93,26 +93,26 @@ Currently, 10 codecs have been added to the repository. Each codec program has f
     <th>YuE</th>
   </tr>
   <tr>
-    <td>sample-rate</td>
-    <td>24000Hz</td>
-    <td>24000Hz</td>
-    <td>24000Hz</td>
-    <td>24000Hz</td>
-    <td>16000Hz</td>
-    <td>16000Hz</td>
-    <td>16000Hz</td>
-    <td>16000Hz</td>
-    <td>16000Hz</td>
-    <td>16000Hz</td>
+    <td>Sample-rate</td>
+    <td>24kHz</td>
+    <td>24kHz</td>
+    <td>24kHz</td>
+    <td>24kHz</td>
+    <td>16kHz</td>
+    <td>16kHz</td>
+    <td>16kHz</td>
+    <td>16kHz</td>
+    <td>16kHz</td>
+    <td>16kHz</td>
   </tr>
   <tr>
-    <td>modes</td>
+    <td>Modes</td>
     <td colspan="10">
-	encode: encode the audio to id tokens
-        decode: decode the id tokens to audio
-        reconstruct: encode -> decode
-        unquantized_emb: encode -> unquantized embedding
-        quantized_emb: encode + quantizer -> quantized embedding
+	encode: encode the audio to id tokens <br>
+        decode: decode the id tokens to audio <br>
+        reconstruct: encode -> decode <br>
+        unquantized_emb: encode -> unquantized embedding <br>
+        quantized_emb: encode + quantizer -> quantized embedding <br>
     </td>
   </tr>
 </table>
