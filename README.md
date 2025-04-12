@@ -126,7 +126,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.325</td>
       <td>0.83</td>
-      <td></td>
+      <td>1.318</td>
     </tr>
     <tr>
       <td>SpeechTokenizer</td>
@@ -148,7 +148,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.106</td>
       <td>0.91</td>
-      <td></td>
+      <td>-0.493</td>
     </tr>
     <tr>
       <td>YuE</td>
@@ -159,7 +159,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.113</td>
       <td>0.90</td>
-      <td></td>
+      <td>-0.472</td>
     </tr>
   </tbody>
 </table>
