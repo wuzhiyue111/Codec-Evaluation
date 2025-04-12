@@ -55,7 +55,7 @@
     - 
 
 ## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Compass/3D/compass_3d.png" alt="compass" width="30" height="30"> Env Build
-The following explains how to quickly create the required environment and install for use.
+The following explains how to quickly create the required environment and install codec_evaluation for use.
 
 ### Setup environment and dependencies
 We strongly recommended to use conda for managing your Python environment.
