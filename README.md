@@ -23,7 +23,7 @@
 
 
 # AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
-
+AudioCodecBench evaluates audio codecs from two aspects. First, its own reconstruction quality is measured through single - pass reconstruction experiments using metrics like PESQ for the reconstructed audio quality. Second, regarding the suitability of the generated information arrangement for large - language - model modeling, it is achieved through multiple - pass reconstruction (assessing the ability to fit noise by adding noise to determine the information tendency of the codebook), audio offset (simulating phase offset to assess the ability to fit noise), mutual information (analyzing the correlation of codebook tokens before and after reconstruction to examine the stability of information representation), and downstream probe (simulating large - language - model modeling) tasks.
 ## Purpose
 
 1. how to evaluate the quality of codebook
