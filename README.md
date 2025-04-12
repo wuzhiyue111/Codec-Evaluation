@@ -60,7 +60,7 @@ The following explains how to quickly create the required environment and instal
 ### Setup environment and dependencies
 We strongly recommended to use conda for managing your Python environment.
 
-'''conda create -n codec_eval python==3.10 -y
+```conda create -n codec_eval python==3.10 -y
 conda activate codec_eval
 git clone https://github.com/wuzhiyue111/Codec-Evaluation.git
 cd Codec-Evaluation
