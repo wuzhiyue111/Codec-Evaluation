@@ -78,6 +78,30 @@ The following will introduce how to conduct evaluations using codecs and downstr
 ### Audio codec
 Currently, 10 codecs have been added to the repository. Each codec program has five modes, namely `encode`, `decode`, `reconstruct`, `unquantized_emb`, and `unquantized_emb`. In the code, we've designed two ways to load model weights: local and remote. Users can choose either loading method according to their own needs. 
 
+<table>
+  <tr>
+    <th rowspan="2">codec</th>
+    <th colspan="10"> </th>
+  </tr>
+  <tr>
+    <th>sample-rate</th>
+    <th>1</th>
+    <th>2</th>
+    <th>3</th>
+    <th>4</th>
+    <th>5</th>
+    <th>6</th>
+    <th>7</th>
+    <th>8</th>
+    <th>9</th>
+  </tr>
+  <tr>
+    <td>modes</td>
+    <td colspan="10">your merged content here</td>
+  </tr>
+</table>
+
+
 ## Reconstruction Metric
 ### Speech
 <table border="1" align="center">
