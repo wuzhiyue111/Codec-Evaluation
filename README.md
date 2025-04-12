@@ -37,13 +37,13 @@
 <img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Animals/Penguin.png" alt="penguin" width="20" height="20" />contribution5 <br>
 </div>
 
-## Purpose
+## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Mountain/3D/mountain_3d.png" alt="mountain" width="30" height="30"> Purpose
 
 1. how to evaluate the quality of codebook
 2. collect all existing metrics for reconstruction
 3. collect all existing metrics for Linear Probing (Music and Speech)
 
-## Road Map
+## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/World%20map/3D/world_map_3d.png" alt="map" width="30" height="30"> Road Map
 
 - [x] multi codec deploy
     - multi codec deploy reference: https://github.com/lucadellalib/audiocodecs
