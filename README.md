@@ -29,8 +29,9 @@
   <img src="https://camo.githubusercontent.com/a8d50b4cb0bebfa879fca60626080da8012c5a24a1fe3d3db641e19485b0851f/68747470733a2f2f7374617469632e61727869762e6f72672f7374617469632f62726f7773652f302e332e342f696d616765732f69636f6e732f66617669636f6e2d31367831362e706e67" alt="arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation">
   arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
 </a>
+
 <a>
-  <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Dove.png" alt="Dove" >
+  <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Dove.png" alt="Dove" width="15" height="15">
   arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
 </a>
 
