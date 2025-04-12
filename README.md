@@ -1,6 +1,7 @@
 <div align="center">
 	<!-- Welcome words -->
 	<h1 style="color: #FFA500;">
+	<img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExcnA3cDMyenY4OWpkZHU5OGJ4anJpdGJkZG02eWlmcGVhdHVzY215aSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/jIWdDlz1s5a7k1o0w0/giphy.gif" alt="Red Apple" width="50" height="50" />
  🎧 Welcome to AudioCodecBench GitHub 🎵
  	</h1>
 	<!-- Dynamic Emojis -->
