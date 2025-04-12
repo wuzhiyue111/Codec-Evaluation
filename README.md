@@ -1,11 +1,11 @@
 <div align="center">
 	<!-- Welcome words -->
 	<h1 style="color: #FFA500;font-size: 36px;">
-	<img src="https://media.tenor.com/92w2JUO-fk4AAAAi/musical-notes.gif" alt="yf" width="70" height="50" />
- 	<img src="https://media.tenor.com/BpwZmkRWw4oAAAAi/music-music-notes.gif" alt="yf" width="70" height="50" />
+	<img src="https://media.tenor.com/92w2JUO-fk4AAAAi/musical-notes.gif" alt="yf" width="50" height="50" />
+ 	<img src="https://media.tenor.com/BpwZmkRWw4oAAAAi/music-music-notes.gif" alt="yf" width="50" height="50" />
   🎧 Welcome to AudioCodecBench 🎵
-  	<img src="https://media.tenor.com/2wq1PfInyYkAAAAj/music-note-dancing.gif" alt="yf" width="70" height="50" />
-	<img src="https://media.tenor.com/92w2JUO-fk4AAAAi/musical-notes.gif" alt="yf" width="70" height="50" />
+  	<img src="https://media.tenor.com/2wq1PfInyYkAAAAj/music-note-dancing.gif" alt="yf" width="50" height="50" />
+	<img src="https://media.tenor.com/92w2JUO-fk4AAAAi/musical-notes.gif" alt="yf" width="50" height="50" />
  	</h1>
 	<!-- Dynamic Emojis -->
 	<div style="display: flex; justify-content: center; align-items: center;">
