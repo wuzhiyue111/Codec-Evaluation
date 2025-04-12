@@ -103,7 +103,7 @@ Currently, 10 codecs have been added to the repository. Each codec program has f
     <td><center>16kHz</center></td>
     <td><center>16kHz</center></td>
     <td><center>16kHz</center></td>
-    <td><center>16kHz</center></td>
+    <th>16kHz</th>
   </tr>
   <tr>
     <td>Modes</td>
