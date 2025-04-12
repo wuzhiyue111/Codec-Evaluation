@@ -30,7 +30,7 @@
   arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
 </a>
 
-<a href="https://www.overleaf.com/project/67e23cf832acf0f4e121f472">
+<a>
   <img https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Dove.png" alt="Dove" width="20" height="20">
   arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
 </a>
