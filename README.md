@@ -93,7 +93,7 @@ Currently, 10 codecs have been added to the repository. Each codec program has f
     <th>YuE</th>
   </tr>
   <tr>
-    <td>Sample-rate</td>
+    <th>Sample_rate</th>
     <th>24kHz</th>
     <th>24kHz</th>
     <th>24kHz</th>
@@ -106,7 +106,7 @@ Currently, 10 codecs have been added to the repository. Each codec program has f
     <th>16kHz</th>
   </tr>
   <tr>
-    <td>Modes</td>
+    <th>Modes</th>
     <td colspan="10">
 	encode: encode the audio to id tokens <br>
         decode: decode the id tokens to audio <br>
