@@ -176,9 +176,9 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 	  --use_vocos False
 	  --vocos_ckpt_dir None
   ```
-
-## Reconstruction Metric
-### Speech
+## Probe task results
+### Reconstruction Metric
+#### Speech
 <table border="1" align="center">
   <thead>
     <tr>
@@ -288,7 +288,7 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
   </tbody>
 </table>
 
-### Music
+#### Music
 <table border="1" align="center">
   <thead>
     <tr>
@@ -341,8 +341,8 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
   </tbody>
 </table>
 
-## Probe Experiment
-### Marble Probe (Music)
+### Probe Experiment
+#### Marble Probe (Music)
 <table border="1" >
     
    <thead>
@@ -571,7 +571,7 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
     </tbody>
 </table>
 
-### Speech and Sound Probe
+#### Speech and Sound Probe
 <table border="1" >
     
    <thead>
