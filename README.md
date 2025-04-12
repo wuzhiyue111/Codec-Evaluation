@@ -154,7 +154,6 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 	  --use_vocos False
 	  --vocos_ckpt_dir None
   ```
-  ### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> Probe 
 
 - ###### Offset(OS)
 
@@ -177,6 +176,8 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 	  --use_vocos False
 	  --vocos_ckpt_dir None
   ```
+### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> Probe 
+  
 ## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Pen/3D/pen_3d.png" alt="pen" width="30" height="30">Probe task results
 ### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Bookmark%20tabs/3D/bookmark_tabs_3d.png" alt="bookmark" width="30" height="30">Reconstruction Metric
 #### Speech
