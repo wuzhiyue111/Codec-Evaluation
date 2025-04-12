@@ -122,10 +122,10 @@ If users need to test their own codecs, they can quickly deploy their own codecs
 
 - Package the codec model as a source code library function and place it in the directory `Codec-Evaluation/codec_evaluation/codecs`.
 - Create a `codec.py` program and modify the functions `_sig_to_unquantized_emb`, `_sig_to_quantized_emb`, `_sig_to_toks`, and `_toks_to_sig` according to the inference code of the model to obtain the corresponding mode results.
-- Use the local weight loading method to load the trained weights of the model.
-- Run the code python codec.py
+- Use the local loading method to load the model's training weights by setting the correct `mode_ckpt_path` parameter.
+- Run the code.
   ```
-  python Codec-Evaluation/codec_evaluation/codecs/codec.py
+  python ~/Codec-Evaluation/codec_evaluation/codecs/codec.py
   ```
 - Add a codec initialization function in `init_codecs.py` to facilitate the initialization and invocation of the codec for downstream tasks. 
 
