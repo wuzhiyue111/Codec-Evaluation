@@ -75,7 +75,7 @@ We strongly recommended to use conda for managing your Python environment.
 ## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Straight%20ruler/3D/straight_ruler_3d.png" alt="ruler" width="30" height="30"> Usage
 The following will introduce how to conduct evaluations using codecs and downstream tasks. 
 
-### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30">Audio codec
+### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30">Audio codec and init
 Currently, 10 codecs have been added to the repository. Each codec program has five modes, namely `encode`, `decode`, `reconstruct`, `unquantized_emb`, and `unquantized_emb`. In the code, we've designed two ways to load model weights: local and remote. Users can choose either loading method according to their own needs. 
 
 <table>
@@ -120,7 +120,7 @@ Currently, 10 codecs have been added to the repository. Each codec program has f
 ### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> Add audio codec
 If users need to test their own codecs, they can quickly deploy their own codecs by following the methods below.
 
-- Package the codec model as a source code library function and place it in the directory `Codec - Evaluation/codec_evaluation/codecs`.
+- Package the codec model as a source code library function and place it in the directory `Codec-Evaluation/codec_evaluation/codecs`.
 - Create a `codec.py` program and modify the functions `_sig_to_unquantized_emb`, `_sig_to_quantized_emb`, `_sig_to_toks`, and `_toks_to_sig` according to the inference code of the model to obtain the corresponding mode results.
 - Use the local weight loading method to load the trained weights of the model.
 - Run the code: python codec.py
