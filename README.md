@@ -100,7 +100,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.173</td>
       <td>0.88</td>
-      <td></td>
+      <td>4.162</td>
     </tr>
     <tr>
       <td>SemantiCodec</td>
@@ -111,7 +111,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.195</td>
       <td>0.86</td>
-      <td></td>
+      <td>-2.484</td>
     </tr>
     <tr>
       <td>WavTokenizer</td>
@@ -133,7 +133,7 @@ bash env_build.sh
       <td>0.09</td>
       <td>0.12</td>
       <td>0.89</td>
-      <td></td>
+      <td>3.495</td>
     </tr>
     <tr>
       <td>XCodec</td>
