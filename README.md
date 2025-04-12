@@ -43,18 +43,6 @@
 2. collect all existing metrics for reconstruction
 3. collect all existing metrics for Linear Probing (Music and Speech)
 
-## Env Build
-
-conda create -n codec_eval python==3.10 -y
-
-conda activate codec_eval
-
-git clone https://github.com/wuzhiyue111/Codec-Evaluation.git
-
-cd Codec-Evaluation
-
-bash env_build.sh
-
 ## Road Map
 
 - [x] multi codec deploy
@@ -65,6 +53,19 @@ bash env_build.sh
 - [ ] define the evaluation metrics of codec, codebooks
     - test ID sensitive in same semantic
     - 
+
+## Env Build
+'''
+conda create -n codec_eval python==3.10 -y
+
+conda activate codec_eval
+
+git clone https://github.com/wuzhiyue111/Codec-Evaluation.git
+
+cd Codec-Evaluation
+
+bash env_build.sh
+'''
 
 ## Reconstruction Metric
 ### Speech
