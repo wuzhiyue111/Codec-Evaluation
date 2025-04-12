@@ -60,16 +60,18 @@ The following explains how to quickly create the required environment and instal
 ### Setup environment and dependencies
 We strongly recommended to use conda for managing your Python environment.
 
-- Create a virtual environment using conda.
+- ### Create a virtual environment using conda.
 	```
 	# create a virtual environment using conda.
 	conda create -n codec_eval python==3.10 -y	# Python ==3.10 is recommended.
 	conda activate codec_eval
 	```
-
- git clone https://github.com/wuzhiyue111/Codec-Evaluation.git
+- ### Install codec_evaluation from source
+  	```
+ 	git clone https://github.com/wuzhiyue111/Codec-Evaluation.git
 	cd Codec-Evaluation
 	bash env_build.sh
+   	```
 
 ## Reconstruction Metric
 ### Speech
