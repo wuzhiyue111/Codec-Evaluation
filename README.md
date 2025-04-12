@@ -1,8 +1,8 @@
 <div align="center">
 	<!-- Welcome words -->
 	<img src="" alt="Red Apple" width="50" height="50" />
-	https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExNWJleHgxN3h3N3lpa3Z1MGkwOGR6Z2F4bTBhamw0bThyZWpxNTFmeSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Kw2CLv69onhvFlFteN/giphy.gif
-	<h1 style="color: #FFA500;"><img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Food/Red%20Apple.png" alt="Red Apple" width="50" height="50" />🎧 Welcome to AudioCodecBench GitHub 🎵</h1>
+	
+	<h1 style="color: #FFA500;"><img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExNWJleHgxN3h3N3lpa3Z1MGkwOGR6Z2F4bTBhamw0bThyZWpxNTFmeSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Kw2CLv69onhvFlFteN/giphy.gif" alt="Red Apple" width="50" height="50" />🎧 Welcome to AudioCodecBench GitHub 🎵</h1>
 	<!-- Dynamic Emojis -->
 	<div style="display: flex; justify-content: center; align-items: center;">
 	  <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Food/Red%20Apple.png" alt="Red Apple" width="50" height="50" />
