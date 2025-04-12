@@ -4,6 +4,11 @@ from codec_evaluation.codecs.mimi import Mimi
 from codec_evaluation.codecs.semanticodec import SemantiCodec
 from codec_evaluation.codecs.speechtokenizer import SpeechTokenizer
 from codec_evaluation.codecs.wavtokenizer import WavTokenizer
+from codec_evaluation.codecs.qwen2encoder import Qwen2Encoder
+from codec_evaluation.codecs.qwenaudiovq import QwenAudioVQ  # 添加导入
+from codec_evaluation.codecs.qwen2encoder_PCA import Qwen2EncoderPCA  # 添加新的编解码器导入
+from codec_evaluation.codecs.qwen2svdvq import QwenSVDVQ  # 添加新的SVDVQ编解码器导入
+from codec_evaluation.codecs.distilvq import DistilVQCodec  # 添加新的DistilVQ编解码器导入
 
 def init_codec(
         modelname: str, 
@@ -86,6 +91,53 @@ def init_codec(
             need_resample=need_resample,
             mode=mode,
             model_ckpt_dir=model_ckpt_dir,
+        ).to(device)
+    elif modelname =="qwen2encoder":
+        model = Qwen2Encoder(
+            sample_rate=sample_rate, 
+            need_resample=need_resample,
+            mode=mode,
+            model_ckpt_dir=model_ckpt_dir,
+            feature_extractor_config_path="/home/lr/project/Echodec/sfm/sfm_model/whisperVQ_model/whisper_feature_config.json",           
+        ).to(device)
+    elif modelname == "qwen2audiovq":
+        model = QwenAudioVQ(
+            sample_rate=sample_rate,
+            mode=mode,
+            model_ckpt_path=model_ckpt_dir,
+            need_resample=need_resample,
+            feature_extractor_config_path=kwargs.get("feature_extractor_config_path", 
+                "/home/lr/project/Echodec/sfm/sfm_model/whisperVQ_model/whisper_feature_config.json")
+        ).to(device)
+    elif modelname == "qwen2encoder_pca":
+        model = Qwen2EncoderPCA(
+            sample_rate=sample_rate,
+            mode=mode,
+            model_ckpt_dir=model_ckpt_dir,
+            need_resample=need_resample,
+            target_dim=kwargs.get("target_dim", 32),
+            pca_model_path=kwargs.get("pca_model_path", 
+                "/home/lr/project/Codec-Evaluation/codec_evaluation/pca/pca_model_1280to32.pth"),
+            feature_extractor_config_path=kwargs.get("feature_extractor_config_path", 
+                "/home/lr/project/Echodec/sfm/sfm_model/whisperVQ_model/whisper_feature_config.json")
+        ).to(device)
+    elif modelname == "qwen2svdvq":
+        model = QwenSVDVQ(
+            sample_rate=sample_rate,
+            mode=mode,
+            model_ckpt_path=model_ckpt_dir,
+            need_resample=need_resample,
+            feature_extractor_config_path=kwargs.get("feature_extractor_config_path", 
+                "/home/lr/project/Echodec/sfm/sfm_model/whisperVQ_model/whisper_feature_config.json")
+        ).to(device)
+    elif modelname == "distilvq":
+        model = DistilVQCodec(
+            sample_rate=sample_rate,
+            mode=mode,
+            model_ckpt_path=model_ckpt_dir,
+            need_resample=need_resample,
+            feature_extractor_config_path=kwargs.get("feature_extractor_config_path", 
+                "/home/lr/project/Echodec/sfm/sfm_model/whisperVQ_model/whisper_feature_config.json")
         ).to(device)
     else:
         raise ValueError(f"Invalid model name: {modelname}")

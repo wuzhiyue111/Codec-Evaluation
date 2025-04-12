@@ -181,3 +181,5 @@ tb_log/
 __pycache__
 *.jsonl
 lightning_logs/
+/codec_eval
+/codec_evaluation/pca

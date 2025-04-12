@@ -28,6 +28,7 @@ class Prober(pl.LightningModule):
                  probe_model_builder: Any = None,
                  optimizer_builder: Any = None,
                  lr_scheduler_builder: Any = None,
+                 codec_dim: int = None,
                  ):
         """
             codec_name must in ['dac', 'encodec', 'mimi', 'semanticodec', 'speechtokenizer', wavtokenizer]
@@ -54,7 +55,7 @@ class Prober(pl.LightningModule):
         self.target_T = int(self.token_rate * target_sec )
         self.audio_length = target_sec * self.sample_rate
         self.probe_model = probe_model_builder(
-            codec_dim = self.dim,
+            codec_dim = codec_dim,
             target_T = self.target_T)
         
         self.num_outputs = num_outputs
@@ -114,10 +115,16 @@ class Prober(pl.LightningModule):
         n_segments_list = batch["n_segments_list"]
 
         batch_size = labels.shape[0]
-        if self.codec.orig_sample_rate != self.sample_rate:
-            feature_length = self.audio_length * (self.codec.orig_sample_rate / self.sample_rate) // self.codec.hop_length
+        
+        # 针对qwen2audiovq做特殊处理，因其量化嵌入长度固定为750
+        if self.codec_name == "qwen2audiovq":
+            feature_length = 750  # 直接使用固定长度750
         else:
-            feature_length = self.audio_length // self.codec.hop_length
+            # 原有的计算逻辑保持不变
+            if self.codec.orig_sample_rate != self.sample_rate:
+                feature_length = self.audio_length * (self.codec.orig_sample_rate / self.sample_rate) // self.codec.hop_length
+            else:
+                feature_length = self.audio_length // self.codec.hop_length
 
         audio_features = self.extract_feature(audio, int(feature_length))
 

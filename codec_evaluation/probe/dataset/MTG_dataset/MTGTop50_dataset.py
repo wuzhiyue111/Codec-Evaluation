@@ -57,14 +57,19 @@ class MTGTop50dataset(Dataset):
         
         audio_file = os.path.join(self.audio_dir, audio_path)
         segments, pad_mask = self.load_audio(audio_file)
+        
+        # 确保segments不为None
+        if segments is None:
+            # 创建一个空的占位符张量，形状与预期输出一致
+            segments = torch.zeros((1, self.target_length))
+            pad_mask = [0]  # 全部为填充
+            
         class_name = self.all_tags[index]
         label = torch.zeros(len(self.class2id))
         for c in class_name:
             label[self.class2id[c.strip()]] = 1
 
-        segments = torch.vstack(segments)
-
-        return {"audio": segments, "labels":  label, "n_segments": len(pad_mask)}
+        return {"audio": segments, "labels": label, "n_segments": len(pad_mask)}
     
     def load_audio(
         self,
@@ -77,13 +82,14 @@ class MTGTop50dataset(Dataset):
             waveform:[T]
         """
         if len(audio_file) == 0:
-            raise FileNotFoundError("No audio files found in the specified directory.")
+            print("Empty audio file path provided.")
+            return torch.zeros((1, self.target_length)), [0]
 
         try:
             waveform, _ = torchaudio.load(audio_file)
         except Exception as e:
             print(f"Error loading audio file {audio_file}: {e}")
-            return None
+            return torch.zeros((1, self.target_length)), [0]
 
         # Convert to mono if needed
         if waveform.shape[0] > 1 and self.is_mono:
@@ -113,12 +119,63 @@ class MTGTop50dataset(Dataset):
         return class2id
 
     def collate_fn(self, batch):
-        audio_list = [item["audio"] for item in batch if item is not None]
-        label_list = [item["labels"] for item in batch if item is not None]
-        n_segments_list = [item["n_segments"] for item in batch if item is not None]
-
-        audio_tensor = torch.vstack(audio_list)
-        label_tensor = torch.vstack(label_list).long()
+        # 过滤掉None值
+        filtered_batch = [item for item in batch if item is not None]
+        
+        if not filtered_batch:
+            # 如果批次为空，返回空张量
+            return {
+                "audio": torch.zeros((0, self.target_length)),
+                "labels": torch.zeros((0, len(self.class2id))).long(),
+                "n_segments_list": []
+            }
+        
+        audio_list = [item["audio"] for item in filtered_batch]
+        label_list = [item["labels"] for item in filtered_batch]
+        n_segments_list = [item["n_segments"] for item in filtered_batch]
+        
+        # 确保每个音频项都是有效的张量
+        processed_audio_list = []
+        for audio in audio_list:
+            if audio is None:
+                # 跳过None值
+                continue
+            
+            if isinstance(audio, list):
+                if not audio:  # 如果列表为空
+                    continue
+                try:
+                    processed_audio_list.append(torch.vstack(audio))
+                except Exception as e:
+                    print(f"Error stacking audio tensors: {e}")
+                    # 跳过这个样本
+                    continue
+            else:
+                # 确保audio是张量
+                if not isinstance(audio, torch.Tensor):
+                    print(f"Unexpected audio type: {type(audio)}")
+                    continue
+                processed_audio_list.append(audio)
+        
+        if not processed_audio_list:
+            # 如果没有有效的音频张量
+            return {
+                "audio": torch.zeros((0, self.target_length)),
+                "labels": torch.zeros((0, len(self.class2id))).long(),
+                "n_segments_list": []
+            }
+        
+        try:
+            audio_tensor = torch.vstack(processed_audio_list)
+            label_tensor = torch.vstack(label_list).long()
+        except Exception as e:
+            print(f"Error in final stacking: {e}")
+            # 返回空批次
+            return {
+                "audio": torch.zeros((0, self.target_length)),
+                "labels": torch.zeros((0, len(self.class2id))).long(),
+                "n_segments_list": []
+            }
 
         return {
             "audio": audio_tensor,

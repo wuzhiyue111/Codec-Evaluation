@@ -20,14 +20,22 @@ class SEBlock(nn.Module):
         T: 时间维度
         D: 特征维度（即音频的通道数）
         """
-        b, t, _ = x.shape  
-        y = self.avg_pool(x)    
+        # 首先克隆输入张量，确保我们不会修改原始输入
+        x_clone = x.clone()
+        b, t, _ = x_clone.shape  
+        
+        # 应用平均池化并克隆结果
+        y = self.avg_pool(x_clone).clone()    
     
+        # 展平并应用全连接层
         y = y.view(b, t)  
         y = self.fc(y)    
         
-        y = y.view(b, t, 1)  
-        return x * y.expand_as(x)  
+        # 重塑为适当的形状并克隆
+        y = y.view(b, t, 1)
+        
+        # 使用克隆后的张量进行扩展和乘法操作
+        return x_clone * y.expand_as(x_clone)  
     
 
 class DSConv(nn.Module):

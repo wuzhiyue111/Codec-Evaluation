@@ -14,8 +14,10 @@ class LibriTTS_ctc_dataset(Dataset):
     def __init__(
         self,
         audio_dir,
+        max_length=None,
     ):
         self.all_paths = find_audios(audio_dir)
+        self.max_length = max_length
         logger.info(f"Found {len(self.all_paths)} audio files in {audio_dir}")
 
     def __len__(self):
@@ -40,12 +42,16 @@ class LibriTTS_ctc_dataset(Dataset):
             labels: [1, 20]
         """
         audio_path = self.all_paths[index]
-        waveform, _ = torchaudio.load(audio_path)  # [1, T]
+        waveform, sample_rate = torchaudio.load(audio_path)  # [1, T]
         if waveform.shape[0] > 1:
             waveform = waveform.mean(dim=0, keepdim=True)
 
         text_path = audio_path.replace(".wav", ".normalized.txt")
         text = self.load_text(text_path)
+
+        if waveform.shape[1] > self.max_length * sample_rate:
+            # dropout this item
+            return None
 
         return {"audio": waveform, "text": text, "audio_length": waveform.shape[1]}
 
@@ -81,6 +87,7 @@ class LibriTTS_ctc_module(pl.LightningDataModule):
         train_num_workers=4,
         valid_num_workers=4,
         test_num_workers=4,
+        max_length=None,
     ):
         super().__init__()
         self.train_batch_size = train_batch_size
@@ -96,14 +103,16 @@ class LibriTTS_ctc_module(pl.LightningDataModule):
         self.valid_num_workers = valid_num_workers
         self.test_num_workers = test_num_workers
 
+        self.max_length = max_length
+
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            self.train_dataset = LibriTTS_ctc_dataset(self.train_audio_dir)
-            self.valid_dataset = LibriTTS_ctc_dataset(self.valid_audio_dir)
+            self.train_dataset = LibriTTS_ctc_dataset(self.train_audio_dir, self.max_length)
+            self.valid_dataset = LibriTTS_ctc_dataset(self.valid_audio_dir, self.max_length)
         if stage == "val":
-            self.valid_dataset = LibriTTS_ctc_dataset(self.valid_audio_dir)
+            self.valid_dataset = LibriTTS_ctc_dataset(self.valid_audio_dir, self.max_length)
         if stage == "test":
-            self.test_dataset = LibriTTS_ctc_dataset(self.test_audio_dir)
+            self.test_dataset = LibriTTS_ctc_dataset(self.test_audio_dir, self.max_length)
 
     def train_dataloader(self):
         return DataLoader(

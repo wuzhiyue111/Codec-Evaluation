@@ -1,0 +1,75 @@
+mode: unquantized_emb
+sample_rate: 24000
+probe_ckpt_path: /home/lr/project/Codec-Evaluation/codec_eval/ctc_libritts_pca/ckpt/qwen2encoder_pca_unquantized_emb_8_epoch=4-val_loss=0.9000.ckpt
+seed: 666
+codec_name: qwen2encoder_pca
+save_asr_result: /home/lr/project/Codec-Evaluation/codec_eval/ctc_libritts_pca/result/qwen2encoder_pca_asr.json
+proj_dim: 8
+target_dim: 256
+
+trainer:
+  _target_: pytorch_lightning.Trainer
+  accelerator: gpu
+  devices: [1]
+  precision: 32
+  deterministic: true  # ensure reproducible results
+  enable_progress_bar: true  # show progress bar
+  enable_checkpointing: false  # no need to save checkpoints during testing
+  # limit_test_batches: 5  # only test 5 samples for debugging
+
+data:
+  _target_: codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc.LibriTTS_ctc_module
+  train_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/train-clean-100
+  valid_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/dev-other
+  test_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/test-clean
+  test_batch_size: 100
+  test_num_workers: 8
+  max_length: 30
+
+model:
+  _target_: codec_evaluation.probe.model.ctc_lit_prober.CtcLitProber
+  codec_name: ${codec_name}
+  sample_rate: ${sample_rate}
+  mode: ${mode}
+  proj_dim: ${proj_dim}
+  target_dim: ${target_dim}
+  model_ckpt_dir: null
+  probe_model_builder:
+    _target_: codec_evaluation.probe.model.LibriTTS_dataset.model.Ctc_probe_model
+    _partial_: true
+    tokenizer:
+      _target_: transformers.Speech2TextProcessor.from_pretrained
+      pretrained_model_name_or_path: /sdb/model_weight/s2t-small-librispeech-asr
+    vocab_size: 10000
+    dropout: 0.1
+    conformer_head: 8
+
+  optimizer_builder:
+    _target_: torch.optim.AdamW
+    _partial_: true
+    lr: 1e-4
+    betas: [0.8, 0.99]
+    eps: 1e-5
+    weight_decay: 0.08
+    
+  lr_scheduler_builder:
+    _target_: torch.optim.lr_scheduler.LambdaLR
+    _partial_: true
+    lr_lambda:
+      _target_: codec_evaluation.utils.schedule.get_cosine_schedule_with_warmup_lr_lambda
+      _partial_: true
+      num_warmup_steps: 200
+      num_training_steps: 4000
+      final_lr_ratio: 0.2
+
+callbacks:
+  learning_rate_monitor:
+    _target_: pytorch_lightning.callbacks.LearningRateMonitor
+    logging_interval: step
+
+  rich_progress_bar:
+    _target_: pytorch_lightning.callbacks.RichProgressBar
+
+  model_summary:
+    _target_: pytorch_lightning.callbacks.ModelSummary
+    max_depth: 1

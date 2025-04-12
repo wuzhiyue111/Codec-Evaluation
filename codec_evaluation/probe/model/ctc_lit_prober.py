@@ -24,6 +24,8 @@ class CtcLitProber(LightningModule):
         optimizer_builder: Any = None,
         lr_scheduler_builder: Any = None,
         accumulate_grad_batches: int = 1,
+        proj_dim: int = None,
+        codec_dim: int =None,
     ):
         super(CtcLitProber, self).__init__()
         self.codec_model = init_codec(
@@ -32,16 +34,22 @@ class CtcLitProber(LightningModule):
             sample_rate=sample_rate,
             model_ckpt_dir=model_ckpt_dir,
             device="cpu",
-            freeze=True
+            freeze=True,
         )
         if codec_name == 'semanticodec':
             self.dim = self.codec_model.dim * 2
         else:
             self.dim = self.codec_model.dim
+        
+        if codec_name == 'qwen2encoder' and proj_dim is not None:
+            self.orig_dim = self.codec_model.dim
+            self.proj_dim = proj_dim
+            self.proj_layer = torch.nn.Linear(self.orig_dim, self.proj_dim)
+            self.dim = self.proj_dim
 
-        logger.info(f"{codec_name} dim: {self.dim}")
+        logger.info(f"{codec_name} dim: {codec_dim}")
         self.probe_model: Ctc_probe_model = probe_model_builder(
-            codec_dim = self.dim)
+            codec_dim = codec_dim)
         self.codec_name = codec_name
         self.optimizer_builder = optimizer_builder
         self.lr_scheduler_builder = lr_scheduler_builder
@@ -50,6 +58,9 @@ class CtcLitProber(LightningModule):
         self.ctc_decoder = CTCDecoder()
         self.test_step_outputs = []
         self.sample_rate = sample_rate
+
+        if self.global_rank == 0:
+                logger.info(self.codec_model)
 
     def extract_feature(self, waveforms, expect_lenth: torch.Tensor = None):
         """
@@ -66,6 +77,12 @@ class CtcLitProber(LightningModule):
                 all_features = rearrange(all_features, 'b d c t -> b (d c) t')
             max_length = max(expect_lenth).item()
             all_features = all_features[:, :, :int(max_length)]
+        
+        if self.codec_name == 'qwen2encoder' and hasattr(self, 'proj_layer'):
+            # all_features [B, D, T]，D=1280
+            all_features = all_features.transpose(1, 2)  # [B, T, D]
+            all_features = self.proj_layer(all_features)  # [B, T, proj_dim]
+            all_features = all_features.transpose(1, 2)  # [B, proj_dim, T]
 
         return all_features
     
@@ -96,12 +113,10 @@ class CtcLitProber(LightningModule):
         lr_scheduler = self.lr_schedulers()
         loss, batch_size = self.step(batch)
 
-        # 检查loss是否正常
         if torch.isnan(loss) or torch.isinf(loss):
             logger.info(f"Skipping bad loss: {loss.item()}")
             return {"loss": torch.tensor(0.0).to(self.device).requires_grad_(True).detach()}
         
-        # 梯度累积
         self.manual_backward(loss / self.accumulate_grad_batches)
         if (batch_idx+1) % self.accumulate_grad_batches == 0:
             optimizer.step()
