@@ -154,6 +154,7 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 	  --use_vocos False
 	  --vocos_ckpt_dir None
   ```
+  ### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> Probe 
 
 - ###### Offset(OS)
 
