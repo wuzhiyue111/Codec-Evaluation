@@ -31,7 +31,9 @@
 </a>
 
   
-<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Dove.png" alt="Dove" width="20" height="20"> nihao
+<a>
+  <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Dove.png" alt="Dove" width="20" height="20"> nihao
+</a>
 
 
 ## Purpose
