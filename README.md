@@ -54,7 +54,7 @@
     - test ID sensitive in same semantic
     - 
 
-## Env Build
+## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Compass/3D/compass_3d.png" alt="compass">Env Build
 '''
 conda create -n codec_eval python==3.10 -y
 
