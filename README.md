@@ -1,9 +1,9 @@
 <div align="center">
 	<!-- Welcome words -->
 	<h1 style="color: #FFA500;">
-	<img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExcnA3cDMyenY4OWpkZHU5OGJ4anJpdGJkZG02eWlmcGVhdHVzY215aSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/jIWdDlz1s5a7k1o0w0/giphy.gif" alt="Red Apple" width="100" height="100" />
+	<img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExcnA3cDMyenY4OWpkZHU5OGJ4anJpdGJkZG02eWlmcGVhdHVzY215aSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/jIWdDlz1s5a7k1o0w0/giphy.gif" alt="Red Apple" width="40" height="40" />
   Welcome to AudioCodecBench GitHub 
-	<img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbWdtb3pvdGxkNmd6N2w1NTM5bzUxNjFrMzdnZWVudmh4dzdldTU5OCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/QshNGcjjEDpNoHhzh9/giphy.gif" alt="Red Apple" width="100" height="100" />
+	<img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbWdtb3pvdGxkNmd6N2w1NTM5bzUxNjFrMzdnZWVudmh4dzdldTU5OCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/QshNGcjjEDpNoHhzh9/giphy.gif" alt="Red Apple" width="40" height="40" />
  	</h1>
 	<!-- Dynamic Emojis -->
 	<div style="display: flex; justify-content: center; align-items: center;">
