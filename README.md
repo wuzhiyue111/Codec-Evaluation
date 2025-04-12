@@ -81,33 +81,39 @@ Currently, 10 codecs have been added to the repository. Each codec program has f
 <table>
   <tr>
     <th>codec</th>
-    <th>col1</th>
-    <th>col2</th>
-    <th>col3</th>
-    <th>col4</th>
-    <th>col5</th>
-    <th>col6</th>
-    <th>col7</th>
-    <th>col8</th>
-    <th>col9</th>
-    <th>col10</th>
+    <th>DAC</th>
+    <th>Encodec</th>
+    <th>Mimi</th>
+    <th>WavTokenizer</th>
+    <th>Semanticodec</th>
+    <th>Speechtokenizer</th>
+    <th>Qwen2AudioEncoder</th>
+    <th>HuBert</th>
+    <th>XCodec</th>
+    <th>YuE</th>
   </tr>
   <tr>
     <td>sample-rate</td>
-    <td>val1</td>
-    <td>val2</td>
-    <td>val3</td>
-    <td>val4</td>
-    <td>val5</td>
-    <td>val6</td>
-    <td>val7</td>
-    <td>val8</td>
-    <td>val9</td>
-    <td>val10</td>
+    <td>24000Hz</td>
+    <td>24000Hz</td>
+    <td>24000Hz</td>
+    <td>24000Hz</td>
+    <td>16000Hz</td>
+    <td>16000Hz</td>
+    <td>16000Hz</td>
+    <td>16000Hz</td>
+    <td>16000Hz</td>
+    <td>16000Hz</td>
   </tr>
   <tr>
     <td>modes</td>
-    <td colspan="10">your merged content here</td>
+    <td colspan="10">
+	encode: encode the audio to id tokens
+        decode: decode the id tokens to audio
+        reconstruct: encode -> decode
+        unquantized_emb: encode -> unquantized embedding
+        quantized_emb: encode + quantizer -> quantized embedding
+    </td>
   </tr>
 </table>
 
