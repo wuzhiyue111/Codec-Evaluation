@@ -132,7 +132,8 @@ If users need to test their own codecs, they can quickly deploy their own codecs
 ### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> ID sensitive
 Regarding the testing and analysis of ID sensitivity, it is carried out from the perspectives of the following three tasks. 
 
-#### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Books/3D/books_3d.png" alt="books" width="30" height="30"> MRC and OS tasks
+#### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Books/3D/books_3d.png" alt="books" width="20" height="20"> MRC and OS tasks
+&emsp;&emsp;__Multi-round reconstruction(MRC)__ tasks evaluate the codec's ability to fit noise by introducing noise iteratively, helping to determine whether the codebook information is more semantically or acoustically oriented. The audio &emsp;&emsp;__offset(OS)__ task simulates phase shifts in audio to further assess the codec's noise-fitting capability.
 
 ## Reconstruction Metric
 ### Speech
