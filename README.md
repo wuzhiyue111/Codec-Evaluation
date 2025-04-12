@@ -94,15 +94,15 @@ Currently, 10 codecs have been added to the repository. Each codec program has f
   </tr>
   <tr>
     <td>Sample-rate</td>
-    <td><center>24kHz</center></td>
-    <td><center>24kHz</center></td>
-    <td><center>24kHz</center></td>
-    <td><center>24kHz</center></td>
-    <td><center>16kHz</center></td>
-    <td><center>16kHz</center></td>
-    <td><center>16kHz</center></td>
-    <td><center>16kHz</center></td>
-    <td><center>16kHz</center></td>
+    <th>24kHz</th>
+    <th>24kHz</th>
+    <th>24kHz</th>
+    <th>24kHz</th>
+    <th>16kHz</th>
+    <th>16kHz</th>
+    <th>16kHz</th>
+    <th>16kHz</th>
+    <th>16kHz</th>
     <th>16kHz</th>
   </tr>
   <tr>
