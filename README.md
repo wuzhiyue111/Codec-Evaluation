@@ -158,6 +158,24 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 - ###### Offset(OS)
 
   The audio OS task simulates phase shifts in audio to further assess the codec's noise-fitting capability.
+  Navigate to the `Codec-Evaluation/id_sensitive` directory, and run the following command in the terminal to execute the task:
+  ```
+  python evaluate_codec.py
+	  --codec_name speechtokenizer
+	  --model_ckpt_dir /sdb/model_weight/codec_evaluation/codec_ckpt/speechtokenizer
+	  --device gpu:0
+	  --sample_rate 24000
+	  --num_codebooks 8
+	  --need_resample True
+	  --task OS
+	  --batch_size 24
+	  --num_workers 8
+	  --shift_time 2
+	  --subset_step 1200
+	  --dataset_audio_dir /sdb/data1/speech/24kHz/LibriTTS/test-other
+	  --use_vocos False
+	  --vocos_ckpt_dir None
+  ```
 
 ## Reconstruction Metric
 ### Speech
