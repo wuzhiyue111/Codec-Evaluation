@@ -291,7 +291,7 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 </table>
 
 #### Music
-<table border="1" align="center">
+<table border="1" >
   <thead>
     <tr>
       <th rowspan="3">Codec</th>
