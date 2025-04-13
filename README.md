@@ -64,7 +64,7 @@ We strongly recommended to use conda for managing your Python environment.
 
 - #### Create a virtual environment using conda.
 	```
-	# create a virtual environment using conda.
+	# create a virtual environment using conda
 	conda create -n codec_eval python==3.10 -y	# Python ==3.10 is recommended.
 	conda activate codec_eval
 	```
