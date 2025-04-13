@@ -137,7 +137,7 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 #### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Books/3D/books_3d.png" alt="books" width="20" height="20"> MRC and OS tasks
 - ###### Multi-round reconstruction(MRC)
 
-  MRC tasks evaluate the codec's ability to fit noise by introducing noise iteratively, helping to determine whether the codebook information is more semantically or acoustically oriented.
+  MRC task evaluate the codec's ability to fit noise by introducing noise iteratively, helping to determine whether the codebook information is more semantically or acoustically oriented.
   Navigate to the `Codec-Evaluation/id_sensitive` directory, and run the following command in the terminal to execute the task:
   ```
   python evaluate_codec.py
