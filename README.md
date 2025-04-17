@@ -75,7 +75,7 @@ We strongly recommended to use conda for managing your Python environment.
 	bash env_build.sh
    	```
 ## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Straight%20ruler/3D/straight_ruler_3d.png" alt="ruler" width="30" height="30"> Usage
-The following will introduce how to conduct evaluations using codecs and downstream tasks. 
+The following will introduce how to conduct evaluations using codecs and downstream tasks. For details, please refer to the <a href="https://q058tnj4ico.feishu.cn/wiki/UPIhwaPBqiNnitk4gHRcihGcnBd?from=from_copylink">instruction document.</a>
 
 ### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30">Audio codec 
 Currently, 10 codecs have been added to the repository. Each codec program has five modes, namely `encode`, `decode`, `reconstruct`, `unquantized_emb`, and `unquantized_emb`. In the code, we've designed two ways to load model weights: local and remote. Users can choose either loading method according to their own needs. 
