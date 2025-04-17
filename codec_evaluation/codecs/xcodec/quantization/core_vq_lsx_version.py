@@ -46,8 +46,8 @@ from torch import nn
 import torch.nn.functional as F
 import torch.distributed as dist
 
-from .distrib import broadcast_tensors, rank, is_distributed
-from ..utils.ddp_utils import SyncFunction
+from codec_evaluation.codecs.xcodec.quantization.distrib import broadcast_tensors, rank, is_distributed
+from codec_evaluation.codecs.xcodec.utils.ddp_utils import SyncFunction
 
 
 def default(val: tp.Any, d: tp.Any) -> tp.Any:

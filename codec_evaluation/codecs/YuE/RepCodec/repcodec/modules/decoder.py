@@ -8,8 +8,8 @@
 import torch
 import torch.nn as nn
 
-from ....RepCodec.repcodec.layers.conv_layer import Conv1d, ConvTranspose1d
-from ....RepCodec.repcodec.modules.residual_unit import ResidualUnit
+from codec_evaluation.codecs.YuE.RepCodec.repcodec.layers.conv_layer import Conv1d, ConvTranspose1d
+from codec_evaluation.codecs.YuE.RepCodec.repcodec.modules.residual_unit import ResidualUnit
 
 
 class DecoderBlock(nn.Module):

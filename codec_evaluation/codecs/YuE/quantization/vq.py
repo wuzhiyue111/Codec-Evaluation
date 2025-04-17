@@ -13,8 +13,7 @@ import typing as tp
 import torch
 from torch import nn
 
-# from .core_vq import ResidualVectorQuantization
-from .core_vq_lsx_version import ResidualVectorQuantization
+from codec_evaluation.codecs.YuE.quantization.core_vq_lsx_version import ResidualVectorQuantization
 
 
 @dataclass

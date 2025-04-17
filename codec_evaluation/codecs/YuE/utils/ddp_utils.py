@@ -8,8 +8,6 @@ import torch
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
 from torch.nn.parallel.distributed import _find_tensors
-import torch.optim
-import torch.utils.data
 from packaging import version
 from omegaconf import OmegaConf
 

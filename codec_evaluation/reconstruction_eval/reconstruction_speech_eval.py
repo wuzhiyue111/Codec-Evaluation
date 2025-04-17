@@ -17,6 +17,7 @@ from codec_evaluation.reconstruction_eval.utils import (
     calculate_pesq,
     calculate_spk_sim,
     calculate_stoi,
+    calculate_sisnr,
     wer,
     cer,
 )
@@ -147,6 +148,7 @@ class CodecEvaluation:
         pesq_list = []
         speaker_sim_list = []
         usage_entropy_list = []
+        sisnr_list = []
 
         data_length = len(gt_audio_list)
         for i in tqdm(range(0, data_length, 50), desc="compute metrics"):  # per 50 samples to compute metrics
@@ -188,6 +190,8 @@ class CodecEvaluation:
             cer_rec_list.append(cer_rec)
             cer_gt_list.append(cer_gt)
             print(f"cer_gt: {cer_gt}, cer_rec: {cer_rec}")
+
+            # speaker_sim
             speaker_sim_list.append(
                 calculate_spk_sim(
                     gt_audio=tmp_gt_audio,
@@ -196,6 +200,7 @@ class CodecEvaluation:
                 )
             )
             print(f"speaker_sim: {speaker_sim_list[-1]}")
+            
             # stoi
             stoi_list.append(
                 calculate_stoi(
@@ -216,6 +221,15 @@ class CodecEvaluation:
             )
             print(f"pesq: {pesq_list[-1]}")
 
+            # sisnr
+            sisnr_list.append(
+                calculate_sisnr(
+                    gt_audio=tmp_gt_audio,
+                    rec_audio=tmp_rec_audio,
+                )
+            )
+            print(f"sisnr: {sisnr_list[-1]}")
+
         avg_wer_gt = sum(wer_gt_list) / len(wer_gt_list)
         avg_wer_rec = sum(wer_rec_list) / len(wer_rec_list)
         avg_cer_gt = sum(cer_gt_list) / len(cer_gt_list)
@@ -223,6 +237,7 @@ class CodecEvaluation:
         avg_stoi = sum(stoi_list) / len(stoi_list)
         avg_pesq = sum(pesq_list) / len(pesq_list)
         avg_speaker_sim = sum(speaker_sim_list) / len(speaker_sim_list)
+        avg_sisnr = sum(sisnr_list) / len(sisnr_list)
         print(f"compute metrics done, now start to save results")
         print(f"speaker_sim: {avg_speaker_sim}")
         print(f"wer_gt: {avg_wer_gt}")
@@ -231,6 +246,7 @@ class CodecEvaluation:
         print(f"cer_rec: {avg_cer_rec}")
         print(f"stoi: {avg_stoi}")
         print(f"pesq: {avg_pesq}")
+        print(f"sisnr: {avg_sisnr}")
         return {
             "wer_gt": avg_wer_gt,
             "cer_gt": avg_cer_gt,
@@ -240,15 +256,16 @@ class CodecEvaluation:
             "stoi": avg_stoi,
             "pesq": avg_pesq,
             # "codebook_usage": np.mean(per_codebook_usage, axis=0) / np.log2(self.effective_codebook_num)
+            "sisnr": avg_sisnr,
         }
 
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--codec_name", type=str, default="dac")
-    parser.add_argument("--model_ckpt_dir", type=str, default="/sdb/model_weight/codec_evaluation/codec_ckpt/")
-    parser.add_argument("--device", type=str, default="cuda:0")
+    parser.add_argument("--codec_name", type=str, default="encodec")
+    parser.add_argument("--model_ckpt_dir", type=str, default="/sdb/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz")
+    parser.add_argument("--device", type=str, default="cuda:6")
     parser.add_argument("--sample_rate", type=int, default=24000)
     parser.add_argument("--asr_model_path_or_name", type=str, default="/sdb/model_weight/whisper-base")
     parser.add_argument("--dataset_audio_dir", type=str, default="/sdb/data1/speech/24kHz/LibriTTS/test-other")

@@ -7,7 +7,7 @@
 
 import torch.nn as nn
 
-from ....RepCodec.repcodec.layers.conv_layer import Conv1d, Conv1d1x1
+from codec_evaluation.codecs.YuE.RepCodec.repcodec.layers.conv_layer import Conv1d, Conv1d1x1
 
 
 class ResidualUnit(nn.Module):

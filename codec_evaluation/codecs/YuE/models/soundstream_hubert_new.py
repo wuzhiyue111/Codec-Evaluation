@@ -1,29 +1,16 @@
  
 
 from typing import Sequence, Optional, Union
-import sys
-# sys.path.append('/aifs4su/data/zheny/fairseq/vae_v2/codec_final')
 import math
-import random
-
 import torch
 import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
-
-# from ..modules.seanet import SEANetEncoder, SEANetDecoder
-from ..quantization  import ResidualVectorQuantizer#,VectorQuantize
+from codec_evaluation.codecs.YuE.quantization  import ResidualVectorQuantizer
 from transformers import  AutoModel
-# from transformers import WhisperProcessor, WhisperForConditionalGeneration
-from transformers import AutoFeatureExtractor, WhisperModel
-# sys.path.append('/scratch/buildlam/codeclm/jiahaopan/codec_final/RepCodec')
-from ..RepCodec.repcodec.modules.encoder import Encoder
-from ..RepCodec.repcodec.modules.decoder import Decoder
-# sys.path.append('/data/zheny/UniAudio/codec/descriptaudiocodecs')
-#descript-audio-codec/dac/model
+from codec_evaluation.codecs.YuE.RepCodec.repcodec.modules.encoder import Encoder
+from codec_evaluation.codecs.YuE.RepCodec.repcodec.modules.decoder import Decoder
 from codec_evaluation.codecs.YuE.descriptaudiocodec.dac.model import dac as dac2
-# sys.path.append('/aifs4su/data/zheny/peiwensun/project/s3prl/s3prl/upstream/hubert/')
-# from simple_expert import UpstreamExpert
 
 def get_model_size(model):
     # 计算总参数数

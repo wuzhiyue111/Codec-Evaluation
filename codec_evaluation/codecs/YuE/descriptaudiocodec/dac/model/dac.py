@@ -8,7 +8,7 @@ from audiotools import AudioSignal
 from audiotools.ml import BaseModel
 from torch import nn
 
-from .base import CodecMixin
+from codec_evaluation.codecs.YuE.descriptaudiocodec.dac.model.base import CodecMixin
 from codec_evaluation.codecs.YuE.descriptaudiocodec.dac.nn.layers import (
     Snake1d,
     WNConv1d,   
