@@ -197,7 +197,6 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
       <th>CER_GT</th>
       <th>CER_REC</th>
       <th>STOI</th>
-      <th>SISNR</th>
     </tr>
   </thead>
   <tbody>
@@ -210,7 +209,6 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
       <td>0.09</td>
       <td>0.125</td>
       <td>0.94</td>
-      <td>0.149</td>
     </tr>
     <tr>
       <td>Encodec</td>
@@ -221,7 +219,6 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
       <td>0.09</td>
       <td>0.114</td>
       <td>0.925</td>
-      <td>6.902</td>
     </tr>
     <tr>
       <td>Mimi</td>
@@ -232,7 +229,6 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
       <td>0.09</td>
       <td>0.173</td>
       <td>0.88</td>
-      <td>4.162</td>
     </tr>
     <tr>
       <td>SemantiCodec</td>
@@ -243,7 +239,6 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
       <td>0.09</td>
       <td>0.195</td>
       <td>0.86</td>
-      <td>-2.484</td>
     </tr>
     <tr>
       <td>WavTokenizer</td>
@@ -254,7 +249,6 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
       <td>0.09</td>
       <td>0.325</td>
       <td>0.83</td>
-      <td>1.318</td>
     </tr>
     <tr>
       <td>SpeechTokenizer</td>
@@ -265,7 +259,6 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
       <td>0.09</td>
       <td>0.12</td>
       <td>0.89</td>
-      <td>3.495</td>
     </tr>
     <tr>
       <td>XCodec</td>
@@ -276,18 +269,6 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
       <td>0.09</td>
       <td>0.106</td>
       <td>0.91</td>
-      <td>-0.493</td>
-    </tr>
-    <tr>
-      <td>YuE</td>
-      <td>3.17</td>
-      <td>0.938</td>
-      <td>0.154</td>
-      <td>0.195</td>
-      <td>0.09</td>
-      <td>0.113</td>
-      <td>0.90</td>
-      <td>-0.472</td>
     </tr>
   </tbody>
 </table>
@@ -302,7 +283,6 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
     <tr>
       <th>PESQ</th>
       <th>STOI</th>
-      <th>SISNR</th>
     </tr>
   </thead>
   <tbody>
@@ -310,37 +290,31 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
       <td>DAC</td>
       <td>2.66</td>
       <td>0.86</td>
-      <td>0.980</td>
     </tr>
     <tr>
       <td>Encodec</td>
       <td>2.27</td>
       <td>0.85</td>
-      <td>5.891</td>
     </tr>
     <tr>
       <td>SemantiCodec</td>
       <td>1.32</td>
       <td>0.60</td>
-      <td>-3.086</td>
     </tr>
     <tr>
       <td>WavTokenizer</td>
       <td>1.14</td>
       <td>0.49</td>
-      <td>-0.464</td>
     </tr>
     <tr>
        <td>XCodec</td>
        <td>1.85</td>
        <td>0.76</td>
-       <td>-0.065</td>
     </tr>
     <tr>
        <td>YuE</td>
        <td>1.84</td>
        <td>0.75</td>
-       <td>-0.296</td>
     </tr>
   </tbody>
 </table>
