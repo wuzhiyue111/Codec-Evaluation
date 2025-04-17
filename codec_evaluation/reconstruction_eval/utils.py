@@ -161,15 +161,3 @@ def calculate_pesq(gt_audio: torch.Tensor, rec_audio: torch.Tensor, sample_rate=
             print(f"gt_audio.shape = {gt_audio_cal.shape}, rec_audio.shape = {rec_audio_cal.shape},")
             print(f"pesq error: {e}")
     return sum(pesq_list) / len(pesq_list)
-
-def calculate_sisnr(gt_audio: torch.Tensor, rec_audio: torch.Tensor):
-        if gt_audio.dim() == 2:
-            gt_audio = gt_audio.unsqueeze(1)
-            rec_audio = rec_audio.unsqueeze(1)
-        gt_audio = gt_audio - gt_audio.mean(-1, keepdim=True)
-        rec_audio = rec_audio - rec_audio.mean(-1, keepdim=True)
-        energy_gt_audio = gt_audio.pow(2).sum(-1, keepdim=True)
-        noise = gt_audio - rec_audio
-        energy_noise = noise.pow(2).sum(-1, keepdim=True) + 1e-8
-        sisnr = 10 * torch.log10( energy_gt_audio / energy_noise + 1e-8)
-        return sisnr.mean()

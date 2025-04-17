@@ -14,7 +14,6 @@ from typing import Optional
 from codec_evaluation.reconstruction_eval.utils import (
     calculate_pesq,
     calculate_stoi,
-    calculate_sisnr,
 )
 from tqdm import tqdm
 
@@ -129,7 +128,6 @@ class CodecEvaluation:
         # compute metrics
         stoi_list = []
         pesq_list = []
-        sisnr_list = []
 
         data_length = len(gt_audio_list)
         for i in tqdm(
@@ -169,27 +167,15 @@ class CodecEvaluation:
             )
             print(f"pesq: {pesq_list[-1]}")
 
-            # sisnr
-            sisnr_list.append(
-                calculate_sisnr(
-                    gt_audio=tmp_gt_audio,
-                    rec_audio=tmp_rec_audio,
-                )
-            )
-            print(f"sisnr: {sisnr_list[-1]}")
-
         avg_stoi = sum(stoi_list) / len(stoi_list)
         avg_pesq = sum(pesq_list) / len(pesq_list)
-        avg_sisnr = sum(sisnr_list) / len(sisnr_list)
         print(f"compute metrics done, now start to save results")
 
         print(f"stoi: {avg_stoi}")
         print(f"pesq: {avg_pesq}")
-        print(f"sisnr: {avg_sisnr}")
         return {
             "stoi": avg_stoi,
             "pesq": avg_pesq,
-            "sisnr": avg_sisnr,
         }
 
 
