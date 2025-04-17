@@ -80,7 +80,7 @@ class Qwen2AudioEncoder(Codec):
             length: [B]
             return: tuple(input_feature, feature_attention_mask)
                     input_feature: [B, D, N]
-                    feature_attention_mask: [B, N]
+                    feature_attention_mask: [B, 1, N_enc, N_enc]
         """
         device = sig.device
         batch_size = sig.shape[0] 
@@ -116,7 +116,7 @@ class Qwen2AudioEncoder(Codec):
             mel_hop_length = 160, so the number of time steps of the Mel-spectrogram is:
             1/ (160 / orig_sample_rate) = 1 / 0.01 = 100 
         """
-        # Move features to the correct device
+        # Ensure that all batches of `input_features` have the same, predefined `valid_mel_length` length, even if the original audio is very short. 
         input_features = features.input_features.to(device)     # [B, n_mels, T]
         valid_mel_length = self.audio_max_length_sec * 100
         batch_size, n_mels, max_mel_seq_len = input_features.shape
@@ -129,7 +129,7 @@ class Qwen2AudioEncoder(Codec):
             del pad_features
         
         # Calculate mel spectrogram attention mask with downsampling
-        # Convert original sampling rate to feature rate
+        # Convert original sampling rate to feature rate, ensure that the original audio mask also corresponds to the unified maximum length. 
         raw_audio_mask = features.attention_mask.to(device)   # [B, T]
         fixed_length = self.audio_max_length_sec * self.orig_sample_rate
         batch_size = raw_audio_mask.shape[0]
@@ -141,6 +141,7 @@ class Qwen2AudioEncoder(Codec):
             raw_audio_mask = pad_mask
             del pad_mask
         
+        # downsample the attention mask `raw_audio_mask` of the original audio to the temporal dimension of the Mel spectrogram. 
         feature_attention_mask = F.max_pool1d(
             raw_audio_mask.unsqueeze(1).float(),    # shape [B, 1, T]
             kernel_size=self.mel_hop_length,        # pooling kernel size
@@ -223,7 +224,6 @@ if __name__ == "__main__":
     sig, sample_rate = torchaudio.load(os.path.join(root_path, "codecs", "example.wav"))
     sig = sig[:sample_rate * 30].clone().detach().unsqueeze(0).to(device) # [B=1, T]
     sig = torch.cat([sig, sig], dim=0).to(device).squeeze(1) # [B=2, T]
-    length = torch.tensor([1.0, 0.5]).to(device) # [B=2]
     
     mode = "unquantized_emb"
     codec = (
@@ -238,7 +238,7 @@ if __name__ == "__main__":
         .to(device)
     )
     with torch.no_grad():
-        output = codec(sig, length)
+        output = codec(sig)
     
     print(f"{mode} mode, the output shape is {output.shape}")
         
