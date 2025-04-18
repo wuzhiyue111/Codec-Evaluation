@@ -1,20 +1,18 @@
-"""X-codec (see https://arxiv.org/pdf/2408.17175)."""
+""" YuE (see https://arxiv.org/abs/2503.08638)"""
 
-import os
+import os 
 import sys
 import torch
-import torchaudio.transforms as T
 import codec_evaluation
 from omegaconf import OmegaConf
 root_path = codec_evaluation.__path__[0]
 sys.path.append(root_path)
 
-
 from codec_evaluation.codecs.codec import Codec
 
-__all__ = ["XCodec"]
+all = ["YuE"]
 
-class XCodec(Codec):
+class YuE(Codec):
     def __init__(
         self,
         sample_rate,
@@ -30,32 +28,27 @@ class XCodec(Codec):
             num_codebooks: number of codebooks
             model_ckpt_dir: path to the model checkpoint
         """
-        # Workaround to avoid name collisions with installed modules
-        root_dir = os.path.dirname(os.path.realpath(__file__))
-        sys_path = [x for x in sys.path]
-        sys.path = [x for x in sys.path if root_dir not in x]
-        from codec_evaluation.codecs.xcodec.models.soundstream_semantic import SoundStream
-
-        sys.path = sys_path
+        from codec_evaluation.codecs.YuE.models.soundstream_hubert_new import SoundStream
 
         super().__init__(sample_rate, 16000, mode)
         self.num_codebooks = num_codebooks
 
-        config_path = os.path.join(model_ckpt_dir, 'config_hubert_general.yaml')
+
+        config_path = os.path.join(model_ckpt_dir, 'config.yaml')
         if not os.path.isfile(config_path):
             raise FileNotFoundError(f"{config_path} file does not exist.")
         config = OmegaConf.load(config_path)
         generator_config = config.generator.config
         self.model = SoundStream(**generator_config)
-        model_file = os.path.join(model_ckpt_dir, 'xcodec_hubert_general_audio_v2.pth')
+        model_file = os.path.join(model_ckpt_dir, 'ckpt_00360000.pth')
         if not os.path.exists(model_file):
             raise FileNotFoundError(f"Model file not found: {model_file}.")
-        parameter_dict = torch.load(model_file)
-        self.model.load_state_dict(parameter_dict)  
+        parameter_dict = torch.load(model_file, map_location='cpu', weights_only=False)
+        self.model.load_state_dict(parameter_dict['codec_model'])  
 
         self.vocab_size = 1024
         self.need_resample = need_resample
-        self.hop_length = self.model.hop_length
+        self.hop_length = 320
         self.dim = 1024
         self.token_rate = self.model.frame_rate
 
@@ -71,7 +64,6 @@ class XCodec(Codec):
     @torch.no_grad()
     def embs(self):
         # H means the dimension of the embedding
-        # See https://github.com/zhenye234/xcodec/blob/main/quantization/core_vq.py#L356
         device = next(iter(self.model.state_dict().values())).device
         toks = torch.arange(self.vocab_size, device=device)
         toks = (
@@ -86,22 +78,23 @@ class XCodec(Codec):
         embs = torch.stack(embs)[..., 0]  # [K, C, H] 
         return embs
     
+
     # override
     def _sig_to_unquantized_emb(self, sig, length):
         """
             sig: [B, T]
             return: [B, D, N]   [2, 1024, 468]
         """
-        unquantized_feats, _ = self.model.encode(sig[:, None])
+        _, unquantized_feats = self.model.encode(sig[:, None])
         return unquantized_feats
-    
+
     # override
     def _sig_to_quantized_emb(self, sig, length):
         """
             sig: [B, T]
             return: [B, D, N]   [2, 1024, 468]
         """
-        _, toks = self.model.encode(sig[:, None])
+        toks, _ = self.model.encode(sig[:, None])
         toks = toks[: self.num_codebooks]  # [K, B, N]
         quantized_feats = self.model.quantizer.decode(toks)
         return quantized_feats
@@ -111,10 +104,11 @@ class XCodec(Codec):
         """
             sig: [B, T]
             return: [B, N, K]  [2, 468, 8]
-        """  
-        _, toks = self.model.encode(sig[:, None])  # [K, B, N]
-        toks = toks[: self.num_codebooks].movedim(-3, -1)  
+        """
+        toks, _ = self.model.encode(sig[:, None])  # [K, B, N]
+        toks = toks[: self.num_codebooks].movedim(-3, -1)  # [B, N, K]
         return toks, None
+        
 
     # override
     def _toks_to_sig(self, toks, length, padding_mask=None):
@@ -123,7 +117,7 @@ class XCodec(Codec):
             return: [B, T]   [2, 3200]
         """
         toks = toks.movedim(-1, -3)  # [K, B, N]
-        sig = self.model.decode(toks)[:, 0]
+        sig = self.model.decode(toks)[:, 0]  # [B, T]
         return sig
 
 if __name__ == "__main__":
@@ -136,16 +130,16 @@ if __name__ == "__main__":
 
     sig, sample_rate = torchaudio.load(os.path.join(root_path, "codecs", "example.wav"))
     sig = sig.unsqueeze(0)
-    sig = torch.cat([sig, sig], dim=0).to(device).squeeze(1)  # [B=2, T]
+    sig = torch.cat([sig, sig], dim=0).to(device).squeeze(1)    # [B=2, T]
 
     for mode in ["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"]:
         codec = (
-            XCodec(
-                sample_rate,
-                mode=mode,
-                num_codebooks=num_codebooks,
-                model_ckpt_dir="/sdb/model_weight/codec_evaluation/codec_ckpt/xcodec",
-                need_resample=False,
+            YuE(
+            sample_rate, 
+            mode=mode, 
+            num_codebooks=num_codebooks,
+            model_ckpt_dir="/sdb/model_weight/codec_evaluation/codec_ckpt/yue",
+            need_resample=False,
             )
             .eval()
             .to(device)
@@ -165,11 +159,11 @@ if __name__ == "__main__":
         if mode == "reconstruct":
             save_dir = os.path.join(root_path, "codecs", "reconstruction_wav")
             os.makedirs(save_dir, exist_ok=True)
-            save_path = os.path.join(save_dir, f"xcodec_reconstruction.wav")
+            save_path = os.path.join(save_dir, f'yue_reconstruction.wav')
             torchaudio.save(
-                save_path,
+                save_path, 
                 output[0].unsqueeze(0).cpu() if use_cuda else output[0].unsqueeze(0),
-                codec.orig_sample_rate,
+                codec.orig_sample_rate
             )
             print(f"{mode} mode has been saved to {save_path}")
         elif mode == "encode":

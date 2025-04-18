@@ -183,11 +183,11 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--codec_name", type=str, default="dac")
+    parser.add_argument("--codec_name", type=str, default="encodec")
     parser.add_argument(
         "--model_ckpt_dir",
         type=str,
-        default="/sdb/model_weight/codec_evaluation/codec_ckpt/",
+        default="/sdb/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz",
     )
     parser.add_argument("--device", type=str, default="cuda:0")
     parser.add_argument("--sample_rate", type=int, default=22050)

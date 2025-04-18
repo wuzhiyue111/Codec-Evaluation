@@ -8,11 +8,13 @@ from audiotools import AudioSignal
 from audiotools.ml import BaseModel
 from torch import nn
 
-from codec_evaluation.codecs.xcodec.descriptaudiocodec.dac.model.base import CodecMixin
-from codec_evaluation.codecs.xcodec.descriptaudiocodec.dac.nn.layers import Snake1d
-from codec_evaluation.codecs.xcodec.descriptaudiocodec.dac.nn.layers import WNConv1d
-from codec_evaluation.codecs.xcodec.descriptaudiocodec.dac.nn.layers import WNConvTranspose1d
-from codec_evaluation.codecs.xcodec.descriptaudiocodec.dac.nn.quantize import ResidualVectorQuantize
+from codec_evaluation.codecs.YuE.descriptaudiocodec.dac.model.base import CodecMixin
+from codec_evaluation.codecs.YuE.descriptaudiocodec.dac.nn.layers import (
+    Snake1d,
+    WNConv1d,   
+    WNConvTranspose1d,
+)
+from codec_evaluation.codecs.YuE.descriptaudiocodec.dac.nn.quantize import ResidualVectorQuantize
 
 
 def init_weights(m):
@@ -102,7 +104,7 @@ class DecoderBlock(nn.Module):
                 kernel_size=2 * stride,
                 stride=stride,
                 padding=math.ceil(stride / 2),
-                output_padding=  stride % 2,     #out_pad,
+                output_padding=out_pad,
             ),
             ResidualUnit(output_dim, dilation=1),
             ResidualUnit(output_dim, dilation=3),

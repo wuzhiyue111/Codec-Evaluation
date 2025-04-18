@@ -4,10 +4,10 @@ import torch
 import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
-from ..descriptaudiocodec.dac.model import dac as dac2
-from ..quantization import ResidualVectorQuantizer 
+from codec_evaluation.codecs.xcodec.descriptaudiocodec.dac.model import dac as dac2
+from codec_evaluation.codecs.xcodec.quantization import ResidualVectorQuantizer 
 from transformers import  AutoModel
-from ..modules.semantic_module import Encoder,Decoder
+from codec_evaluation.codecs.xcodec.modules.semantic_module import Encoder,Decoder
  
 class SoundStream(nn.Module):
     def __init__(
