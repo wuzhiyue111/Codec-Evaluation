@@ -28,13 +28,17 @@ class YuE(Codec):
             num_codebooks: number of codebooks
             model_ckpt_dir: path to the model checkpoint
         """
+        # Workaround to avoid name collisions with installed modules
+        root_dir = os.path.dirname(os.path.realpath(__file__))
+        sys_path = [x for x in sys.path]
+        sys.path = [x for x in sys.path if root_dir not in x]
         from codec_evaluation.codecs.YuE.models.soundstream_hubert_new import SoundStream
 
+        sys.path = sys_path
         super().__init__(sample_rate, 16000, mode)
         self.num_codebooks = num_codebooks
 
-
-        config_path = os.path.join(model_ckpt_dir, 'config.yaml')
+        config_path = os.path.join(root_path, "codecs", "config", "yue_config.yaml")
         if not os.path.isfile(config_path):
             raise FileNotFoundError(f"{config_path} file does not exist.")
         config = OmegaConf.load(config_path)

@@ -22,6 +22,7 @@ class XCodec(Codec):
         mode="reconstruct",
         num_codebooks=8,
         model_ckpt_dir=None,
+        teacher_ckpt_path=None,
     ):
         """
             sample_rate: sample rate of the input signal
@@ -41,11 +42,15 @@ class XCodec(Codec):
         super().__init__(sample_rate, 16000, mode)
         self.num_codebooks = num_codebooks
 
-        config_path = os.path.join(model_ckpt_dir, 'config_hubert_general.yaml')
+        config_path = os.path.join(root_path, "codecs", "config", "xcodec_config_hubert_general.yaml")
         if not os.path.isfile(config_path):
             raise FileNotFoundError(f"{config_path} file does not exist.")
         config = OmegaConf.load(config_path)
         generator_config = config.generator.config
+        if teacher_ckpt_path is None:
+            generator_config.teacher_ckpt_path = None
+        else:
+            generator_config.teacher_ckpt_path = teacher_ckpt_path
         self.model = SoundStream(**generator_config)
         model_file = os.path.join(model_ckpt_dir, 'xcodec_hubert_general_audio_v2.pth')
         if not os.path.exists(model_file):
@@ -146,6 +151,7 @@ if __name__ == "__main__":
                 num_codebooks=num_codebooks,
                 model_ckpt_dir="/mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/xcodec",
                 need_resample=False,
+                teacher_ckpt_path="/sdb/model_weight/codec_evaluation/codec_ckpt/xcodec/hubert_base_general_audio"
             )
             .eval()
             .to(device)

@@ -1,14 +1,10 @@
 from typing import Union
-
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from torch.nn.utils import weight_norm
-
 from codec_evaluation.codecs.xcodec.descriptaudiocodec.dac.nn.layers import WNConv1d
-
 
 class VectorQuantize(nn.Module):
     """
@@ -21,12 +17,10 @@ class VectorQuantize(nn.Module):
         2. l2-normalized codes: Converts euclidean distance to cosine similarity which
             improves training stability
     """
-
     def __init__(self, input_dim: int, codebook_size: int, codebook_dim: int):
         super().__init__()
         self.codebook_size = codebook_size
         self.codebook_dim = codebook_dim
-
         self.in_proj = WNConv1d(input_dim, codebook_dim, kernel_size=1)
         self.out_proj = WNConv1d(codebook_dim, input_dim, kernel_size=1)
         self.codebook = nn.Embedding(codebook_size, codebook_dim)
@@ -53,18 +47,14 @@ class VectorQuantize(nn.Module):
         Tensor[B x D x T]
             Projected latents (continuous representation of input before quantization)
         """
-
         # Factorized codes (ViT-VQGAN) Project input into low-dimensional space
         z_e = self.in_proj(z)  # z_e : (B x D x T)
         z_q, indices = self.decode_latents(z_e)
-
         commitment_loss = F.mse_loss(z_e, z_q.detach(), reduction="none").mean([1, 2])
         codebook_loss = F.mse_loss(z_q, z_e.detach(), reduction="none").mean([1, 2])
-
         z_q = (
             z_e + (z_q - z_e).detach()
         )  # noop in forward pass, straight-through gradient estimator in backward pass
-
         z_q = self.out_proj(z_q)
 
         return z_q, commitment_loss, codebook_loss, indices, z_e
@@ -93,13 +83,11 @@ class VectorQuantize(nn.Module):
         z_q = self.decode_code(indices)
         return z_q, indices
 
-
 class ResidualVectorQuantize(nn.Module):
     """
     Introduced in SoundStream: An end2end neural audio codec
     https://arxiv.org/abs/2107.03312
     """
-
     def __init__(
         self,
         input_dim: int = 512,
@@ -157,7 +145,6 @@ class ResidualVectorQuantize(nn.Module):
         residual = z
         commitment_loss = 0
         codebook_loss = 0
-
         codebook_indices = []
         latents = []
 
@@ -214,7 +201,6 @@ class ResidualVectorQuantize(nn.Module):
         for i in range(n_codebooks):
             z_p_i = self.quantizers[i].decode_code(codes[:, i, :])
             z_p.append(z_p_i)
-
             z_q_i = self.quantizers[i].out_proj(z_p_i)
             z_q = z_q + z_q_i
         return z_q, torch.cat(z_p, dim=1), codes
@@ -239,10 +225,7 @@ class ResidualVectorQuantize(nn.Module):
         z_p = []
         codes = []
         dims = np.cumsum([0] + [q.codebook_dim for q in self.quantizers])
-
-        n_codebooks = np.where(dims <= latents.shape[1])[0].max(axis=0, keepdims=True)[
-            0
-        ]
+        n_codebooks = np.where(dims <= latents.shape[1])[0].max(axis=0, keepdims=True)[0]
         for i in range(n_codebooks):
             j, k = dims[i], dims[i + 1]
             z_p_i, codes_i = self.quantizers[i].decode_latents(latents[:, j:k, :])
@@ -254,9 +237,3 @@ class ResidualVectorQuantize(nn.Module):
 
         return z_q, torch.cat(z_p, dim=1), torch.stack(codes, dim=1)
 
-
-if __name__ == "__main__":
-    rvq = ResidualVectorQuantize(quantizer_dropout=True)
-    x = torch.randn(16, 512, 80)
-    y = rvq(x)
-    print(y["latents"].shape)
