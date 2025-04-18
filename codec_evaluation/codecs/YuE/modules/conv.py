@@ -1,26 +1,15 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-
 """Convolutional layers wrappers and utilities."""
-
 import math
 import typing as tp
 import warnings
-
 import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.nn.utils import spectral_norm, weight_norm
-
 from codec_evaluation.codecs.YuE.modules.norm import ConvLayerNorm
-
 
 CONV_NORMALIZATIONS = frozenset(['none', 'weight_norm', 'spectral_norm',
                                  'time_layer_norm', 'layer_norm', 'time_group_norm'])
-
 
 def apply_parametrization_norm(module: nn.Module, norm: str = 'none') -> nn.Module:
     assert norm in CONV_NORMALIZATIONS
@@ -32,7 +21,6 @@ def apply_parametrization_norm(module: nn.Module, norm: str = 'none') -> nn.Modu
         # We already check was in CONV_NORMALIZATION, so any other choice
         # doesn't need reparametrization.
         return module
-
 
 def get_norm_module(module: nn.Module, causal: bool = False, norm: str = 'none', **norm_kwargs) -> nn.Module:
     """Return the proper normalization module. If causal is True, this will ensure the returned
@@ -59,7 +47,6 @@ def get_extra_padding_for_conv1d(x: torch.Tensor, kernel_size: int, stride: int,
     n_frames = (length - kernel_size + padding_total) / stride + 1
     ideal_length = (math.ceil(n_frames) - 1) * stride + (kernel_size - padding_total)
     return ideal_length - length
-
 
 def pad_for_conv1d(x: torch.Tensor, kernel_size: int, stride: int, padding_total: int = 0):
     """Pad for a convolution to make sure that the last window is full.
@@ -95,7 +82,6 @@ def pad1d(x: torch.Tensor, paddings: tp.Tuple[int, int], mode: str = 'zero', val
     else:
         return F.pad(x, paddings, mode, value)
 
-
 def unpad1d(x: torch.Tensor, paddings: tp.Tuple[int, int]):
     """Remove padding from x, handling properly zero padding. Only for 1d!"""
     padding_left, padding_right = paddings
@@ -103,7 +89,6 @@ def unpad1d(x: torch.Tensor, paddings: tp.Tuple[int, int]):
     assert (padding_left + padding_right) <= x.shape[-1]
     end = x.shape[-1] - padding_right
     return x[..., padding_left: end]
-
 
 class NormConv1d(nn.Module):
     """Wrapper around Conv1d and normalization applied to this conv
@@ -121,7 +106,6 @@ class NormConv1d(nn.Module):
         x = self.norm(x)
         return x
 
-
 class NormConv2d(nn.Module):
     """Wrapper around Conv2d and normalization applied to this conv
     to provide a uniform interface across normalization approaches.
@@ -137,7 +121,6 @@ class NormConv2d(nn.Module):
         x = self.conv(x)
         x = self.norm(x)
         return x
-
 
 class NormConvTranspose1d(nn.Module):
     """Wrapper around ConvTranspose1d and normalization applied to this conv
@@ -155,7 +138,6 @@ class NormConvTranspose1d(nn.Module):
         x = self.norm(x)
         return x
 
-
 class NormConvTranspose2d(nn.Module):
     """Wrapper around ConvTranspose2d and normalization applied to this conv
     to provide a uniform interface across normalization approaches.
@@ -170,7 +152,6 @@ class NormConvTranspose2d(nn.Module):
         x = self.convtr(x)
         x = self.norm(x)
         return x
-
 
 class SConv1d(nn.Module):
     """Conv1d with some builtin handling of asymmetric or causal padding
@@ -208,7 +189,6 @@ class SConv1d(nn.Module):
             padding_left = padding_total - padding_right
             x = pad1d(x, (padding_left, padding_right + extra_padding), mode=self.pad_mode)
         return self.conv(x)
-
 
 class SConvTranspose1d(nn.Module):
     """ConvTranspose1d with some builtin handling of asymmetric or causal padding

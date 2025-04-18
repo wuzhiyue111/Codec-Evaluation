@@ -1,13 +1,10 @@
 import math
 from typing import List
 from typing import Union
-
 import numpy as np
 import torch
-from audiotools import AudioSignal
 from audiotools.ml import BaseModel
 from torch import nn
-
 from codec_evaluation.codecs.YuE.descriptaudiocodec.dac.model.base import CodecMixin
 from codec_evaluation.codecs.YuE.descriptaudiocodec.dac.nn.layers import (
     Snake1d,
@@ -21,7 +18,6 @@ def init_weights(m):
     if isinstance(m, nn.Conv1d):
         nn.init.trunc_normal_(m.weight, std=0.02)
         nn.init.constant_(m.bias, 0)
-
 
 class ResidualUnit(nn.Module):
     def __init__(self, dim: int = 16, dilation: int = 1):
@@ -40,7 +36,6 @@ class ResidualUnit(nn.Module):
         if pad > 0:
             x = x[..., pad:-pad]
         return x + y
-
 
 class EncoderBlock(nn.Module):
     def __init__(self, dim: int = 16, stride: int = 1):
@@ -61,7 +56,6 @@ class EncoderBlock(nn.Module):
 
     def forward(self, x):
         return self.block(x)
-
 
 class Encoder(nn.Module):
     def __init__(
@@ -91,7 +85,6 @@ class Encoder(nn.Module):
 
     def forward(self, x):
         return self.block(x)
-
 
 class DecoderBlock(nn.Module):
     def __init__(self, input_dim: int = 16, output_dim: int = 8, stride: int = 1,out_pad=0):
@@ -144,7 +137,6 @@ class Decoder(nn.Module):
             WNConv1d(output_dim, d_out, kernel_size=7, padding=3),
             # nn.Tanh(),
         ]
-
         self.model = nn.Sequential(*layers)
 
     def forward(self, x):
@@ -177,10 +169,8 @@ class DAC(BaseModel, CodecMixin):
             latent_dim = encoder_dim * (2 ** len(encoder_rates))
 
         self.latent_dim = latent_dim
-
         self.hop_length = np.prod(encoder_rates)
         self.encoder = Encoder(encoder_dim, encoder_rates, latent_dim)
-
         self.n_codebooks = n_codebooks
         self.codebook_size = codebook_size
         self.codebook_dim = codebook_dim
@@ -199,7 +189,6 @@ class DAC(BaseModel, CodecMixin):
         )
         self.sample_rate = sample_rate
         self.apply(init_weights)
-
         self.delay = self.get_delay()
 
     def preprocess(self, audio_data, sample_rate):
@@ -327,45 +316,3 @@ class DAC(BaseModel, CodecMixin):
             "vq/commitment_loss": commitment_loss,
             "vq/codebook_loss": codebook_loss,
         }
-
-
-if __name__ == "__main__":
-    import numpy as np
-    from functools import partial
-
-    model = DAC().to("cpu")
-
-    for n, m in model.named_modules():
-        o = m.extra_repr()
-        p = sum([np.prod(p.size()) for p in m.parameters()])
-        fn = lambda o, p: o + f" {p/1e6:<.3f}M params."
-        setattr(m, "extra_repr", partial(fn, o=o, p=p))
-    print(model)
-    print("Total # of params: ", sum([np.prod(p.size()) for p in model.parameters()]))
-
-    length = 88200 * 2
-    x = torch.randn(1, 1, length).to(model.device)
-    x.requires_grad_(True)
-    x.retain_grad()
-
-    # Make a forward pass
-    out = model(x)["audio"]
-    print("Input shape:", x.shape)
-    print("Output shape:", out.shape)
-
-    # Create gradient variable
-    grad = torch.zeros_like(out)
-    grad[:, :, grad.shape[-1] // 2] = 1
-
-    # Make a backward pass
-    out.backward(grad)
-
-    # Check non-zero values
-    gradmap = x.grad.squeeze(0)
-    gradmap = (gradmap != 0).sum(0)  # sum across features
-    rf = (gradmap != 0).sum()
-
-    print(f"Receptive field: {rf.item()}")
-
-    x = AudioSignal(torch.randn(1, 1, 44100 * 60), 44100)
-    model.decompress(model.compress(x, verbose=True), verbose=True)

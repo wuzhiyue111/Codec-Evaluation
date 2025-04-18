@@ -7,10 +7,8 @@
 
 import torch
 import torch.nn as nn
-
 from codec_evaluation.codecs.YuE.RepCodec.repcodec.layers.conv_layer import Conv1d
 from codec_evaluation.codecs.YuE.RepCodec.repcodec.modules.residual_unit import ResidualUnit
-
 
 class EncoderBlock(nn.Module):
     def __init__(
@@ -45,7 +43,6 @@ class EncoderBlock(nn.Module):
             x = self.res_units[idx](x)
         x = self.conv(x)
         return x
-
 
 class Encoder(nn.Module):
     def __init__(

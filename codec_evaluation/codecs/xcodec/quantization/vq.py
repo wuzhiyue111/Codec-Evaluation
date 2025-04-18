@@ -1,31 +1,9 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-
 """Residual vector quantizer implementation."""
-
-from dataclasses import dataclass, field
 import math
 import typing as tp
-
 import torch
 from torch import nn
-
-# from .core_vq import ResidualVectorQuantization
 from codec_evaluation.codecs.xcodec.quantization.core_vq_lsx_version import ResidualVectorQuantization
-
-
-
-@dataclass
-class QuantizedResult:
-    quantized: torch.Tensor
-    codes: torch.Tensor
-    bandwidth: torch.Tensor  # bandwidth in kb/s used, per batch item.
-    penalty: tp.Optional[torch.Tensor] = None
-    metrics: dict = field(default_factory=dict)
-
 
 class ResidualVectorQuantizer(nn.Module):
     """Residual Vector Quantizer.

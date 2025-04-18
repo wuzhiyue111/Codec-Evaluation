@@ -1,15 +1,11 @@
- 
 import torch
 import torch.nn as nn
-
-
 
 class Conv1d1x1(nn.Conv1d):
     """1x1 Conv1d."""
 
     def __init__(self, in_channels, out_channels, bias=True):
         super(Conv1d1x1, self).__init__(in_channels, out_channels, kernel_size=1, bias=bias)
-
 
 class Conv1d(nn.Module):
     def __init__(
@@ -50,7 +46,6 @@ class Conv1d(nn.Module):
         """
         x = self.conv(x)
         return x
-
 
 class ResidualUnit(nn.Module):
     def __init__(
@@ -153,7 +148,6 @@ class EncoderBlock(nn.Module):
         x = self.conv(x)
         return x
 
-
 class Encoder(nn.Module):
     def __init__(
             self,
@@ -194,8 +188,6 @@ class Encoder(nn.Module):
         for i in range(self.num_blocks):
             x = self.conv_blocks[i](x)
         return x
-
-
 
 class DecoderBlock(nn.Module):
     """ Decoder block (no up-sampling) """
@@ -243,7 +235,6 @@ class DecoderBlock(nn.Module):
             x = self.res_units[idx](x)
         return x
 
-
 class Decoder(nn.Module):
     def __init__(
             self,
@@ -283,7 +274,6 @@ class Decoder(nn.Module):
                 )
             ]
         self.num_blocks = len(self.conv_blocks)
-
         self.conv2 = Conv1d(out_channels, output_channels, kernel_size, 1, bias=False)
 
     def forward(self, z):

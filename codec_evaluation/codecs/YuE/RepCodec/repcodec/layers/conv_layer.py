@@ -1,19 +1,10 @@
-# Copyright (c) ByteDance, Inc. and its affiliates.
-# Copyright (c) Chutong Meng
-#
-# This source code is licensed under the CC BY-NC license found in the
-# LICENSE file in the root directory of this source tree.
-# Based on AudioDec (https://github.com/facebookresearch/AudioDec)
-
 import torch.nn as nn
-
 
 class Conv1d1x1(nn.Conv1d):
     """1x1 Conv1d."""
 
     def __init__(self, in_channels, out_channels, bias=True):
         super(Conv1d1x1, self).__init__(in_channels, out_channels, kernel_size=1, bias=bias)
-
 
 class Conv1d(nn.Module):
     def __init__(
