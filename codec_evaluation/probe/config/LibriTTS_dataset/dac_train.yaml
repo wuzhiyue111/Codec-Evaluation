@@ -1,6 +1,6 @@
 mode: quantized_emb
 sample_rate: 24000
-probe_root_dir: /sdb/tmp/user/wzy/codec_eval/ctc_libritts
+probe_ckpt_dir: /sdb/tmp/user/wzy/codec_eval/ctc_libritts
 seed: 666
 codec_name: dac
 

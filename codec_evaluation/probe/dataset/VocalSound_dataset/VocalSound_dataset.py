@@ -41,7 +41,7 @@ class vocalsounddataset(Dataset):
         try:
             return self.get_item(index)
         except Exception as e:
-            logger.error(f"Error loading audio file {os.path.basename(self.metadata["data"][index]["wav"])}: {e}")
+            logger.error(f"Error loading audio file {os.path.basename(self.metadata['data'][index]['wav'])}: {e}")
             return None
 
     def get_item(self, index):
