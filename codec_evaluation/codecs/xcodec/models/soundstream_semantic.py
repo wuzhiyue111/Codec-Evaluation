@@ -46,7 +46,7 @@ class SoundStream(nn.Module):
             self.semantic_model = AutoModel.from_pretrained("microsoft/wavlm-base-plus")
         elif semantic_techer=='hubert_base_general':
             
-            self.semantic_model = AutoModel.from_pretrained("ZhenYe234/hubert_base_general_audio")
+            self.semantic_model = AutoModel.from_pretrained("/mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/xcodec/hubert_base_general_audio")
         self.semantic_model.eval()
          
         self.fc_prior = nn.Linear(D+768, D+768 )

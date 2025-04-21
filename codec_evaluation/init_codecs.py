@@ -18,6 +18,7 @@ def init_codec(
         num_codebooks: int = 8,
         freeze: bool = False,
         need_resample: bool = True,
+        feature_extractor_config_path = None,
         **kwargs,
         ):
     """
@@ -113,7 +114,7 @@ def init_codec(
             mode=mode,
             need_resample=need_resample,
             model_ckpt_dir=model_ckpt_dir,
-            feature_extractor_config_path=kwargs.get("feature_extractor_config_path", None)
+            feature_extractor_config_path=feature_extractor_config_path
         ).to(device)
     elif modelname == "yue":
         model = YuE(

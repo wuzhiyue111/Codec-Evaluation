@@ -5,7 +5,7 @@ import torch
 import torchaudio
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data.dataloader import DataLoader
-from codec_evaluation.probe.dataset.GTZAN_dataset import (
+from codec_evaluation.probe.dataset.GTZAN_dataset.GTZAN_dataset import (
     GTZANdataset,
 )
 from tqdm import tqdm

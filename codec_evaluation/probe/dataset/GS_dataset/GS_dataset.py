@@ -16,7 +16,6 @@ class GSdataset(Dataset):
         sample_rate,
         target_sec,        
         is_mono,
-        is_normalize,
         audio_dir,
         meta_path,
     ):
@@ -25,7 +24,6 @@ class GSdataset(Dataset):
         self.target_sec = target_sec
         self.target_length = self.target_sec * self.sample_rate
         self.is_mono = is_mono
-        self.is_normalize = is_normalize
         self.audio_dir = audio_dir
         self.audio_files = find_audios(audio_dir)
 

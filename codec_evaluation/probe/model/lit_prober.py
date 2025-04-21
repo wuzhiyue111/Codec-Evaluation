@@ -1,6 +1,5 @@
 import torch
 import torchmetrics 
-import torch.nn.functional as F
 import pytorch_lightning as pl
 from einops import rearrange
 from codec_evaluation.init_codecs import init_codec
@@ -28,6 +27,7 @@ class Prober(pl.LightningModule):
                  probe_model_builder: Any = None,
                  optimizer_builder: Any = None,
                  lr_scheduler_builder: Any = None,
+                 feature_extractor_config_path:Any = None,
                  ):
         """
             codec_name must in ['dac', 'encodec', 'mimi', 'semanticodec', 'speechtokenizer', wavtokenizer]
@@ -40,7 +40,8 @@ class Prober(pl.LightningModule):
                                 mode = mode, 
                                 model_ckpt_dir = model_ckpt_dir,
                                 device = 'cpu', 
-                                freeze = True)
+                                freeze = True,
+                                feature_extractor_config_path = feature_extractor_config_path)
         self.codec_name = codec_name
         self.sample_rate = sample_rate
         
@@ -118,6 +119,9 @@ class Prober(pl.LightningModule):
             feature_length = self.audio_length * (self.codec.orig_sample_rate / self.sample_rate) // self.codec.hop_length
         else:
             feature_length = self.audio_length // self.codec.hop_length
+            
+        if self.codec_name == "hubert":
+            feature_length = feature_length - 1
 
         audio_features = self.extract_feature(audio, int(feature_length))
 

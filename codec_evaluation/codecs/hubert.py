@@ -45,17 +45,11 @@ class Hubert(Codec):
         super().__init__(sample_rate, 16000, mode)
         self.need_resample = need_resample
         self.dim = 768     # encoder output dim
-        if model_ckpt_dir is None:
-            self.model = HubertModel.from_pretrained("facebook/hubert-base-ls960")
-        else:
-            self.model = HubertModel.from_pretrained(model_ckpt_dir)
+        self.model = HubertModel.from_pretrained(model_ckpt_dir)
 
-        if feature_extractor_config_path is None:
-            self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained("facebook/hubert-base-ls960")
-        else:
-            with open(feature_extractor_config_path, "r") as f:
-                feature_extractor_config = json.load(f)  
-                self.feature_extractor = Wav2Vec2FeatureExtractor(**feature_extractor_config)
+        with open(feature_extractor_config_path, "r") as f:
+            feature_extractor_config = json.load(f)  
+            self.feature_extractor = Wav2Vec2FeatureExtractor(**feature_extractor_config)
 
         self.hop_length = 320    # downsampling rate of the encoder
         self.token_rate = self.orig_sample_rate / self.hop_length
@@ -79,6 +73,7 @@ class Hubert(Codec):
             return_tensors="pt",
             padding=True,
         )
+        device = self.model.device
         input_values = features["input_values"].squeeze(0).to(device)
         hidden_states = self.model(input_values).last_hidden_state    # [B, N, D]
         unquantized_emb = hidden_states.permute(0, 2, 1)  # [B, D, N]
@@ -123,8 +118,8 @@ if __name__ == "__main__":
             sample_rate,
             mode=mode,
             need_resample=False,    # means the output sample rate is the same as codec's sample rate
-            model_ckpt_dir="/sdb/model_weight/codec_evaluation/codec_ckpt/hubert/hubert-base-ls960",
-            feature_extractor_config_path="/sdb/model_weight/codec_evaluation/codec_ckpt/hubert/hubert-base-ls960/preprocessor_config.json"
+            model_ckpt_dir="/mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/hubert/hubert-base-ls960",
+            feature_extractor_config_path="/mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/hubert/hubert-base-ls960/preprocessor_config.json"
         )
         .eval()
         .to(device)

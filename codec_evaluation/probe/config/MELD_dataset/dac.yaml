@@ -11,9 +11,9 @@ save_result: null #/home/wsy/project/Codec-Evaluation/codec_evaluation/probe/pro
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [2]
+  devices: [3,4]
   precision: 32
-  max_epochs: 50
+  max_epochs: 100
   limit_val_batches: 10
   log_every_n_steps: 5
   val_check_interval: 1.0
@@ -27,9 +27,9 @@ data:
     audio_dir: /mnt/sda/a6000/sdb/data1/MELD.Raw
     meta_dir: /mnt/sda/a6000/sdb/data1/MELD.Raw
   codec_name: ${codec_name}
-  train_batch_size: 128
-  valid_batch_size: 8
-  test_batch_size: 64
+  train_batch_size: 64
+  valid_batch_size: 2
+  test_batch_size: 32
   train_num_workers: 8
   valid_num_workers: 4
   test_num_workers: 4

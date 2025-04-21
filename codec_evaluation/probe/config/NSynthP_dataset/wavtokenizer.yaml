@@ -28,12 +28,12 @@ data:
     audio_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music/NSynth-dataset
     meta_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music/NSynth-dataset
   codec_name: ${codec_name}
-  train_batch_size: 512
+  train_batch_size: 256
   valid_batch_size: 32
-  test_batch_size: 256
-  train_num_workers: 8
-  valid_num_workers: 4
-  test_num_workers: 4
+  test_batch_size: 128
+  train_num_workers: 128
+  valid_num_workers: 8
+  test_num_workers: 64
 
 model:
   _target_: codec_evaluation.probe.model.lit_prober.Prober

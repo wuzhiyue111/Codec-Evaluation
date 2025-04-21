@@ -1,16 +1,12 @@
 import os
-import torch
 import torchaudio
-import json
+import torch
+import pytorch_lightning as pl
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-import pytorch_lightning as pl
 from codec_evaluation.utils.utils import cut_or_pad
-from codec_evaluation.utils.logger import RankedLogger
-
-logger = RankedLogger(__name__, rank_zero_only=True)
-
-class vocalsounddataset(Dataset):
+import json
+class NSynthIdataset(Dataset):
     def __init__(
         self,
         split,
@@ -27,46 +23,58 @@ class vocalsounddataset(Dataset):
         self.is_mono = is_mono
         self.audio_dir = audio_dir
 
-        self.meta_dir = meta_dir
-        self.meta_path = os.path.join(meta_dir, f'{split}.json')
-        with open(self.meta_path) as f:
-            self.metadata = json.load(f)
-        self.classes = """/m/01j3sz, /m/07plz5l, /m/01b_21, /m/0dl9sf8, /m/01hsr_, /m/07ppn3j""".split(", ")
-        self.class2id = {c: i for i, c in enumerate(self.classes)}
+        self.meta_dir = os.path.join(meta_dir, f'nsynth-{split}/examples.json')
+        metadata = json.load(open(self.meta_dir,'r'))
+        self.metadata = [(k, v['instrument_family_str']) for k, v in metadata.items()]
+        self.audio_paths = [os.path.join(f'nsynth-{split}/audio', k+".wav") for k, v in self.metadata]
+        self.class2id = {
+            'bass': 0,
+            'brass': 1,
+            'flute': 2,
+            'guitar': 3,
+            'keyboard': 4,
+            'mallet': 5,
+            'organ': 6,
+            'reed': 7,
+            'string': 8,
+            'synth_lead': 9,
+            'vocal': 10
+        }
+        self.id2class = {v: k for k, v in self.class2id.items()}
 
     def __len__(self):
-        return len(self.metadata["data"])
+        return len(self.metadata)
 
     def __getitem__(self, index):
-        try:
-            return self.get_item(index)
-        except Exception as e:
-            logger.error(f"Error loading audio file {os.path.basename(self.metadata["data"][index]["wav"])}: {e}")
-            return None
+        return self.getitem(index)
 
-    def get_item(self, index):
+    
+    def getitem(self, index):
         """
-        return:
-            segments: [n,T]
-            labels: [n]
+            return:
+                segments: [n_segments, segments_length]
+                labels: [n_segments, 50]
         """
-        
-        audio_path = os.path.basename(self.metadata["data"][index]["wav"])
+        audio_path = self.audio_paths[index]
         audio_file = os.path.join(self.audio_dir, audio_path)
-        
-        segments, pad_mask= self.load_audio(audio_file)
-        label = self.class2id[self.metadata["data"][index]["labels"]]
-        labels = []
-        labels.extend([label] * len(pad_mask))
+        segments, pad_mask = self.load_audio(audio_file)
+        class_name = self.metadata[index][1]
+        label = torch.tensor(self.class2id[class_name])
 
+        labels = []
+        for mask in pad_mask:
+            if mask == 1:
+                labels.append(label)
+            else:
+                labels.append(-100)
         labels = torch.tensor(labels)
         segments = torch.vstack(segments)
 
         return {"audio": segments, "labels":  labels, "n_segments": len(pad_mask)}
-
+    
     def load_audio(
-        self,
-        audio_file,
+            self,
+            audio_file,
     ):
         """
         input:
@@ -74,7 +82,7 @@ class vocalsounddataset(Dataset):
         return:
             waveform:[n,T]
         """
-        
+
         waveform, _ = torchaudio.load(audio_file)
 
         if waveform.shape[0] > 1 and self.is_mono:
@@ -83,7 +91,7 @@ class vocalsounddataset(Dataset):
         waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length)
 
         return waveform, pad_mask
-
+    
     def collate_fn(self, batch):
         audio_list = [item["audio"] for item in batch if item is not None]
         label_list = [item["labels"] for item in batch if item is not None]
@@ -99,9 +107,8 @@ class vocalsounddataset(Dataset):
         }
 
 
-class vocalsounddataModule(pl.LightningDataModule):
-    def __init__(
-            self,
+class NSynthIdataModule(pl.LightningDataModule):
+    def __init__(self,
             dataset_args, 
             codec_name,
             train_batch_size=32,
@@ -122,13 +129,14 @@ class vocalsounddataModule(pl.LightningDataModule):
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            self.train_dataset = vocalsounddataset(split="tr", **self.dataset_args)
-            self.valid_dataset = vocalsounddataset(split="val", **self.dataset_args)
+            self.train_dataset = NSynthIdataset(split="train", **self.dataset_args)
+            # 创建验证集
+            self.valid_dataset = NSynthIdataset(split="valid", **self.dataset_args)
         if stage == "val":
-            self.valid_dataset = vocalsounddataset(split="val", **self.dataset_args)
+            self.valid_dataset = NSynthIdataset(split="valid", **self.dataset_args)
         if stage == "test":
-            self.test_dataset = vocalsounddataset(split="te", **self.dataset_args)
-
+            self.test_dataset = NSynthIdataset(split="test", **self.dataset_args)
+ 
     def train_dataloader(self):
         return DataLoader(
             dataset=self.train_dataset,

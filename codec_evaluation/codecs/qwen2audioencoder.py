@@ -135,6 +135,8 @@ class Qwen2AudioEncoder(Codec):
         batch_size = raw_audio_mask.shape[0]
         if raw_audio_mask.shape[1] < fixed_length:
             pad_mask = torch.zeros((batch_size, fixed_length),
+        if raw_audio_mask.shape[1] < fixed_length:
+            pad_mask = torch.zeros((batch_size, fixed_length),
                                    dtype=raw_audio_mask.dtype,
                                    device=device)
             pad_mask[:, :raw_audio_mask.shape[1]] = raw_audio_mask
@@ -224,6 +226,7 @@ if __name__ == "__main__":
     sig, sample_rate = torchaudio.load(os.path.join(root_path, "codecs", "example.wav"))
     sig = sig[:sample_rate * 30].clone().detach().unsqueeze(0).to(device) # [B=1, T]
     sig = torch.cat([sig, sig], dim=0).to(device).squeeze(1) # [B=2, T]
+    # length = torch.tensor([1.0, 0.5]).to(device) # [B=2]
     
     mode = "unquantized_emb"
     codec = (
@@ -231,8 +234,8 @@ if __name__ == "__main__":
             sample_rate, 
             mode=mode,
             need_resample=False, # means the output sample rate is the same as codec's sample rate
-            model_ckpt_dir = "/sdb/model_weight/codec_evaluation/codec_ckpt/qwen2audioencoder",
-            feature_extractor_config_path = "/sdb/model_weight/whisper-large-v3/preprocessor_config.json"
+            model_ckpt_dir = "/mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/qwen2audioencoder",
+            feature_extractor_config_path = "/mnt/sda/a6000/sdb/model_weight/whisper-large-v3/preprocessor_config.json"
         )
         .eval()
         .to(device)

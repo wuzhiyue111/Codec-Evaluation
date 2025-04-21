@@ -11,15 +11,16 @@ save_result: null
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [7,8]
+  devices: [1,2,3,7,8,9]
   precision: 32
   max_epochs: 100
-  limit_val_batches: 10
+  check_val_every_n_epoch: 10
+  limit_val_batches: 1.0
   log_every_n_steps: 5
   val_check_interval: 1.0
 
 data:
-  _target_: codec_evaluation.probe.dataset.NSynthI_dataset.NSynthIdataModule
+  _target_: codec_evaluation.probe.dataset.NSynthI_dataset.NSynthI_dataset.NSynthIdataModule
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
@@ -27,7 +28,7 @@ data:
     audio_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music/NSynth-dataset
     meta_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music/NSynth-dataset
   codec_name: ${codec_name}
-  train_batch_size: 512
+  train_batch_size: 256
   valid_batch_size: 32
   test_batch_size: 256
   train_num_workers: 8

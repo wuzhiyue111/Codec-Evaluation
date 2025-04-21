@@ -25,6 +25,7 @@ class CtcLitProber(LightningModule):
         optimizer_builder: Any = None,
         lr_scheduler_builder: Any = None,
         accumulate_grad_batches: int = 1,
+        feature_extractor_config_path: Any = None,
     ):
         super(CtcLitProber, self).__init__()
         self.codec_model = init_codec(
@@ -33,7 +34,8 @@ class CtcLitProber(LightningModule):
             sample_rate=sample_rate,
             model_ckpt_dir=model_ckpt_dir,
             device="cpu",
-            freeze=True
+            freeze=True,
+            feature_extractor_config_path=feature_extractor_config_path
         )
         if codec_name == 'semanticodec':
             self.dim = self.codec_model.dim * 2
@@ -89,6 +91,10 @@ class CtcLitProber(LightningModule):
             feature_length = audio_length * (self.codec_model.orig_sample_rate / self.sample_rate) // self.codec_model.hop_length
         else:
             feature_length = audio_length // self.codec_model.hop_length
+
+        if self.codec_name == "hubert":
+            feature_length = feature_length - 1
+            
         audio_features = self.extract_feature(audio, feature_length)
         loss = self.probe_model(audio_features, feature_length, text)
         return loss, batch_size

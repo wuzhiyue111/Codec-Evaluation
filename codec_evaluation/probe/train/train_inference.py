@@ -2,7 +2,6 @@ import logging
 import hydra
 import torch
 import pytorch_lightning as pl
-from omegaconf import DictConfig
 import codec_evaluation
 import argparse
 from codec_evaluation.utils.logger import RankedLogger

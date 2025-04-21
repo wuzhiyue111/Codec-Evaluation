@@ -18,7 +18,6 @@ class MTTdataset(Dataset):
         sample_rate,
         target_sec,        
         is_mono,
-        is_normalize,
         audio_dir,
         meta_dir,
         task
@@ -28,7 +27,6 @@ class MTTdataset(Dataset):
         self.target_sec = target_sec
         self.target_length = self.target_sec * self.sample_rate
         self.is_mono = is_mono
-        self.is_normalize = is_normalize
         self.audio_dir = audio_dir
         self.meta_dir = meta_dir
         self.task = task

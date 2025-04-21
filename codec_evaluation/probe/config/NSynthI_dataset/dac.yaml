@@ -12,15 +12,16 @@ save_result: null
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [3,4,5,6]
+  devices: [1,2,3,7,8,9]
   precision: 32
-  max_epochs: 50
-  limit_val_batches: 10
+  max_epochs: 100
+  check_val_every_n_epoch: 10
+  limit_val_batches: 1.0
   log_every_n_steps: 5
   val_check_interval: 1.0
 
 data:
-  _target_: codec_evaluation.probe.dataset.NSynthI_dataset.NSynthIdataModule
+  _target_: codec_evaluation.probe.dataset.NSynthI_dataset.NSynthI_dataset.NSynthIdataModule
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}

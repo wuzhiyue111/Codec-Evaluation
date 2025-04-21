@@ -11,7 +11,7 @@ save_result: null
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [9]
+  devices: [5,6]
   precision: 32
   max_epochs: 100
   limit_val_batches: 10
@@ -27,13 +27,13 @@ data:
     audio_dir: /mnt/sda/a6000/sdb/data1/MELD.Raw
     meta_dir: /mnt/sda/a6000/sdb/data1/MELD.Raw
   codec_name: ${codec_name}
-  train_batch_size: 256
-  valid_batch_size: 32
-  test_batch_size: 256
+  train_batch_size: 64
+  valid_batch_size: 2
+  test_batch_size: 32
   train_num_workers: 8
   valid_num_workers: 4
   test_num_workers: 4
-
+  
 model:
   _target_: codec_evaluation.probe.model.lit_prober.Prober
   codec_name: ${codec_name}

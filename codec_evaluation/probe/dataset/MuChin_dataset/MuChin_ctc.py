@@ -12,7 +12,7 @@ from torch.utils.data import random_split
 logger = RankedLogger(__name__, rank_zero_only=True)
 
 
-class Muchin_ctc_dataset(Dataset):
+class MuChin_ctc_dataset(Dataset):
     def __init__(
         self,
         audio_dir,
@@ -70,7 +70,7 @@ class Muchin_ctc_dataset(Dataset):
         }
 
 
-class Muchin_ctc_module(pl.LightningDataModule):
+class MuChin_ctc_module(pl.LightningDataModule):
     def __init__(
         self,
         audio_dir,
@@ -93,7 +93,7 @@ class Muchin_ctc_module(pl.LightningDataModule):
         self.train_num_workers = train_num_workers
         self.valid_num_workers = valid_num_workers
         self.test_num_workers = test_num_workers
-        self.dataset = Muchin_ctc_dataset(audio_dir, meta_path)
+        self.dataset = MuChin_ctc_dataset(audio_dir, meta_path)
         self.train_size = int(len(self.dataset) * self.train_split)
         self.test_size = len(self.dataset) - self.train_size
         self.train_dataset, self.test_dataset = random_split(self.dataset, [self.train_size, self.test_size])

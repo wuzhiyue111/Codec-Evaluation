@@ -144,7 +144,7 @@ if __name__ == "__main__":
                 sample_rate,
                 mode=mode,
                 num_codebooks=num_codebooks,
-                model_ckpt_dir="/sdb/model_weight/codec_evaluation/codec_ckpt/xcodec",
+                model_ckpt_dir="/mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/xcodec",
                 need_resample=False,
             )
             .eval()
