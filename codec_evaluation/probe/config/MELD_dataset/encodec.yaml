@@ -2,7 +2,7 @@ mode: quantized_emb
 sample_rate: 48000
 target_sec: 3
 num_outputs: 7
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/MELD_dataset/encodec/${mode} # 需要更改
+probe_ckpt_dir: ???
 seed: 666
 codec_name: encodec # 需要更改
 task: multiclass

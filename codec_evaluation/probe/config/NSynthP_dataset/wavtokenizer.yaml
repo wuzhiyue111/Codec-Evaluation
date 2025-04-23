@@ -3,7 +3,7 @@ sample_rate: 16000
 target_sec: 4
 n_segments: 1
 num_outputs: 128
-probe_ckpt_dir: /home/ch/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/NSynthP_dataset/wavtokenizer/${mode}
+probe_ckpt_dir: ???
 seed: 666
 codec_name: wavtokenizer
 task: multiclass

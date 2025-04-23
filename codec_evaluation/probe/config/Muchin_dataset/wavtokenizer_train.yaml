@@ -1,6 +1,6 @@
 mode: quantized_emb
 sample_rate: 44100
-probe_ckpt_dir: /sdb/tmp/user/wsy/codec_eval/probe_ckpt/Muchin_dataset/wavtokenizer/${mode}
+probe_ckpt_dir: ???
 seed: 666
 codec_name: wavtokenizer
 

@@ -2,7 +2,7 @@ mode: quantized_emb
 sample_rate: 16000
 target_sec: 10
 num_outputs: 50
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/MTT_dataset/wavtokenizer/${mode}
+probe_ckpt_dir: ???
 seed: 666
 codec_name: wavtokenizer
 task: multilabel

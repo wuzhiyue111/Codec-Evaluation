@@ -2,7 +2,7 @@ mode: unquantized_emb
 sample_rate: 44100
 target_sec: 10
 num_outputs: 56
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/MTG_dataset/MTGMoodtheme_dataset/wavtokenizer/${mode} # 需要更改
+probe_ckpt_dir: ???
 seed: 666
 codec_name: wavtokenizer # 需要更改
 task: multilabel
