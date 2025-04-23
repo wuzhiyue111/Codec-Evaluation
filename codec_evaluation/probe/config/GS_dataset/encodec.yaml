@@ -11,7 +11,7 @@ save_result: null
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [0,1]
+  devices: ???
   precision: 32
   max_epochs: 70
   limit_val_batches: 10

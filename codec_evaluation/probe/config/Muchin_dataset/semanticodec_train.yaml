@@ -7,7 +7,7 @@ codec_name: semanticodec
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [1]
+  devices: ???
   precision: 32
   max_epochs: 20
   log_every_n_steps: 20

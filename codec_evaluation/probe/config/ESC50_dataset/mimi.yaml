@@ -11,7 +11,7 @@ save_result: null #/home/wsy/project/Codec-Evaluation/codec_evaluation/probe/pro
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [3]
+  devices: ???
   precision: 32
   max_epochs: 100
   limit_val_batches: 10
