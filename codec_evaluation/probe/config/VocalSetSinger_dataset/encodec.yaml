@@ -97,6 +97,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/VocalSet_dataset/VocalSetSinger # 需要更改
+  save_dir: ???
   name: ${codec_name}_${mode}
   log_graph: true

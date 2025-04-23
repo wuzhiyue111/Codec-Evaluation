@@ -83,6 +83,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: ${probe_root_dir}/tb_log
+  save_dir: ???
   name: ${codec_name}_${mode}
   log_graph: true
