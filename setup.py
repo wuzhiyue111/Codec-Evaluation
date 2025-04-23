@@ -23,7 +23,7 @@ setup(
     python_requires=">=3.10",
     entry_points={
         "console_scripts": [
-            "codec_eval_probe = codec_evaluation.probe.test.test_inference:cli",
+            "codec_eval_probe = codec_evaluation.probe.train.train_inference:cli",
         ]
     },
 )
