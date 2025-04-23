@@ -21,12 +21,7 @@ codec_name: encodec
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-<<<<<<< HEAD
-<<<<<<<< HEAD:codec_evaluation/probe/config/Muchin_dataset/encodec_train.yaml
-  devices: [0]
-=======
   devices: ???
->>>>>>> e45d815 (ppl_train, need inference)
   precision: 32
   max_epochs: 20
   limit_val_batches: 10
