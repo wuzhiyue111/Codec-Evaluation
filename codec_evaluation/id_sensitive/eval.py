@@ -1,3 +1,4 @@
+import argparse
 from codec_evaluation.init_codecs import init_codec
 import torchaudio
 import random
@@ -255,10 +256,8 @@ class IDSensitiveEvaluation:
             return f"codebook same id: {percent_same_id_avg_list}"
 
 
-if __name__ == "__main__":
+def main():
     seed_all(666)
-    import argparse
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--codec_name", type=str, default="speechtokenizer")
     parser.add_argument(
@@ -302,3 +301,7 @@ if __name__ == "__main__":
     )
     result = codec_eval.evaluate(args.task)
     print(result)
+
+
+if __name__ == "__main__":
+    main()

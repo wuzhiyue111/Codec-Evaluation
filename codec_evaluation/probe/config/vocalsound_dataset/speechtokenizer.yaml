@@ -2,7 +2,7 @@ mode: quantized_emb
 sample_rate: 44100
 target_sec: 10
 num_outputs: 6
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/vocalsound_dataset/speechtokenizer/${mode} # 需要更改
+probe_ckpt_dir: ???
 seed: 666
 codec_name: speechtokenizer # 需要更改
 task: multiclass
@@ -11,7 +11,7 @@ save_result: null
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [2]
+  devices: ???
   precision: 32
   max_epochs: 100
   check_val_every_n_epoch: 5
@@ -97,6 +97,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/vocalsound_dataset # 需要更改
+  save_dir: ???
   name: ${codec_name}_${mode}
   log_graph: true

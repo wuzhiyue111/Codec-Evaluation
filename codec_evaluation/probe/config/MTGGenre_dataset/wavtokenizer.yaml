@@ -2,7 +2,7 @@ mode: quantized_emb
 sample_rate: 44100
 target_sec: 10
 num_outputs: 87
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/MTG_dataset/MTGGenre_dataset/wavtokenizer/${mode} # 需要更改
+probe_ckpt_dir: ???
 seed: 666
 codec_name: wavtokenizer # 需要更改
 task: multilabel
@@ -11,7 +11,7 @@ save_result: null
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [5]
+  devices: ???
   precision: 32
   max_epochs: 100
   limit_val_batches: 10
@@ -97,6 +97,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/MTG_dataset/MTGGenre_dataset # 需要更改
+  save_dir: ???
   name: ${codec_name}_${mode}
   log_graph: true
