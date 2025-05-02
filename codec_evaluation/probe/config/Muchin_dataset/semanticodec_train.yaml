@@ -1,13 +1,13 @@
 mode: quantized_emb
 sample_rate: 44100
-probe_ckpt_dir: /sdb/tmp/user/wsy/codec_eval/probe_ckpt/Muchin_dataset/semanticodec/${mode} 
+probe_ckpt_dir: ???
 seed: 666
 codec_name: semanticodec
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [1]
+  devices: ???
   precision: 32
   max_epochs: 20
   log_every_n_steps: 20
@@ -86,6 +86,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /sdb/tmp/user/wsy/codec_eval/tb_log/Muchin_dataset
+  save_dir: ???
   name: ${codec_name}_${mode}
   log_graph: true

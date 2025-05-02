@@ -1,0 +1,82 @@
+project: ppl_dac
+seed: 114514
+ppl_ckpt_dir: /sdb/tmp/user/wzy/codec_eval/ppl/ckpt
+
+trainer:
+  _target_: pytorch_lightning.Trainer
+  accelerator: gpu
+  # devices: [0] # for debug
+  devices: -1
+  precision: bf16-mixed
+  max_steps: 1000000
+  val_check_interval: 400
+  log_every_n_steps: 50
+  max_epochs: 1000
+  strategy: ddp_find_unused_parameters_true
+
+
+data:
+  _target_: codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc.LibriTTS_ctc_module
+  train_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/train-clean-100
+  valid_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/dev-other
+  test_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/test-clean
+  train_batch_size: 10
+  valid_batch_size: 4
+  train_num_workers: 4
+  valid_num_workers: 1
+
+model:
+  _target_: codec_evaluation.perplexity.model.lit_modules.PPL_lit_modules
+  ppl_model_config:
+    _target_: transformers.models.qwen2.configuration_qwen2.Qwen2Config.from_pretrained
+    pretrained_model_name_or_path: /home/wzy/projects/Codec-Evaluation/codec_evaluation/perplexity/config/ppl_model_config.json
+
+  sample_rate: 24000
+  codec_name: dac
+  codec_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt
+  lm_head_nums: 8
+
+  optimizer_builder:
+    _target_: torch.optim.AdamW
+    _partial_: true
+    lr: 1e-4
+    betas:
+    - 0.8
+    - 0.99
+    eps: 1e-05
+    weight_decay: 0.01
+
+  lr_scheduler_builder:
+    _target_: torch.optim.lr_scheduler.LambdaLR
+    _partial_: true
+    lr_lambda:
+      _target_: codec_evaluation.utils.schedule.get_cosine_schedule_with_warmup_lr_lambda
+      _partial_: true
+      num_warmup_steps: 50
+      num_training_steps: ${trainer.max_steps} 
+      final_lr_ratio: 0.99
+
+callbacks:
+  rich_progress_bar:
+    _target_: pytorch_lightning.callbacks.RichProgressBar
+
+  model_summary:
+    _target_: pytorch_lightning.callbacks.ModelSummary
+    max_depth: 1
+
+  model_checkpoint:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    monitor: val_loss_mean
+    mode: min
+    every_n_train_steps: 2000
+    dirpath: ${ppl_ckpt_dir}
+    filename: '{epoch:03d}-{step:06d}_dac_ppl'
+    save_top_k: 1
+    verbose: true
+    save_last: true  # add this parameter to save the last epoch
+
+tensorboard_logger:
+  _target_: pytorch_lightning.loggers.TensorBoardLogger
+  save_dir: /sdb/tmp/user/wzy/codec_eval/ppl/tb_log
+  name: ppl_dac
+  log_graph: true

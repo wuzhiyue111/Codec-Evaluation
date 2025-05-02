@@ -1,3 +1,4 @@
+import argparse
 import os
 import random
 import numpy as np
@@ -9,7 +10,7 @@ from codec_evaluation.probe.dataset.GTZAN_dataset.GTZAN_dataset import (
     GTZANdataset,
 )
 from tqdm import tqdm
-from codec_evaluation.init_codecs import init_codec
+from codec_evaluation.codecs.init_codecs import init_codec
 from typing import Optional
 from codec_evaluation.reconstruction_eval.utils import (
     calculate_pesq,
@@ -179,9 +180,7 @@ class CodecEvaluation:
         }
 
 
-if __name__ == "__main__":
-    import argparse
-
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--codec_name", type=str, default="encodec")
     parser.add_argument(
@@ -223,3 +222,9 @@ if __name__ == "__main__":
     )
     result = codec_eval.evaluate()
     print(f"result: {result}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    main()

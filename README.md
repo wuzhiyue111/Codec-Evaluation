@@ -51,10 +51,10 @@
     - multi codec deploy reference: https://github.com/lucadellalib/audiocodecs
 - [ ] clean different dataset in marble benchmark
     - add code to redeploy marble in our benchmark
-    - add code in marble base to evaluate our index 
+    - add code in marble base to evaluate our index
+    - package default behavior: load ckpt or dataset from default base dir (like: ~/.codec_evaluation) or os environment var (like CODEC_EVALUATION_DATA_DIR) rather than absolute path
 - [ ] define the evaluation metrics of codec, codebooks
     - test ID sensitive in same semantic
-    - 
 
 ## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Compass/3D/compass_3d.png" alt="compass" width="30" height="30"> Env Build
 The following explains how to quickly create the required environment and install codec_evaluation for use.
@@ -562,17 +562,20 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
             <th colspan="2">libritts</th>
             <th colspan="1">Vocalsound</th>
             <th colspan="1">MELD</th>
+            <th colspan="1">ESC50</th>
         </tr>
 	<tr>
 	    <td align=center>WER</td>
             <td align=center>CER</td>
 	    <td align=center>Acc</td>
             <td align=center>Acc</td>
+            <td align=center>Acc</td>
     </thead>
     <tbody>
         <tr>
             <td align=center rowspan="2">DAC</td>
             <td align=center>unquantized_emb</td>
+            <td align=center></td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -584,10 +587,12 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
             <td align=center>0.369</td>
             <td align=center>0.535</td>
             <td align=center>0.483</td>
+	    <td align=center>0.325</td>
         </tr>
         <tr>
             <td align=center rowspan="2">Encodec</td>
             <td align=center>unquantized_emb</td>
+            <td align=center></td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -599,10 +604,12 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
             <td align=center>0.369</td>
 	    <td align=center>0.574</td>
 	    <td align=center>0.481</td>
+	    <td align=center>0.275</td>
         </tr>
         <tr>
             <td align=center rowspan="2">SemantiCodec</td>
             <td align=center>unquantized_emb</td>
+            <td align=center></td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -614,10 +621,12 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
             <td align=center>0.183</td>
             <td align=center>0.723</td>
             <td align=center>0.482</td>
+	    <td align=center>0.620</td>
         </tr>
         <tr>
             <td align=center rowspan="2">WavTokenizer</td>
             <td align=center>unquantized_emb</td>
+            <td align=center></td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -629,10 +638,12 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
             <td align=center>0.416</td>
             <td align=center>0.524</td>
             <td align=center>0.484</td>
+	    <td align=center>0.135</td>
         </tr>
 	<tr>
 	    <td align=center rowspan="2">Mimi</td>
             <td align=center>unquantized_emb</td>
+            <td align=center></td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -644,10 +655,12 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
             <td align=center>0.22</td>
             <td align=center>0.833</td>
             <td align=center>0.481</td>
+	    <td align=center>0.335</td>
         </tr>
 	<tr>
 	    <td align=center rowspan="2">SpeechTokenizer</td>
             <td align=center>unquantized_emb</td>
+            <td align=center></td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -659,12 +672,7 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
             <td align=center>0.164</td>
             <td align=center>0.776</td>
             <td align=center>0.498</td>
+	    <td align=center>0.670</td>
         </tr>
     </tbody>
 </table>
-
-
-
-
-
-

@@ -1,4 +1,5 @@
-from codec_evaluation.init_codecs import init_codec
+import argparse
+from codec_evaluation.codecs.init_codecs import init_codec
 import torchaudio
 import random
 import numpy as np
@@ -302,3 +303,7 @@ if __name__ == "__main__":
     )
     result = codec_eval.evaluate(args.task)
     print(result)
+
+
+if __name__ == "__main__":
+    main()

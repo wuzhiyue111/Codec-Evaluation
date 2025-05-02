@@ -1,13 +1,34 @@
 mode: quantized_emb
 sample_rate: 44100
+<<<<<<< HEAD
+<<<<<<<< HEAD:codec_evaluation/probe/config/Muchin_dataset/encodec_train.yaml
 probe_ckpt_dir: /sdb/tmp/user/wsy/codec_eval/probe_ckpt/Muchin_dataset/encodec/${mode} #/sdb/tmp/user/wzy/codec_eval/ctc_libritts
 seed: 666
 codec_name: encodec
+========
+target_sec: 5
+num_outputs: 50
+probe_ckpt_dir: ???
+seed: 666
+codec_name: speechtokenizer # 需要更改
+task: multiclass
+save_result: null
+>>>>>>>> e45d815 (ppl_train, need inference):codec_evaluation/probe/config/ESC50_dataset/speechtokenizer.yaml
+=======
+probe_ckpt_dir: ???
+seed: 666
+codec_name: encodec
+>>>>>>> e45d815 (ppl_train, need inference)
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
+<<<<<<< HEAD
+<<<<<<<< HEAD:codec_evaluation/probe/config/Muchin_dataset/encodec_train.yaml
   devices: [0]
+=======
+  devices: ???
+>>>>>>> e45d815 (ppl_train, need inference)
   precision: 32
   max_epochs: 20
   limit_val_batches: 10
@@ -16,8 +37,13 @@ trainer:
 
 data:
   _target_: codec_evaluation.probe.dataset.Muchin_dataset.Muchin_ctc.Muchin_ctc_module
+<<<<<<< HEAD
   audio_dir: /mnt/sda/a6000/sdb/data1/benchmark/muchin/muchin_split
   meta_path: /mnt/sda/a6000/sdb/data1/benchmark/muchin/muchin_ctc.json
+=======
+  audio_dir: /sdb/data1/benchmark/muchin/muchin_split
+  meta_path: /sdb/data1/benchmark/muchin/muchin_ctc.json
+>>>>>>> e45d815 (ppl_train, need inference)
   train_split: 0.9
   test_split: 0.1
   train_batch_size: 16
@@ -26,6 +52,36 @@ data:
   train_num_workers: 16
   valid_num_workers: 2
   test_num_workers: 16
+<<<<<<< HEAD
+========
+  devices: ???
+  precision: 32
+  max_epochs: 100
+  limit_val_batches: 10
+  log_every_n_steps: 5
+  val_check_interval: 1.0
+
+data:
+  _target_: codec_evaluation.probe.dataset.ESC50_dataset.ESC50_dataset.ESC50dataModule
+  dataset_args:
+    sample_rate: ${sample_rate}
+    target_sec: ${target_sec}
+    task: ${task}
+    is_mono: True
+    audio_dir: /sdb/data1/sound/ESC-50-master/audio
+    meta_path: /sdb/data1/sound/ESC-50-master/meta/esc50.csv
+  codec_name: ${codec_name}
+  train_split: 0.9
+  test_split: 0.1
+  train_batch_size: 128
+  valid_batch_size: 2
+  test_batch_size: 128
+  train_num_workers: 32
+  valid_num_workers: 4
+  test_num_workers: 32
+>>>>>>>> e45d815 (ppl_train, need inference):codec_evaluation/probe/config/ESC50_dataset/speechtokenizer.yaml
+=======
+>>>>>>> e45d815 (ppl_train, need inference)
 
 
 model:
@@ -33,17 +89,43 @@ model:
   codec_name: ${codec_name}
   sample_rate: ${sample_rate}
   mode: ${mode}
+<<<<<<< HEAD
+<<<<<<<< HEAD:codec_evaluation/probe/config/Muchin_dataset/encodec_train.yaml
+=======
+>>>>>>> e45d815 (ppl_train, need inference)
   language: ch
   probe_model_builder:
     _target_: codec_evaluation.probe.model.ctc_model.Ctc_Probe
     _partial_: true
     tokenizer:
       _target_: transformers.Wav2Vec2Processor.from_pretrained
+<<<<<<< HEAD
       pretrained_model_name_or_path: /mnt/sda/a6000/sdb/data1/model_weight/wav2vec2-large-chinese-zh-cn
+=======
+      pretrained_model_name_or_path: /sdb/model_weight/wav2vec2-large-chinese-zh-cn
+>>>>>>> e45d815 (ppl_train, need inference)
     vocab_size: 5171
     dropout: 0.1
     conformer_head: 8
   model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz
+<<<<<<< HEAD
+========
+  task: ${task}
+  num_outputs: ${num_outputs}
+  probe_model_builder:
+    _target_: codec_evaluation.probe.model.multiclass_model.MulticlassProber
+    _partial_: true
+    num_outputs: ${num_outputs}
+    drop_out: 0.1
+    channel_reduction: 16
+    padding: 1
+    kernel_size: 3
+    stride: 1
+  target_sec: ${target_sec}
+  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/speechtokenizer # 需要更改
+>>>>>>>> e45d815 (ppl_train, need inference):codec_evaluation/probe/config/ESC50_dataset/speechtokenizer.yaml
+=======
+>>>>>>> e45d815 (ppl_train, need inference)
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -82,11 +164,24 @@ callbacks:
     every_n_epochs: 1
     mode: min
     save_top_k: 1
+<<<<<<< HEAD
+    save_last: False
+    filename: ${codec_name}_${mode}_{epoch}-{valid_loss:.4f}
+=======
     filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
+>>>>>>> e45d815 (ppl_train, need inference)
     verbose: True
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
+<<<<<<< HEAD
+<<<<<<<< HEAD:codec_evaluation/probe/config/Muchin_dataset/encodec_train.yaml
   save_dir: /sdb/tmp/user/wsy/codec_eval/tb_log/Muchin_dataset
+========
+  save_dir: ???
+>>>>>>>> e45d815 (ppl_train, need inference):codec_evaluation/probe/config/ESC50_dataset/speechtokenizer.yaml
+=======
+  save_dir: ???
+>>>>>>> e45d815 (ppl_train, need inference)
   name: ${codec_name}_${mode}
   log_graph: true

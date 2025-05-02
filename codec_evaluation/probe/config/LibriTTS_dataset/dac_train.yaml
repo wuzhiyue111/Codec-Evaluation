@@ -1,13 +1,13 @@
 mode: quantized_emb
 sample_rate: 24000
-probe_ckpt_dir: /sdb/tmp/user/wzy/codec_eval/ctc_libritts
+probe_root_dir: /sdb/tmp/user/wzy/codec_eval/ctc_libritts
 seed: 666
 codec_name: dac
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [1]
+  devices: ???
   precision: 32
   max_epochs: 20
   limit_val_batches: 10
@@ -83,6 +83,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /sdb/tmp/user/wsy/codec_eval/tb_log/Muchin_dataset
+  save_dir: ???
   name: ${codec_name}_${mode}
   log_graph: true
