@@ -3,7 +3,7 @@ sample_rate: 16000
 target_sec: 4
 n_segments: 1
 num_outputs: 128
-probe_ckpt_dir: /home/ch/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/NSynthP_dataset/wavtokenizer/${mode}
+probe_ckpt_dir: ???
 seed: 666
 codec_name: wavtokenizer
 task: multiclass
@@ -12,11 +12,10 @@ save_result: null
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [4]
+  devices: ???
   precision: 32
   max_epochs: 100
-  check_val_every_n_epoch: 10
-  limit_val_batches: 1.0
+  limit_val_batches: 10
   log_every_n_steps: 5
   val_check_interval: 1.0
 
@@ -26,7 +25,6 @@ data:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    is_normalize: False
     audio_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music/NSynth-dataset
     meta_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music/NSynth-dataset
   codec_name: ${codec_name}
@@ -45,7 +43,7 @@ model:
   task: ${task}
   num_outputs: ${num_outputs}
   probe_model_builder:
-    _target_: codec_evaluation.probe.model.NSynthP_dataset.model.NSynthPProber
+    _target_: codec_evaluation.probe.model.multiclass_model.MulticlassProber
     _partial_: true
     num_outputs: ${num_outputs}
     drop_out: 0.2
@@ -98,6 +96,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/nsynth_p
+  save_dir: ???
   name: ${codec_name}_${mode}
   log_graph: true

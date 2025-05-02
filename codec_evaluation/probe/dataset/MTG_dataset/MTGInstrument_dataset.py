@@ -1,15 +1,13 @@
 import os
-import pandas as pd
 import torch
 import torchaudio
-import numpy as np
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
-from einops import reduce
-
 from codec_evaluation.utils.utils import cut_or_pad
+from codec_evaluation.utils.logger import RankedLogger
 
+logger = RankedLogger(__name__, rank_zero_only=True)
 
 class MTGInstrumentdataset(Dataset):
     def __init__(
@@ -18,7 +16,6 @@ class MTGInstrumentdataset(Dataset):
         sample_rate,
         target_sec,        
         is_mono,
-        is_normalize,
         audio_dir,
         meta_dir,
         task
@@ -28,7 +25,6 @@ class MTGInstrumentdataset(Dataset):
         self.target_sec = target_sec
         self.target_length = self.target_sec * self.sample_rate
         self.is_mono = is_mono
-        self.is_normalize = is_normalize
         self.audio_dir = audio_dir
         self.task = task
 
@@ -44,8 +40,12 @@ class MTGInstrumentdataset(Dataset):
         return len(self.metadata)
 
     def __getitem__(self, index):
-        return self.get_item(index)
-
+        try:
+            return self.get_item(index)
+        except Exception as e:
+            logger.error(f"Error loading audio file {self.all_paths[index]}: {e}")
+            return None
+        
     def get_item(self, index):
         """
         return:
@@ -75,24 +75,12 @@ class MTGInstrumentdataset(Dataset):
         input:
             audio_file:one of audio_file path
         return:
-            waveform:[T]
+            waveform:[n,T]
         """
-        if len(audio_file) == 0:
-            raise FileNotFoundError("No audio files found in the specified directory.")
+        waveform, _ = torchaudio.load(audio_file)
 
-        try:
-            waveform, _ = torchaudio.load(audio_file)
-        except Exception as e:
-            print(f"Error loading audio file {audio_file}: {e}")
-            return None
-
-        # Convert to mono if needed
         if waveform.shape[0] > 1 and self.is_mono:
             waveform = torch.mean(waveform, dim=0, keepdim=True)
-
-        # Normalize to [-1, 1] if needed
-        if self.is_normalize:
-            waveform = waveform / waveform.abs().max()
 
         if waveform.shape[1] > 150 *self.sample_rate:
             waveform = waveform[:, :150 *self.sample_rate]
@@ -143,9 +131,6 @@ class MTGInstrumentModule(pl.LightningDataModule):
         self.train_batch_size = train_batch_size
         self.valid_batch_size = valid_batch_size
         self.test_batch_size = test_batch_size
-        self.train_dataset = None
-        self.valid_dataset = None
-        self.test_dataset = None
         self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.valid_num_workers = valid_num_workers

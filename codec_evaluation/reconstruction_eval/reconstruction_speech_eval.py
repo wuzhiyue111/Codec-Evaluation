@@ -1,3 +1,4 @@
+import argparse
 import os
 import random
 import numpy as np
@@ -11,7 +12,7 @@ from codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc import (
 )
 from tqdm import tqdm
 from transformers import WhisperForConditionalGeneration, WhisperProcessor
-from codec_evaluation.init_codecs import init_codec
+from codec_evaluation.codecs.init_codecs import init_codec
 from typing import Optional
 from codec_evaluation.reconstruction_eval.utils import (
     calculate_pesq,
@@ -188,6 +189,8 @@ class CodecEvaluation:
             cer_rec_list.append(cer_rec)
             cer_gt_list.append(cer_gt)
             print(f"cer_gt: {cer_gt}, cer_rec: {cer_rec}")
+
+            # speaker_sim
             speaker_sim_list.append(
                 calculate_spk_sim(
                     gt_audio=tmp_gt_audio,
@@ -196,6 +199,7 @@ class CodecEvaluation:
                 )
             )
             print(f"speaker_sim: {speaker_sim_list[-1]}")
+            
             # stoi
             stoi_list.append(
                 calculate_stoi(
@@ -243,12 +247,11 @@ class CodecEvaluation:
         }
 
 
-if __name__ == "__main__":
-    import argparse
+def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--codec_name", type=str, default="dac")
-    parser.add_argument("--model_ckpt_dir", type=str, default="/sdb/model_weight/codec_evaluation/codec_ckpt/")
-    parser.add_argument("--device", type=str, default="cuda:0")
+    parser.add_argument("--codec_name", type=str, default="encodec")
+    parser.add_argument("--model_ckpt_dir", type=str, default="/sdb/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz")
+    parser.add_argument("--device", type=str, default="cuda:6")
     parser.add_argument("--sample_rate", type=int, default=24000)
     parser.add_argument("--asr_model_path_or_name", type=str, default="/sdb/model_weight/whisper-base")
     parser.add_argument("--dataset_audio_dir", type=str, default="/sdb/data1/speech/24kHz/LibriTTS/test-other")
@@ -276,3 +279,9 @@ if __name__ == "__main__":
     )
     result = codec_eval.evaluate()
     print(f"result: {result}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    main()

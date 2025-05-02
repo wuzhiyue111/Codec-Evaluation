@@ -1,41 +1,193 @@
-# Codec-Evaluation
+<div align="center">
+	<!-- Welcome words -->
+	<h1 style="color: #FFA500;font-size: 36px;">
+	<img src="https://media.tenor.com/92w2JUO-fk4AAAAi/musical-notes.gif" alt="yf" width="50" height="50" />
+ 	<img src="https://media.tenor.com/Ziew1c0_mKUAAAAi/pepe-frog.gif" alt="yf" width="50" height="50" />
+  🎧 Welcome to AudioCodecBench 🎵
+  	<img src="https://media.tenor.com/2wq1PfInyYkAAAAj/music-note-dancing.gif" alt="yf" width="50" height="50" />
+	<img src="https://media.tenor.com/92w2JUO-fk4AAAAi/musical-notes.gif" alt="yf" width="50" height="50" />
+ 	</h1>
+	<!-- Dynamic Emojis -->
+	<div style="display: flex; justify-content: center; align-items: center;">
+	<img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Objects/Musical%20Notes.png" alt="Waving Hand" width="50" height="50" />
+  	<img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Objects/Guitar.png" alt="Waving Hand" width="50" height="50" />
+	<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Waving%20Hand.png" alt="Waving Hand" width="50" height="50" />
+  	<img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Objects/Saxophone.png" alt="Glowing Star" width="50" height="50" />
+  	<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Glowing%20Star.png" alt="Glowing Star" width="50" height="50" />
+	<img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Headphone/3D/headphone_3d.png" alt="Fire" width="50" height="50" />
+ 	<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Fire.png" alt="Fire" width="50" height="50" />
+	<img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Violin/3D/violin_3d.png" alt="Sun" width="50" height="50" />  
+	<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Sun.png" alt="Sun" width="50" height="50" />
+	<img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Objects/Trumpet.png" alt="Sun" width="50" height="50" />
+	<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Rocket.png" alt="Rocket" width="50" height="50" />
+	</div>
+</div>
 
-## Purpose
+
+# AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
+&emsp;&emsp;__AudioCodecBench__ evaluates audio codecs in terms of reconstruction quality and the adaptability of generated representations to large language model(LLM) modeling, by performing tasks such as reconstruction (adding noise to assess the codec’s ability to fit noise and to determine whether the codebook information tends to encode noise), audio offset (simulating phase shifts to evaluate noise fitting ability), mutual information (analyzing the correlation between codebook tokens before and after reconstruction to assess the stability of information representation), and downstream probe tasks (simulating large language model-style modeling).<br>
+ <a href="https://www.overleaf.com/project/67f66ad3dd19f43edfd9d439">
+  <img src="https://camo.githubusercontent.com/a8d50b4cb0bebfa879fca60626080da8012c5a24a1fe3d3db641e19485b0851f/68747470733a2f2f7374617469632e61727869762e6f72672f7374617469632f62726f7773652f302e332e342f696d616765732f69636f6e732f66617669636f6e2d31367831362e706e67" alt="arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation">
+  arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
+</a>
+
+<div style="display: flex; justify-content: center; align-items: left;">
+<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Dove.png" alt="Dove" width="20" height="20">contribution1 <br>
+<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Peacock.png" alt="Peacock" width="20" height="20" />contribution2 <br>
+<img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Animals/Unicorn.png" alt="unicorn" width="20" height="20" />contribution3 <br>
+<img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Animals/Fox.png" alt="fox" width="20" height="20" />contribution4 <br>
+<img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Animals/Penguin.png" alt="penguin" width="20" height="20" />contribution5 <br>
+</div>
+
+## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Mountain/3D/mountain_3d.png" alt="mountain" width="30" height="30"> Purpose
 
 1. how to evaluate the quality of codebook
 2. collect all existing metrics for reconstruction
 3. collect all existing metrics for Linear Probing (Music and Speech)
 
-## Env Build
-
-conda create -n codec_eval python==3.10 -y
-
-conda activate codec_eval
-
-git clone https://github.com/wuzhiyue111/Codec-Evaluation.git
-
-cd Codec-Evaluation
-
-bash env_build.sh
-
-## Road Map
+## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/World%20map/3D/world_map_3d.png" alt="map" width="30" height="30"> Road Map
 
 - [x] multi codec deploy
     - multi codec deploy reference: https://github.com/lucadellalib/audiocodecs
 - [ ] clean different dataset in marble benchmark
     - add code to redeploy marble in our benchmark
-    - add code in marble base to evaluate our index 
+    - add code in marble base to evaluate our index
+    - package default behavior: load ckpt or dataset from default base dir (like: ~/.codec_evaluation) or os environment var (like CODEC_EVALUATION_DATA_DIR) rather than absolute path
 - [ ] define the evaluation metrics of codec, codebooks
     - test ID sensitive in same semantic
-    - 
 
-## Reconstruction Metric
-### Speech
-<table border="1" align="center">
+## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Compass/3D/compass_3d.png" alt="compass" width="30" height="30"> Env Build
+The following explains how to quickly create the required environment and install codec_evaluation for use.
+
+### Setup environment and dependencies
+We strongly recommended to use conda for managing your Python environment.
+
+- #### Create a virtual environment using conda.
+	```
+	# create a virtual environment using conda
+	conda create -n codec_eval python==3.10 -y	# Python ==3.10 is recommended.
+	conda activate codec_eval
+	```
+- #### Install codec_evaluation from source
+  	```
+ 	git clone https://github.com/wuzhiyue111/Codec-Evaluation.git
+	cd Codec-Evaluation
+	bash env_build.sh
+   	```
+## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Straight%20ruler/3D/straight_ruler_3d.png" alt="ruler" width="30" height="30"> Usage
+The following will introduce how to conduct evaluations using codecs and downstream tasks. For details, please refer to the <a href="https://q058tnj4ico.feishu.cn/wiki/UPIhwaPBqiNnitk4gHRcihGcnBd?from=from_copylink">instruction document.</a>
+
+### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30">Audio codec 
+Currently, 10 codecs have been added to the repository. Each codec program has five modes, namely `encode`, `decode`, `reconstruct`, `unquantized_emb`, and `unquantized_emb`. In the code, we've designed two ways to load model weights: local and remote. Users can choose either loading method according to their own needs. 
+
+<table>
+  <tr>
+    <th>Codec</th>
+    <th>DAC</th>
+    <th>Encodec</th>
+    <th>Mimi</th>
+    <th>WavTokenizer</th>
+    <th>Semanticodec</th>
+    <th>Speechtokenizer</th>
+    <th>Qwen2AudioEncoder</th>
+    <th>HuBert</th>
+    <th>XCodec</th>
+    <th>YuE</th>
+  </tr>
+  <tr>
+    <th>Sample_rate</th>
+    <th>24kHz</th>
+    <th>24kHz</th>
+    <th>24kHz</th>
+    <th>24kHz</th>
+    <th>16kHz</th>
+    <th>16kHz</th>
+    <th>16kHz</th>
+    <th>16kHz</th>
+    <th>16kHz</th>
+    <th>16kHz</th>
+  </tr>
+  <tr>
+    <th>Modes</th>
+    <td colspan="10">
+	encode: encode the audio to id tokens <br>
+        decode: decode the id tokens to audio <br>
+        reconstruct: encode -> decode <br>
+        unquantized_emb: encode -> unquantized embedding <br>
+        quantized_emb: encode + quantizer -> quantized embedding <br>
+    </td>
+  </tr>
+</table>
+
+### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> Add and init audio codec
+If users need to test their own codecs, they can quickly deploy their own codecs by following the methods below.
+
+- Package the codec model as a source code library function and place it in the directory `Codec-Evaluation/codec_evaluation/codecs`.
+- Create a `codec.py` script under the `Codec-Evaluation/codec_evaluation/codecs` directory, and modify the `_sig_to_unquantized_emb`, `_sig_to_quantized_emb`, `_sig_to_toks`, and `_toks_to_sig` functions based on the model’s inference code to obtain the corresponding mode results.
+- Use the local loading method to load the model's training weights by setting the correct `mode_ckpt_path` parameter.
+- Run the code.
+  ```
+  python ~/Codec-Evaluation/codec_evaluation/codecs/codec.py
+  ```
+- Add a codec initialization function in `codec_evaluation/init_codecs.py` to facilitate the initialization and invocation of the codec for downstream tasks.
+
+### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> ID sensitive
+Regarding the testing and analysis of ID sensitivity, it is carried out from the perspectives of the following three tasks. 
+
+#### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Books/3D/books_3d.png" alt="books" width="20" height="20"> MRC and OS tasks
+- ###### Multi-round reconstruction(MRC)
+
+  MRC task evaluate the codec's ability to fit noise by introducing noise iteratively, helping to determine whether the codebook information is more semantically or acoustically oriented.
+  Navigate to the `Codec-Evaluation/id_sensitive` directory, and run the following command in the terminal to execute the task:
+  ```
+  python evaluate_codec.py \
+	  --codec_name speechtokenizer \
+	  --model_ckpt_dir /sdb/model_weight/codec_evaluation/codec_ckpt/speechtokenizer \
+	  --device gpu:0 \
+	  --sample_rate 24000 \
+	  --num_codebooks 8 \
+	  --need_resample True \
+	  --task MRC \
+	  --batch_size 24 \
+	  --num_workers 8 \
+	  --shift_time 2 \
+	  --subset_step 1200 \
+	  --dataset_audio_dir /sdb/data1/speech/24kHz/LibriTTS/test-other \
+	  --use_vocos False \
+	  --vocos_ckpt_dir None
+  ```
+
+- ###### Offset(OS)
+
+  The audio OS task simulates phase shifts in audio to further assess the codec's noise-fitting capability.
+  Navigate to the `Codec-Evaluation/id_sensitive` directory, and run the following command in the terminal to execute the task:
+  ```
+  python evaluate_codec.py \
+	  --codec_name speechtokenizer \
+	  --model_ckpt_dir /sdb/model_weight/codec_evaluation/codec_ckpt/speechtokenizer \
+	  --device gpu:0 \
+	  --sample_rate 24000 \
+	  --num_codebooks 8 \
+	  --need_resample True \
+	  --task OS \
+	  --batch_size 24 \
+	  --num_workers 8 \
+	  --shift_time 2 \
+	  --subset_step 1200 \
+	  --dataset_audio_dir /sdb/data1/speech/24kHz/LibriTTS/test-other \
+	  --use_vocos False \
+	  --vocos_ckpt_dir None
+  ```
+### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> Probe 
+  
+## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Pen/3D/pen_3d.png" alt="pen" width="30" height="30">Probe task results
+### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Bookmark%20tabs/3D/bookmark_tabs_3d.png" alt="bookmark" width="30" height="30">Reconstruction Metric
+#### Speech
+<table border="1">
   <thead>
     <tr>
       <th rowspan="2">Codec</th>
-      <th colspan="5">Metrics</th>
+      <th colspan="8">Metrics</th>
     </tr>
     <tr>
       <th>PESQ</th>
@@ -108,14 +260,24 @@ bash env_build.sh
       <td>0.12</td>
       <td>0.89</td>
     </tr>
+    <tr>
+      <td>XCodec</td>
+      <td>3.23</td>
+      <td>0.942</td>
+      <td>0.154</td>
+      <td>0.185</td>
+      <td>0.09</td>
+      <td>0.106</td>
+      <td>0.91</td>
+    </tr>
   </tbody>
 </table>
 
-### Music
-<table border="1" align="center">
+#### Music
+<table border="1" >
   <thead>
     <tr>
-      <th rowspan="2">Codec</th>
+      <th rowspan="3">Codec</th>
       <th colspan="5">Metrics</th>
     </tr>
     <tr>
@@ -144,18 +306,28 @@ bash env_build.sh
       <td>1.14</td>
       <td>0.49</td>
     </tr>
+    <tr>
+       <td>XCodec</td>
+       <td>1.85</td>
+       <td>0.76</td>
+    </tr>
+    <tr>
+       <td>YuE</td>
+       <td>1.84</td>
+       <td>0.75</td>
+    </tr>
   </tbody>
 </table>
 
-## Probe Experiment
-### Marble Probe (Music)
+### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Bookmark%20tabs/3D/bookmark_tabs_3d.png" alt="bookmark" width="30" height="30">Probe Experiment
+#### Marble Probe (Music)
 <table border="1" >
     
    <thead>
         <tr>
             <th rowspan="3">Codec</th>
 	    <th rowspan="3">Mode</th>
-            <th colspan="12">Dataset</th>
+            <th colspan="19">Dataset</th>
         </tr>
         <tr>
             <th colspan="2">emomusic</th>
@@ -166,151 +338,218 @@ bash env_build.sh
 	    <th colspan="1">VocalSetSinger</th>
 	    <th colspan="1">VocalSetTech</th>
 	    <th colspan="1">GS</th>
+	    <th colspan="1">Muchin</th>
+	    <th colspan="2">MTGGenre</th>
 	    <th colspan="2">MTGInstrument</th>
+	    <th colspan="2">MTGMoodtheme</th>
+	    <th colspan="2">MTGTop50</th>
         </tr>
 	<tr>
 	    <td align=center>A</td>
             <td align=center>V</td>
 	    <td align=center>Acc</td>
-            <td align=center>AUROC</td>
-	    <td align=center>Ap</td>
+            <td align=center>AP</td>
+	    <td align=center>AUCROC</td>
 	    <td align=center>Acc</td>
 	    <td align=center>Acc</td>
 	    <td align=center>Acc</td>
 	    <td align=center>Acc</td>
-	    <td align=center>Acc</td>
-	    <td align=center>ROC</td>
+	    <td align=center>Acc</td>	   
+	    <td align=center>CER</td>
 	    <td align=center>AP</td>
+	    <td align=center>AUCROC</td>
+	    <td align=center>AP</td>
+	    <td align=center>AUCROC</td>
+	    <td align=center>AP</td>
+	    <td align=center>AUCROC</td>
+	    <td align=center>AP</td>
+	    <td align=center>AUCROC</td>
     </thead>
     <tbody>
         <tr>
             <td align=center rowspan="2">DAC</td>
             <td align=center>unquantized_emb</td>
-            <td align=center>0.51</td>
-            <td align=center>0.34</td>
-            <td align=center>0.321</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
             <td align=center></td>
 	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
-	    <td align=center>0.40</td>
-	    <td align=center>0.41</td>
-            <td align=center>0.09</td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center>0.47</td>
-            <td align=center>0.06</td>
-            <td align=center>0.345</td>
-            <td align=center>0.806</td>
-	    <td align=center>0.226</td>
-	    <td align=center>0.604</td>
-	    <td align=center> </td>
+            <td align=center>0.470</td>
+            <td align=center>0.064</td>
+            <td align=center>0.353</td>
+            <td align=center>0.203</td>
+	    <td align=center>0.785</td>
+	    <td align=center>0.602</td>
+	    <td align=center>0.468</td>
 	    <td align=center>0.419</td>
-	    <td align=center>0.349</td>
+	    <td align=center>0.376</td>
             <td align=center>0.088</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
+	    <td align=center>0.579</td>
+	    <td align=center>0.0295</td>
+	    <td align=center>0.530</td>
+	    <td align=center>0.108</td>
+	    <td align=center>0.638</td>
+            <td align=center>0.076</td>
+	    <td align=center>0.651</td>
+	    <td align=center>0.141</td>
+	    <td align=center>0.687</td>
         </tr>
         <tr>
             <td align=center rowspan="2">Encodec</td>
             <td align=center>unquantized_emb</td>
-            <td align=center>0.56</td>
-            <td align=center>0.24</td>
-            <td align=center>0.314</td>
-            <td align=center>0.792</td>
-            <td align=center>0.196</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
 	    <td align=center> </td>
 	    <td align=center> </td>
-	    <td align=center>0.35</td>
-	    <td align=center>0.41</td>
-	    <td align=center>0.10</td>
-	    <td align=center>0.60</td>
-	    <td align=center>0.11</td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center>0.48</td>
-            <td align=center>0.08</td>
-            <td align=center>0.341</td>
-            <td align=center>0.787</td>
-            <td align=center>0.19</td>
-	    <td align=center>0.543</td>
-	    <td align=center> </td>
+            <td align=center>0.467</td>
+            <td align=center>0.066</td>
+            <td align=center>0.339</td>
+            <td align=center>0.184</td>
+            <td align=center>0.759</td>
+	    <td align=center>0.537</td>
+	    <td align=center>0.547</td>
 	    <td align=center>0.299</td>
 	    <td align=center>0.301</td>
-	    <td align=center>0.088</td>
-	    <td align=center>0.60</td>
-	    <td align=center>0.11</td>
+	    <td align=center>0.102</td>
+	    <td align=center>0.507</td>
+	    <td align=center>0.035</td>
+	    <td align=center>0.528</td>
+	    <td align=center>0.104</td>
+	    <td align=center>0.620</td>
+            <td align=center>0.057</td>
+	    <td align=center>0.642</td>
+	    <td align=center>0.137</td>
+	    <td align=center>0.701</td>
         </tr>
         <tr>
             <td align=center rowspan="2">SemantiCodec</td>
             <td align=center>unquantized_emb</td>
-            <td align=center>0.55</td>
-            <td align=center>0.35</td>
-            <td align=center>0.29</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
             <td align=center></td>
             <td align=center> </td>
 	    <td align=center> </td>
-	    <td align=center> </td>\
-	    <td align=center>0.16</td>
 	    <td align=center> </td>
-	    <td align=center>0.06</td>
+	    <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center>0.48</td>
-            <td align=center>0.31</td>
-            <td align=center>0.501</td>
-            <td align=center></td>
-            <td align=center> </td>
+            <td align=center>0.507</td>
+            <td align=center>0.316</td>
+            <td align=center>0.502</td>
+            <td align=center>0.318</td>
+            <td align=center>0.877</td>
 	    <td align=center>0.658</td>
-	    <td align=center> </td>
+	    <td align=center>0.764</td>
 	    <td align=center>0.344</td>
 	    <td align=center>0.451</td>
-	    <td align=center>0.328</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
+	    <td align=center>0.343</td>
+	    <td align=center>0.578</td>
+	    <td align=center>0.035</td>
+	    <td align=center>0.526</td>
+	    <td align=center>0.149</td>
+	    <td align=center>0.720</td>
+            <td align=center>0.099</td>
+	    <td align=center>0.723</td>
+	    <td align=center>0.230</td>
+	    <td align=center>0.795</td>
         </tr>
         <tr>
             <td align=center rowspan="2">WavTokenizer</td>
             <td align=center>unquantized_emb</td>
-            <td align=center>0.49</td>
-            <td align=center>0.05</td>
-            <td align=center>0.322</td>
-            <td align=center>0.782</td>
-            <td align=center>0.179</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
 	    <td align=center> </td>
 	    <td align=center> </td>
-	    <td align=center>0.24</td>
-	    <td align=center>0.57</td>
-	    <td align=center>0.11</td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
 	    <td align=center> </td>
 	    <td align=center> </td>
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center>0.47</td>
-            <td align=center>0.07</td>
-            <td align=center>0.37</td>
-            <td align=center>0.781</td>
-            <td align=center>0.178</td>
-	    <td align=center>0.541</td>
-	    <td align=center> </td>
+            <td align=center>0.455</td>
+            <td align=center>0.066</td>
+            <td align=center>0.329</td>
+            <td align=center>0.168</td>
+            <td align=center>0.739</td>
+	    <td align=center>0.537</td>
+	    <td align=center>0.444</td>
 	    <td align=center>0.130</td>
 	    <td align=center>0.287</td>
-	    <td align=center>0.090</td>
-            <td align=center> </td>
-	    <td align=center> </td>
+	    <td align=center>0.093</td>
+            <td align=center>0.721</td>
+	    <td align=center>0.034</td>
+	    <td align=center>0.530</td>
+	    <td align=center>0.107</td>
+	    <td align=center>0.635</td>
+            <td align=center>0.056</td>
+	    <td align=center>0.627</td>
+	    <td align=center>0.137</td>
+	    <td align=center>0.698</td>
         </tr>
     </tbody>
 </table>
 
-### Speech and Sound Probe
+#### Speech and Sound Probe
 <table border="1" >
     
    <thead>
@@ -323,17 +562,20 @@ bash env_build.sh
             <th colspan="2">libritts</th>
             <th colspan="1">Vocalsound</th>
             <th colspan="1">MELD</th>
+            <th colspan="1">ESC50</th>
         </tr>
 	<tr>
 	    <td align=center>WER</td>
             <td align=center>CER</td>
 	    <td align=center>Acc</td>
             <td align=center>Acc</td>
+            <td align=center>Acc</td>
     </thead>
     <tbody>
         <tr>
             <td align=center rowspan="2">DAC</td>
             <td align=center>unquantized_emb</td>
+            <td align=center></td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -345,6 +587,7 @@ bash env_build.sh
             <td align=center>0.369</td>
             <td align=center>0.535</td>
             <td align=center>0.483</td>
+	    <td align=center>0.325</td>
         </tr>
         <tr>
             <td align=center rowspan="2">Encodec</td>
@@ -353,13 +596,15 @@ bash env_build.sh
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
+            <td align=center></td>
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-	    <td align=center>0.57</td>
+            <td align=center>0.584</td>
+            <td align=center>0.369</td>
+	    <td align=center>0.574</td>
 	    <td align=center>0.481</td>
+	    <td align=center>0.275</td>
         </tr>
         <tr>
             <td align=center rowspan="2">SemantiCodec</td>
@@ -368,17 +613,20 @@ bash env_build.sh
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
+            <td align=center></td>
         </tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
+            <td align=center>0.445</td>
+            <td align=center>0.183</td>
             <td align=center>0.723</td>
-            <td align=center>0.485</td>
+            <td align=center>0.482</td>
+	    <td align=center>0.620</td>
         </tr>
         <tr>
             <td align=center rowspan="2">WavTokenizer</td>
             <td align=center>unquantized_emb</td>
+            <td align=center></td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -390,10 +638,12 @@ bash env_build.sh
             <td align=center>0.416</td>
             <td align=center>0.524</td>
             <td align=center>0.484</td>
+	    <td align=center>0.135</td>
         </tr>
 	<tr>
 	    <td align=center rowspan="2">Mimi</td>
             <td align=center>unquantized_emb</td>
+            <td align=center></td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -403,12 +653,14 @@ bash env_build.sh
             <td align=center>quantized_emb</td>
             <td align=center>0.499</td>
             <td align=center>0.22</td>
-            <td align=center>0.824</td>
+            <td align=center>0.833</td>
             <td align=center>0.481</td>
+	    <td align=center>0.335</td>
         </tr>
 	<tr>
 	    <td align=center rowspan="2">SpeechTokenizer</td>
             <td align=center>unquantized_emb</td>
+            <td align=center></td>
             <td align=center></td>
             <td align=center></td>
             <td align=center></td>
@@ -418,88 +670,9 @@ bash env_build.sh
             <td align=center>quantized_emb</td>
             <td align=center>0.433</td>
             <td align=center>0.164</td>
-            <td align=center>0.772</td>
+            <td align=center>0.776</td>
             <td align=center>0.498</td>
+	    <td align=center>0.670</td>
         </tr>
     </tbody>
 </table>
-
-## Mutual Information Estimation
-<table border="1" align="center">
-  <thead>
-    <tr>
-      <th rowspan="2">Task</th>
-      <th colspan="6">Codec</th>
-    </tr>
-    <tr>
-      <th>DAC</th>
-      <th>Encodec</th>
-      <th>Mimi</th>
-      <th>SemantiCodec</th>
-      <th>SpeechTokenizer</th>
-      <th>WavTokenizer</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>相同位置id数(codebook)</td>
-      <td>[247,21,2,1,0,0,0,0]</td>
-      <td>[534,426,292,272,237,194,167,176]</td>
-      <td>[85,61,47,44,33,31,43,33]</td>
-      <td>[382,118]</td>
-      <td>[412,334,273,236,198,175,131,128]</td>
-      <td>[125]</td>    
-    </tr>
-    <tr>
-      <td>最大公共子串长度(codebook)</td>
-      <td>[9,3,1,1,0,0,0,0]</td>
-      <td>[18,12,8,6,5,5,5,4]</td>
-      <td>[11,10,6,3,3,3,5,9]</td>
-      <td>[21,5]</td>
-      <td>[74,15,8,21,7,6,5,4]</td>
-      <td>[7]</td>
-    </tr>
-    <tr>
-      <td>偏移2ms相同位置id数(codebook)</td>
-      <td>[149,10,5,4,3,2,1]</td>
-      <td>[334,221,133,114,93,72,72,67]</td>
-      <td>[105,82,48,39,31,15,33,17]</td>
-      <td>[438,214]</td>
-      <td>[407,214,164,123,129,92,60,77]</td>
-      <td>[124]</td>
-    </tr>
-    <tr>
-      <td>偏移2ms最大公共子串长度(codebook)</td>
-      <td>[6,1,1,1,1,1,1,1]</td>
-      <td>[16,7,5,4,3,3,4,3]</td>
-      <td>[12,26,11,8,7,4,6,1]</td>
-      <td>[126,8]</td>
-      <td>[33,12,8,18,8,4,4,6]</td>
-      <td>[10]</td>
-    </tr>
-    <tr>
-      <td>§§</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <th></th>
-    </tr>
-    <tr>
-      <td>§§</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-  </tbody>
-</table>
-
-
-
-
-
-

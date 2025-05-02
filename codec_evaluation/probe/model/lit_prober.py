@@ -3,7 +3,7 @@ import torchmetrics
 import torch.nn.functional as F
 import pytorch_lightning as pl
 from einops import rearrange
-from codec_evaluation.init_codecs import init_codec
+from codec_evaluation.codecs.init_codecs import init_codec
 from typing import Any
 
 class Prober(pl.LightningModule):

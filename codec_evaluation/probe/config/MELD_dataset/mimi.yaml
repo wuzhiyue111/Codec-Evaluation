@@ -2,7 +2,7 @@ mode: quantized_emb
 sample_rate: 48000
 target_sec: 3
 num_outputs: 7
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/MELD_dataset/mimi/${mode} # 需要更改
+probe_ckpt_dir: ???
 seed: 666
 codec_name: mimi # 需要更改
 task: multiclass
@@ -11,11 +11,10 @@ save_result: null #/home/wsy/project/Codec-Evaluation/codec_evaluation/probe/pro
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [2]
+  devices: ???
   precision: 32
   max_epochs: 50
-  check_val_every_n_epoch: 5
-  limit_val_batches: 1.0
+  limit_val_batches: 10
   log_every_n_steps: 5
   val_check_interval: 1.0
 
@@ -25,7 +24,6 @@ data:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    is_normalize: False
     audio_dir: /mnt/sda/a6000/sdb/data1/MELD.Raw
     meta_dir: /mnt/sda/a6000/sdb/data1/MELD.Raw
   codec_name: ${codec_name}
@@ -44,7 +42,7 @@ model:
   task: ${task}
   num_outputs: ${num_outputs}
   probe_model_builder:
-    _target_: codec_evaluation.probe.model.MELD_dataset.model.MELDProber
+    _target_: codec_evaluation.probe.model.multiclass_model.MulticlassProber
     _partial_: true
     num_outputs: ${num_outputs}
     drop_out: 0.2
@@ -98,6 +96,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/MELD_dataset # 需要更改
+  save_dir: ???
   name: ${codec_name}_${mode}
   log_graph: true

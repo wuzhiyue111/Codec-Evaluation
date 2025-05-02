@@ -7,6 +7,10 @@ torch
 torchaudio
 transformers
 vocos
+einops
+numpy
+descript-audiotools>=0.7.2
+scipy==1.10.1
 torchmetrics==1.4.1
 pytorch-lightning==2.4.0
 hydra-core==1.3.2
@@ -18,4 +22,3 @@ sentencepiece==0.2.0
 pesq==0.0.4
 speechbrain==1.0.2
 pandas==2.2.3
-
