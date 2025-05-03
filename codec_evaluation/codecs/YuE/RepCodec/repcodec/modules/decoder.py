@@ -1,16 +1,7 @@
-# Copyright (c) ByteDance, Inc. and its affiliates.
-# Copyright (c) Chutong Meng
-#
-# This source code is licensed under the CC BY-NC license found in the
-# LICENSE file in the root directory of this source tree.
-# Based on AudioDec (https://github.com/facebookresearch/AudioDec)
-
 import torch
 import torch.nn as nn
-
 from codec_evaluation.codecs.YuE.RepCodec.repcodec.layers.conv_layer import Conv1d, ConvTranspose1d
 from codec_evaluation.codecs.YuE.RepCodec.repcodec.modules.residual_unit import ResidualUnit
-
 
 class DecoderBlock(nn.Module):
     """ Decoder block (no up-sampling) """
@@ -58,7 +49,6 @@ class DecoderBlock(nn.Module):
             x = self.res_units[idx](x)
         return x
 
-
 class Decoder(nn.Module):
     def __init__(
             self,
@@ -98,7 +88,6 @@ class Decoder(nn.Module):
                 )
             ]
         self.num_blocks = len(self.conv_blocks)
-
         self.conv2 = Conv1d(out_channels, output_channels, kernel_size, 1, bias=False)
 
     def forward(self, z):
