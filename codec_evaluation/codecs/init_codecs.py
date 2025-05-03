@@ -16,7 +16,7 @@ def init_codec(
         model_ckpt_dir: str,  
         device: str = 'cpu', 
         num_codebooks: int = 8,
-        freeze: bool = False,
+        freeze: bool = True,
         need_resample: bool = True,
         **kwargs,
         ):
@@ -29,7 +29,7 @@ def init_codec(
             model_ckpt_dir: The path of the model checkpoint
             device: Select the device to use
             num_codebooks: The number of codebooks
-            freeze: Whether to calculate the gradient(Default is False)
+            freeze: Whether to calculate the gradient(Default is True)
             need_resample: Boolean, whether to resample the audio after decoding(Default is True)
         return:
             model: Initialied codec

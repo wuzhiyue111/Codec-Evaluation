@@ -1,5 +1,5 @@
 from pytorch_lightning import LightningModule
-from codec_evaluation.init_codecs import init_codec
+from codec_evaluation.codecs.init_codecs import init_codec
 from codec_evaluation.utils.utils import cut_or_pad
 import torch
 from codec_evaluation.utils.logger import RankedLogger

@@ -9,7 +9,7 @@ from codec_evaluation.utils.logger import RankedLogger
 from codec_evaluation.utils.utils import find_lastest_ckpt
 from codec_evaluation.utils.print_config import print_config_tree
 import hydra
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 import pytorch_lightning as pl
 import torch
 
@@ -18,8 +18,7 @@ root_path = codec_evaluation.__path__[0]
 logger = RankedLogger(__name__, rank_zero_only=True)
 logging.basicConfig(level=logging.INFO)
 
-IS_DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
-if IS_DEBUG:
+if os.environ.get("DEBUG", "false").lower() == "true":
     logger.setLevel(logging.DEBUG)
 
 
@@ -27,8 +26,7 @@ def main(dataset_name: str,
          config_name: str,
          mode: str,
          devices: str,
-         pretrained_model_dir: str,
-         weights_save_dir: str,
+         probe_ckpt_dir: str,
          tensorboard_save_dir: str,
          output_file: str):
     with hydra.initialize_config_dir(
@@ -37,12 +35,9 @@ def main(dataset_name: str,
     ):
         config: DictConfig = hydra.compose(config_name=config_name,
                                            overrides=[f"mode={mode}",
-                                                      f"probe_ckpt_dir={weights_save_dir}",
-                                                      f"model.model_ckpt_dir={pretrained_model_dir}",
-                                                      f"tensorboard.save_dir={tensorboard_save_dir}",
-                                                      "trainer.max_epochs=1" if IS_DEBUG else ""])
+                                                      f"probe_ckpt_dir={probe_ckpt_dir}"])
 
-        print_config_tree(config, resolve=True)
+        print_config_tree(config)
 
         pl.seed_everything(config.seed)
 
@@ -61,29 +56,22 @@ def main(dataset_name: str,
 
         logger.info("Instantiating tensorboard_logger...")
         tensorboard_logger = hydra.utils.instantiate(config.tensorboard,
+                                                     save_dir=tensorboard_save_dir,
                                                      _convert_="partial")
 
         logger.info(f"Instantiating trainer <{config.trainer._target_}>.")
         trainer = hydra.utils.instantiate(
             config.trainer, 
             callbacks=callbacks, 
-            logger=tensorboard_logger,
+            logger=tensorboard_logger, 
             devices=devices,
             _convert_="partial")
 
-    Path(weights_save_dir).mkdir(exist_ok=True, parents=True)
-    logger.info(f"Training start, weights_save_dir: {weights_save_dir}")
-    trainer.fit(
-        model=model,
-        datamodule=datamodule,
-        ckpt_path=None,
-    )
-    logger.info("Training finished")
-
+    latest_ckpt_path = None
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     
-    latest_ckpt_path = find_lastest_ckpt(weights_save_dir)
+    latest_ckpt_path = find_lastest_ckpt(config.get("probe_ckpt_dir", None))
     if latest_ckpt_path is None:
         logger.error("No checkpoint found for testing!")
         return
@@ -129,7 +117,6 @@ def main(dataset_name: str,
                         value = value.item()
                     cur_line = f"{key}: {value}"
                     f.write(cur_line)
-                    f.write("\n")
                     logger.info(cur_line)
 
                 logger.info(f"Save result to {output_file}")
@@ -141,14 +128,14 @@ def cli():
     dataset_choices = sorted([d.name.replace("_dataset", "") for d in (Path(root_path) / "probe" / "dataset").iterdir() if d.is_dir()])
     
     parser = argparse.ArgumentParser()
-
+    
     # 第一步：只添加 dataset_name 参数
     parser.add_argument('--dataset_name',
                         type=str,
                         required=True,
                         help=f'Dataset name', 
                         choices=dataset_choices)
-
+    
     # 首先解析 dataset_name
     args, _ = parser.parse_known_args()
 
@@ -173,31 +160,27 @@ def cli():
     parser.add_argument('--mode',
                         type=str,
                         required=True,
-                        choices=["unquantized_emb", "quantized_emb"],
+                        choices=["encode", "decode", "reconstruct", "unquantized_emb", "quantized_emb"],
                         help=f'Mode')
     
     args, _ = parser.parse_known_args()
-    parser.add_argument("--pretrained_model_dir",
-                        type=str,
-                        required=True,
-                        help=f'Pretrained model checkpoint dir')
 
     parser.add_argument('--devices',
                         type=str,
                         default="0,",
                         help=f'Devices, e.g. "1" (gpu count), "0,1,2,3" (gpu ids)')
     
-    parser.add_argument('--weights_save_dir',
+    parser.add_argument('--probe_ckpt_dir',
                         type=str,
-                        default=f"codec_eval_probe/probe_ckpt/{dataset_name}/{args.config_name}/{args.mode}",
-                        help=f'Weights save dir')
+                        default=f"probe/probe_ckpt/{dataset_name}/{args.config_name}/{args.mode}",
+                        help=f'Probe ckpt dir')
     
     parser.add_argument("--tensorboard_save_dir",
                         type=str,
-                        default=f"codec_eval_probe/probe_tb_log/{dataset_name}/{args.config_name}/{args.mode}",
+                        default=f"probe/probe_tb_log/{dataset_name}/{args.config_name}/{args.mode}",
                         help=f'Tensorboard save dir')
     
-    default_output_file = f"codec_eval_probe/probe_result/{dataset_name}/{args.config_name}/{args.mode}_{time.strftime('%Y-%m-%d_%H-%M-%S')}.txt"
+    default_output_file = f"probe/probe_result/{dataset_name}/{args.config_name}/{args.mode}_{time.strftime('%Y-%m-%d_%H-%M-%S')}.txt"
     parser.add_argument('--output_file', 
                         type=str, 
                         default=default_output_file,
@@ -211,14 +194,13 @@ def cli():
     logger.info(f"Available configs for this dataset: {config_choices}")
     logger.info(f"Selected config: {args.config_name}")
     
-    main(dataset_name=dataset_name,
-         config_name=args.config_name,
-         mode=args.mode,
-         devices=args.devices,
-         pretrained_model_dir=args.pretrained_model_dir,
-         weights_save_dir=args.weights_save_dir,
-         tensorboard_save_dir=args.tensorboard_save_dir,
-         output_file=args.output_file)
+    main(dataset_name,
+         args.config_name,
+         args.mode,
+         args.devices,
+         args.probe_ckpt_dir,
+         args.tensorboard_save_dir,
+         args.output_file)
 
 if __name__ == "__main__":
     cli()

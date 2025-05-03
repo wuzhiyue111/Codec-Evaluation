@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from codec_evaluation.init_codecs import init_codec
+from codec_evaluation.codecs.init_codecs import init_codec
 from asr_decoder import CTCDecoder
 from conformer import Conformer
 

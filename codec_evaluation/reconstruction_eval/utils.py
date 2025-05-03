@@ -63,33 +63,58 @@ def asr(audios, processor, model, sample_rate, device):
     transcription = processor.batch_decode(predicted_ids, skip_special_tokens=True)
     return transcription
 
-def wer(gt_audio, rec_audio, gt_text, processor, model, device, sample_rate=24000):
+def wer(gt_audio = None, rec_audio = None, gt_text = None, processor = None, model = None, device = None, sample_rate = 24000):
+    gt_transcription = None
+    rec_transcription = None
+    if gt_audio is not None and gt_text is not None:
+        gt_transcription = asr(audios=gt_audio, processor=processor, model=model, sample_rate=sample_rate, device=device)
+    if rec_audio is not None and gt_text is not None:
+        rec_transcription = asr(audios=rec_audio, processor=processor, model=model, sample_rate=sample_rate, device=device)
 
-    gt_transcription = asr(audios=gt_audio, processor=processor, model=model, sample_rate=sample_rate, device=device)
-    rec_transcription = asr(audios=rec_audio, processor=processor, model=model, sample_rate=sample_rate, device=device)
+    if gt_transcription is None or rec_transcription is None:
+        try:  # if no words are predicted
+            wer_gt = None
+            wer_rec = None
+            gt_text_clean = transform_text_list_for_wer(gt_text)
 
-    try:  # if no words are predicted
-        gt_transcription_clean = transform_text_list_for_wer(gt_transcription)
-        rec_transcription_clean = transform_text_list_for_wer(rec_transcription)
-        gt_text_clean = transform_text_list_for_wer(gt_text)
-        wer_gt = jiwer.wer(reference=gt_text_clean, hypothesis=gt_transcription_clean)
-        wer_rec = jiwer.wer(reference=gt_text_clean, hypothesis=rec_transcription_clean)
-    except ValueError:
+            if gt_transcription is not None:
+                gt_transcription_clean = transform_text_list_for_wer(gt_transcription)
+                wer_gt = jiwer.wer(reference=gt_text_clean, hypothesis=gt_transcription_clean)
+
+            if rec_transcription is not None:
+                rec_transcription_clean = transform_text_list_for_wer(rec_transcription)
+                wer_rec = jiwer.wer(reference=gt_text_clean, hypothesis=rec_transcription_clean)
+        except ValueError:
+            wer_gt = None
+            wer_rec = None
+    else:
         wer_gt = None
         wer_rec = None
     return wer_gt, wer_rec
 
-def cer(gt_audio, rec_audio, gt_text, processor, model, device, sample_rate=24000):
-    gt_transcription = asr(audios=gt_audio, processor=processor, model=model, sample_rate=sample_rate, device=device)
-    rec_transcription = asr(audios=rec_audio, processor=processor, model=model, sample_rate=sample_rate, device=device)
+def cer(gt_audio = None, rec_audio = None, gt_text = None, processor = None, model = None, device = None, sample_rate = 24000):
+    gt_transcription = None
+    rec_transcription = None
+    if gt_audio is not None and gt_text is not None:
+        gt_transcription = asr(audios=gt_audio, processor=processor, model=model, sample_rate=sample_rate, device=device)
+    if rec_audio is not None and gt_text is not None:
+        rec_transcription = asr(audios=rec_audio, processor=processor, model=model, sample_rate=sample_rate, device=device)
 
-    try:  # if no words are predicted
-        gt_transcription_clean = transform_text_list_for_cer(gt_transcription)
-        rec_transcription_clean = transform_text_list_for_cer(rec_transcription)
-        gt_text_clean = transform_text_list_for_cer(gt_text)
-        cer_gt = jiwer.cer(reference=gt_text_clean, hypothesis=gt_transcription_clean)
-        cer_rec = jiwer.cer(reference=gt_text_clean, hypothesis=rec_transcription_clean)
-    except ValueError:
+    if gt_transcription is None or rec_transcription is None:
+        try:  # if no words are predicted
+            cer_gt = None
+            cer_rec = None
+            gt_text_clean = transform_text_list_for_cer(gt_text)
+            if gt_transcription is not None:
+                gt_transcription_clean = transform_text_list_for_cer(gt_transcription)
+                cer_gt = jiwer.cer(reference=gt_text_clean, hypothesis=gt_transcription_clean)
+            if rec_transcription is not None:
+                rec_transcription_clean = transform_text_list_for_cer(rec_transcription)
+                cer_rec = jiwer.cer(reference=gt_text_clean, hypothesis=rec_transcription_clean)
+        except ValueError:
+            cer_gt = None
+            cer_rec = None
+    else:
         cer_gt = None
         cer_rec = None
 

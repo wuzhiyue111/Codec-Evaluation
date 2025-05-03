@@ -1,5 +1,5 @@
 import argparse
-from codec_evaluation.init_codecs import init_codec
+from codec_evaluation.codecs.init_codecs import init_codec
 import torchaudio
 import random
 import numpy as np

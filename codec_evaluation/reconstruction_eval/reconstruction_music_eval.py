@@ -10,7 +10,7 @@ from codec_evaluation.probe.dataset.GTZAN_dataset import (
     GTZANdataset,
 )
 from tqdm import tqdm
-from codec_evaluation.init_codecs import init_codec
+from codec_evaluation.codecs.init_codecs import init_codec
 from typing import Optional
 from codec_evaluation.reconstruction_eval.utils import (
     calculate_pesq,

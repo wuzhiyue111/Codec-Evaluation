@@ -12,7 +12,7 @@ from codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc import (
 )
 from tqdm import tqdm
 from transformers import WhisperForConditionalGeneration, WhisperProcessor
-from codec_evaluation.init_codecs import init_codec
+from codec_evaluation.codecs.init_codecs import init_codec
 from typing import Optional
 from codec_evaluation.reconstruction_eval.utils import (
     calculate_pesq,
