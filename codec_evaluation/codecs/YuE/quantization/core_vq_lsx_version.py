@@ -1,72 +1,17 @@
-# Copyright (c)
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-# This implementation is inspired from
-# https://github.com/rosinality/vq-vae-2-pytorch/blob/master/vqvae.py and
-# https://github.com/clementchadebec/benchmark_VAE/blob/dfa0dcf6c79172df5d27769c09c860c42008baaa/src/pythae/models/vq_vae/vq_vae_utils.py#L81
-#
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-#
-# This implementation is inspired from
-# https://github.com/lucidrains/vector-quantize-pytorch
-# which is released under MIT License. Hereafter, the original license:
-# MIT License
-#
-# Copyright (c) 2020 Phil Wang
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
 """Core vector quantization implementation."""
 import typing as tp
-
 from einops import rearrange, repeat
 import torch
 from torch import nn
 import torch.nn.functional as F
-import torch.distributed as dist
-
-from codec_evaluation.codecs.YuE.quantization.distrib import broadcast_tensors, rank, is_distributed
-from codec_evaluation.codecs.YuE.utils.ddp_utils import SyncFunction
-
 
 def default(val: tp.Any, d: tp.Any) -> tp.Any:
     return val if val is not None else d
-
-
-def ema_inplace(moving_avg, new, decay: float):
-    moving_avg.data.mul_(decay).add_(new, alpha=(1 - decay))
-
-
-def laplace_smoothing(x, n_categories: int, epsilon: float = 1e-5):
-    return (x + epsilon) / (x.sum() + n_categories * epsilon)
-
 
 def uniform_init(*shape: int):
     t = torch.empty(shape)
     nn.init.kaiming_uniform_(t)
     return t
-
 
 def sample_vectors(samples, num: int):
     num_samples, device = samples.shape[0], samples.device
@@ -77,7 +22,6 @@ def sample_vectors(samples, num: int):
         indices = torch.randint(0, num_samples, (num,), device=device)
 
     return samples[indices]
-
 
 def kmeans(samples, num_clusters: int, num_iters: int = 10, frames_to_use: int = 10_000):
     """ Run K-means clustering on samples.
@@ -104,15 +48,12 @@ def kmeans(samples, num_clusters: int, num_iters: int = 10, frames_to_use: int =
         bins = torch.bincount(buckets, minlength=num_clusters)
         zero_mask = bins == 0
         bins_min_clamped = bins.masked_fill(zero_mask, 1)
-
         new_means = buckets.new_zeros(num_clusters, dim, dtype=dtype)
         new_means.scatter_add_(0, repeat(buckets, "n -> n d", d=dim), samples)
         new_means = new_means / bins_min_clamped[..., None]
-
         means = torch.where(zero_mask[..., None], means, new_means)
 
     return means, bins
-
 
 class EuclideanCodebook(nn.Module):
     """Codebook with Euclidean distance.
@@ -143,13 +84,10 @@ class EuclideanCodebook(nn.Module):
         self.decay = decay
         init_fn: tp.Union[tp.Callable[..., torch.Tensor], tp.Any] = uniform_init if not kmeans_init else torch.zeros
         embed = init_fn(codebook_size, dim)
-
         self.codebook_size = codebook_size
-
         self.kmeans_iters = kmeans_iters
         self.epsilon = epsilon
         self.threshold_ema_dead_code = threshold_ema_dead_code
-        
         # Flag variable to indicate whether the codebook is initialized
         self.register_buffer("inited", torch.Tensor([not kmeans_init]))
         # Runing EMA cluster size/count: N_i^t in eq. (6) in vqvae paper
@@ -168,24 +106,11 @@ class EuclideanCodebook(nn.Module):
         if self.inited:
             return
 
-        # if is_primary():
-            # print(data.shape)
-        
-        ## NOTE (snippet added by Songxiang Liu): gather data from all gpus
-        if dist.is_available() and dist.is_initialized():
-            # [B * T * world_size, D]
-            data = SyncFunction.apply(data)
-
-        # if is_primary():
-            # print(data.shape)
-
         embed, cluster_size = kmeans(data, self.codebook_size, self.kmeans_iters)
         self.embed.data.copy_(embed)
         self.embed_avg.data.copy_(embed.clone())
         self.cluster_size.data.copy_(cluster_size)
         self.inited.data.copy_(torch.Tensor([True]))
-        # Make sure all buffers across workers are in sync after initialization
-        broadcast_tensors(self.buffers())
 
     def replace_(self, samples, mask):
         modified_codebook = torch.where(
@@ -201,20 +126,8 @@ class EuclideanCodebook(nn.Module):
         if not torch.any(expired_codes):
             return
 
-        # if is_primary():
-            # print(batch_samples.shape)
-
-        ## NOTE (snippet added by Songxiang Liu): gather data from all gpus
-        if is_distributed():
-            # [B * T * world_size, D]
-            batch_samples = SyncFunction.apply(batch_samples)
-
-        # if is_primary():
-            # print(batch_samples.shape)
-
         batch_samples = rearrange(batch_samples, "... d -> (...) d")
         self.replace_(batch_samples, mask=expired_codes)
-        broadcast_tensors(self.buffers())
 
     def preprocess(self, x):
         x = rearrange(x, "... d -> (...) d")
@@ -268,15 +181,6 @@ class EuclideanCodebook(nn.Module):
             ### Update codebook by EMA
             embed_onehot_sum = embed_onehot.sum(0) # [cb-size,]
             embed_sum = x.t() @ embed_onehot # [D, cb-size]
-            # if is_primary():
-                # print("--------- 1 ---------")
-                # print(embed_onehot_sum[:10])
-            if is_distributed():
-                dist.all_reduce(embed_onehot_sum)
-                dist.all_reduce(embed_sum)
-            # if is_primary():
-                # print(embed_onehot_sum[:10])
-                # print("--------- 2 ---------")
             # Update ema cluster count N_i^t, eq. (6) in vqvae paper
             self.cluster_size.data.mul_(self.decay).add_(
                 embed_onehot_sum, alpha=1 - self.decay
@@ -329,14 +233,11 @@ class VectorQuantization(nn.Module):
     ):
         super().__init__()
         _codebook_dim: int = default(codebook_dim, dim)
-
         requires_projection = _codebook_dim != dim
         self.project_in = (nn.Linear(dim, _codebook_dim) if requires_projection else nn.Identity())
         self.project_out = (nn.Linear(_codebook_dim, dim) if requires_projection else nn.Identity())
-
         self.epsilon = epsilon
         self.commitment_weight = commitment_weight
-
         self._codebook = EuclideanCodebook(dim=_codebook_dim, codebook_size=codebook_size,
                                            kmeans_init=kmeans_init, kmeans_iters=kmeans_iters,
                                            decay=decay, epsilon=epsilon,
@@ -394,10 +295,8 @@ class ResidualVectorQuantization(nn.Module):
     def forward(self, x, n_q: tp.Optional[int] = None):
         quantized_out = 0.0
         residual = x
-
         all_losses = []
         all_indices = []
-
         n_q = n_q or len(self.layers)
 
         for layer in self.layers[:n_q]:

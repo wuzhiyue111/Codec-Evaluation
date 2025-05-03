@@ -97,7 +97,8 @@ def init_codec(
             mode=mode,
             num_codebooks=num_codebooks,
             model_ckpt_dir=model_ckpt_dir,
-            need_resample=need_resample
+            need_resample=need_resample,
+            teacher_ckpt_path=kwargs.get("teacher_ckpt_path", None)
         ).to(device)
     elif modelname == "qwen2audioencoder":
         model = Qwen2AudioEncoder(

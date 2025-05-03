@@ -1,17 +1,8 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-
 """Normalization modules."""
-
 import typing as tp
-
 import einops
 import torch
 from torch import nn
-
 
 class ConvLayerNorm(nn.LayerNorm):
     """

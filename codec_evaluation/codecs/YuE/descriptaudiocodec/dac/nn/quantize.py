@@ -1,12 +1,9 @@
 from typing import Union
-
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from torch.nn.utils import weight_norm
-
 from codec_evaluation.codecs.YuE.descriptaudiocodec.dac.nn.layers import WNConv1d
 
 
@@ -253,10 +250,3 @@ class ResidualVectorQuantize(nn.Module):
             z_q = z_q + z_q_i
 
         return z_q, torch.cat(z_p, dim=1), torch.stack(codes, dim=1)
-
-
-if __name__ == "__main__":
-    rvq = ResidualVectorQuantize(quantizer_dropout=True)
-    x = torch.randn(16, 512, 80)
-    y = rvq(x)
-    print(y["latents"].shape)
