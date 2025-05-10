@@ -680,7 +680,7 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 ### PPL Experiment
 #### LibriTTS
 
-| Codec          | val_loss | ppl↓  | cb1_vl | cb2_vl | cb3_vl | cb4_vl | cb5_vl | cb6_vl | cb7_vl | cb8_vl | cb1_ppl | cb2_ppl | cb3_ppl | cb4_ppl | chb_ppl | chb_ppl | cb7_ppl | cb8_ppl |
+| Codec          | val_loss | ppl↓  | cb1_vl | cb2_vl | cb3_vl | cb4_vl | cb5_vl | cb6_vl | cb7_vl | cb8_vl | cb1_ppl | cb2_ppl | cb3_ppl | cb4_ppl | cb5_ppl | cb6_ppl | cb7_ppl | cb8_ppl |
 |----------------|----------|-------|--------|--------|--------|--------|--------|--------|--------|--------|---------|---------|---------|---------|---------|---------|---------|---------|
 | DAC            | 6.006    | 410   | 3.743  | 5.667  | 5.995  | 6.283  | 6.405  | 6.561  | 6.673  | 6.719  | 44.58   | 297.7   | 409.1   | 541.8   | 609.8   | 710.1   | 792.7   | 829.2   |
 | Encodec        | 4.676    | 110.5 | 3.241  | 4.017  | 4.501  | 4.838  | 5.016  | 5.189  | 5.284  | 5.334  | 26.45   | 57      | 92.88   | 129.9   | 155.8   | 185.3   | 203.9   | 214.7   |
@@ -693,7 +693,7 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 
 #### Emilia_EN
 
-| Codec          | val_loss | ppl↓  | cb1_vl | cb2_vl | cb3_vl | cb4_vl | cb5_vl | cb6_vl | cb7_vl | cb8_vl | cb1_ppl | cb2_ppl | cb3_ppl | cb4_ppl | chb_ppl | chb_ppl | cb7_ppl | cb8_ppl |
+| Codec          | val_loss | ppl↓  | cb1_vl | cb2_vl | cb3_vl | cb4_vl | cb5_vl | cb6_vl | cb7_vl | cb8_vl | cb1_ppl | cb2_ppl | cb3_ppl | cb4_ppl | cb5_ppl | cb6_ppl | cb7_ppl | cb8_ppl |
 |----------------|----------|-------|--------|--------|--------|--------|--------|--------|--------|--------|---------|---------|---------|---------|---------|---------|---------|---------|
 | DAC            |  5.614   | 281.2 | 2.995  | 4.984  | 5.553  |  5.911 |  6.138 |  6.307 |  6.464 |  6.557 |  21.24  |  154.5  |  268.3  |  380.2  |  475.4  |  557.3  |  649.5  |  711.2  |
 | Encodec        |          |       |        |        |        |        |        |        |        |        |         |         |         |         |         |         |         |         |
