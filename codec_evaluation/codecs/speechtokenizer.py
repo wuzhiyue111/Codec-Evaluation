@@ -65,6 +65,7 @@ class SpeechTokenizer(Codec):
         self.hop_length = self.model.encoder.hop_length
         self.dim = self.model.encoder.dimension
         self.token_rate = self.model.sample_rate / self.model.downsample_rate
+        self.vocab_size = 1024
 
         # Delete the decoder to save memory overhead.
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
@@ -78,9 +79,8 @@ class SpeechTokenizer(Codec):
     def embs(self):
         # H means the dimension of the embedding
         # See https://github.com/ZhangXInFD/SpeechTokenizer/blob/a9f88dc72642b600654a62861e34342babae6c71/speechtokenizer/quantization/core_vq.py#L360
-        vocab_size = 1024
         device = next(iter(self.model.state_dict().values())).device
-        toks = torch.arange(vocab_size, device=device)
+        toks = torch.arange(self.vocab_size, device=device)
         toks = (
             toks[None, :, None].expand(self.num_codebooks, -1, -1).clone()
         )  # [K, C, 1]

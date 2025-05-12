@@ -82,6 +82,7 @@ class SemantiCodec(Codec):
         ).to("cpu")
         self.hop_length = int(self.orig_sample_rate * 2 / self.token_rate)
         self.dim = self.model.encoder.feature_dimension
+        self.vocab_size = 8192
 
         # Delete the decoder to save memory overhead.
         if mode == "encode" or mode == "unquantized_emb" or mode == "quantized_emb":
