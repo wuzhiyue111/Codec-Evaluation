@@ -1,14 +1,14 @@
 <div align="center">
 	<!-- Welcome words -->
 	<h1 style="color: #FFA500;font-size: 36px;">
-	<img src="https://media.tenor.com/92w2JUO-fk4AAAAi/musical-notes.gif" alt="yf" width="50" height="50" />
- 	<img src="https://media.tenor.com/Ziew1c0_mKUAAAAi/pepe-frog.gif" alt="yf" width="50" height="50" />
+<!-- 	<img src="https://media.tenor.com/92w2JUO-fk4AAAAi/musical-notes.gif" alt="yf" width="50" height="50" /> -->
+<!--  	<img src="https://media.tenor.com/Ziew1c0_mKUAAAAi/pepe-frog.gif" alt="yf" width="50" height="50" /> -->
   🎧 Welcome to AudioCodecBench 🎵
-  	<img src="https://media.tenor.com/2wq1PfInyYkAAAAj/music-note-dancing.gif" alt="yf" width="50" height="50" />
-	<img src="https://media.tenor.com/92w2JUO-fk4AAAAi/musical-notes.gif" alt="yf" width="50" height="50" />
+<!--   	<img src="https://media.tenor.com/2wq1PfInyYkAAAAj/music-note-dancing.gif" alt="yf" width="50" height="50" /> -->
+<!-- 	<img src="https://media.tenor.com/92w2JUO-fk4AAAAi/musical-notes.gif" alt="yf" width="50" height="50" /> -->
  	</h1>
 	<!-- Dynamic Emojis -->
-	<div style="display: flex; justify-content: center; align-items: center;">
+<!-- 	<div style="display: flex; justify-content: center; align-items: center;">
 	<img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Objects/Musical%20Notes.png" alt="Waving Hand" width="50" height="50" />
   	<img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Objects/Guitar.png" alt="Waving Hand" width="50" height="50" />
 	<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Waving%20Hand.png" alt="Waving Hand" width="50" height="50" />
@@ -19,7 +19,7 @@
 	<img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Violin/3D/violin_3d.png" alt="Sun" width="50" height="50" />  
 	<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Sun.png" alt="Sun" width="50" height="50" />
 	<img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Objects/Trumpet.png" alt="Sun" width="50" height="50" />
-	<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Rocket.png" alt="Rocket" width="50" height="50" />
+	<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Rocket.png" alt="Rocket" width="50" height="50" /> -->
 	</div>
 </div>
 
@@ -31,13 +31,13 @@
   arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
 </a>
 
-<div style="display: flex; justify-content: center; align-items: left;">
-<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Dove.png" alt="Dove" width="20" height="20">contribution1 <br>
-<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Peacock.png" alt="Peacock" width="20" height="20" />contribution2 <br>
-<img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Animals/Unicorn.png" alt="unicorn" width="20" height="20" />contribution3 <br>
-<img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Animals/Fox.png" alt="fox" width="20" height="20" />contribution4 <br>
-<img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Animals/Penguin.png" alt="penguin" width="20" height="20" />contribution5 <br>
-</div>
+<!-- <div style="display: flex; justify-content: center; align-items: left;">  <br> -->
+<!-- <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Dove.png" alt="Dove" width="20" height="20">contribution1 <br> -->
+<!-- <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Peacock.png" alt="Peacock" width="20" height="20" />contribution2 <br> -->
+<!-- <img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Animals/Unicorn.png" alt="unicorn" width="20" height="20" />contribution3 <br> -->
+<!-- <img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Animals/Fox.png" alt="fox" width="20" height="20" />contribution4 <br> -->
+<!-- <img src="https://github.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/blob/master/Emojis/Animals/Penguin.png" alt="penguin" width="20" height="20" />contribution5 <br> -->
+<!-- </div> <br> -->
 
 ## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Mountain/3D/mountain_3d.png" alt="mountain" width="30" height="30"> Purpose
 
@@ -703,3 +703,6 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 | SpeechTokenizer| 16.7  |  2.565  |  5.654  |  15.49  |  22.92  |  29.58  |  28.3   |  36.8   |  39.61  |
 | Mimi           | 131.2 |  16.2   |  65     |  132.8  |  175    |  212.9  |  239.8  |  263.1  |  278.4  |        
 | SemamiCodec    | 15.76 |  1      |  273.13 |    -    |    -    |    -    |    -    |    -    |    -    |
+
+
+
