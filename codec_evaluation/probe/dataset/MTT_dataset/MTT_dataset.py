@@ -5,6 +5,7 @@ import pandas as pd
 import pytorch_lightning as pl
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
+from datasets import load_from_disk
 from codec_evaluation.utils.utils import cut_or_pad
 import numpy as np
 from codec_evaluation.utils.logger import RankedLogger
@@ -14,32 +15,27 @@ logger = RankedLogger(__name__, rank_zero_only=True)
 class MTTdataset(Dataset):
     def __init__(
         self,
-        split,
         sample_rate,
         target_sec,        
         is_mono,
-        audio_dir,
-        meta_dir,
+        dataset_path,
+        base_audio_dir,  
         task
     ):
-        self.split = split
         self.sample_rate = sample_rate
         self.target_sec = target_sec
         self.target_length = self.target_sec * self.sample_rate
         self.is_mono = is_mono
-        self.audio_dir = audio_dir
-        self.meta_dir = meta_dir
+        self.dataset_path = dataset_path
+        self.base_audio_dir = base_audio_dir  
         self.task = task
-        self.metadata = pd.read_csv(filepath_or_buffer=os.path.join(meta_dir, f'{split}.tsv'), 
-                                    sep='\t',
-                                    names = ['uuid', 'audio_path'])
-        self.labels = np.load(os.path.join(meta_dir, 'binary_label.npy'))
-        self.uuids = []
-        self.audio_paths = []
-        for i in range(len(self.metadata)):
-            uuid, audio_path = self.metadata.iloc[i]
-            self.uuids.append(uuid)
-            self.audio_paths.append(audio_path)
+        
+        self.dataset = load_from_disk(dataset_path)
+        
+        self.uuids = self.dataset["uuid"]
+        self.audio_paths = self.dataset["audio_path"]
+        
+        self.labels = np.load(os.path.join(base_audio_dir, 'MTT', 'binary_label.npy'))
 
     def __len__(self):
         return len(self.uuids)
@@ -48,8 +44,10 @@ class MTTdataset(Dataset):
         try:
             return self.getitem(index)
         except Exception as e:
-            print(f"Error in __getitem__: {e}")
-            return None
+            audio_path = self.dataset[index]["audio_path"]  # 数据集中的相对路径
+            full_path = os.path.join(self.base_audio_dir, audio_path)
+            logger.error(f"Error loading {full_path}: {e}")
+            return None  
     
     def getitem(self, index):
         """
@@ -59,7 +57,7 @@ class MTTdataset(Dataset):
         """
         uuid = self.uuids[index]
         audio_path = self.audio_paths[index]
-        audio_file = os.path.join(self.audio_dir, audio_path)
+        audio_file = os.path.join(self.base_audio_dir, audio_path) 
         segments, pad_mask = self.load_audio(audio_file)
         label = torch.from_numpy(self.labels[uuid])
         segments = torch.vstack(segments)
@@ -67,8 +65,8 @@ class MTTdataset(Dataset):
         return {"audio": segments, "labels":  label, "n_segments": len(pad_mask)}
     
     def load_audio(
-            self,
-            audio_file,
+        self, 
+        audio_file
     ):
         """
         input:
@@ -76,7 +74,6 @@ class MTTdataset(Dataset):
         return:
             waveform:[n,T]
         """
-
         waveform, _ = torchaudio.load(audio_file)
 
         if waveform.shape[0] > 1 and self.is_mono:
@@ -105,15 +102,22 @@ class MTTdataset(Dataset):
 class MTTdataModule(pl.LightningDataModule):
     def __init__(self,
             dataset_args, 
+            train_audio_dir,
+            valid_audio_dir,
+            test_audio_dir,
             codec_name,
             train_batch_size=32,
             valid_batch_size=2,
             test_batch_size=16,
             train_num_workers=8,
             valid_num_workers=4,
-            test_num_workers=4):
+            test_num_workers=4
+        ):
         super().__init__()
         self.dataset_args = dataset_args
+        self.train_audio_dir = train_audio_dir
+        self.valid_audio_dir = valid_audio_dir
+        self.test_audio_dir = test_audio_dir
         self.train_batch_size = train_batch_size
         self.valid_batch_size = valid_batch_size
         self.test_batch_size = test_batch_size
@@ -124,12 +128,12 @@ class MTTdataModule(pl.LightningDataModule):
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            self.train_dataset = MTTdataset(split="train", **self.dataset_args)
-            self.valid_dataset = MTTdataset(split="valid", **self.dataset_args) 
+            self.train_dataset = MTTdataset(dataset_path=self.test_audio_dir, **self.dataset_args)
+            self.valid_dataset = MTTdataset(dataset_path=self.valid_audio_dir, **self.dataset_args) 
         if stage == "val":
-            self.valid_dataset = MTTdataset(split="valid", **self.dataset_args)
+            self.valid_dataset = MTTdataset(dataset_path=self.valid_audio_dir, **self.dataset_args)
         if stage == "test":
-            self.test_dataset = MTTdataset(split="test", **self.dataset_args)
+            self.test_dataset = MTTdataset(dataset_path=self.test_audio_dir, **self.dataset_args)
     
     def train_dataloader(self):
         return DataLoader(

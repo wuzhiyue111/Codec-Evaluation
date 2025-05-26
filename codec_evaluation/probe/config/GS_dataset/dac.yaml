@@ -24,8 +24,8 @@ data:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/GS/giantsteps_clips/wav
-    meta_path: /mnt/sda/a6000/sdb/data1/marble_dataset/data/GS/giantsteps_clips/meta.json
+    dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/GS_dataset/GS_dataset
+    base_audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data
   codec_name: ${codec_name}
   train_batch_size: 8
   valid_batch_size: 1

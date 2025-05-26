@@ -1,5 +1,6 @@
 import torch
 import torchmetrics 
+import torch.nn.functional as F
 import pytorch_lightning as pl
 from einops import rearrange
 from codec_evaluation.codecs.init_codecs import init_codec
@@ -51,9 +52,13 @@ class Prober(pl.LightningModule):
         else:
             self.dim = self.codec.dim  
             self.token_rate = self.codec.token_rate
-
-        self.target_T = int(self.token_rate * target_sec )
+        if codec_name == "hubert":
+            self.target_T = int(self.token_rate * target_sec ) - 1
+        else:
+            self.target_T = int(self.token_rate * target_sec )
+        
         self.audio_length = target_sec * self.sample_rate
+
         self.probe_model = probe_model_builder(
             codec_dim = self.dim,
             target_T = self.target_T)
@@ -74,7 +79,7 @@ class Prober(pl.LightningModule):
         length = torch.ones(waveforms.shape[0])
         all_features = self.codec(waveforms, length)
         # import pdb; pdb.set_trace()
-        if self.codec_name == 'semanticodec' or self.codec_name == 'mimi':
+        if self.codec_name == 'semanticodec' or self.codec_name == 'mimi' or self.codec_name == 'qwen2audioencoder':
             assert expect_lenth is not None, "expect_lenth is required for semanticodec"
             if all_features.dim() == 4:
                 all_features = rearrange(all_features, 'b d c t -> b (d c) t')

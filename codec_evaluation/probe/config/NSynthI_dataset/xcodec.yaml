@@ -2,7 +2,7 @@ mode: quantized_emb
 sample_rate: 16000
 target_sec: 4
 num_outputs: 11
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/NSynthI_dataset/xcodec/${mode}
+probe_ckpt_dir: ???
 seed: 666
 codec_name: xcodec
 task: multiclass
@@ -12,9 +12,9 @@ save_result: null
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [1,2,3,4,5,6]
+  devices: ???
   precision: 32
-  max_epochs: 50
+  max_epochs: 100
   limit_val_batches: 10
   log_every_n_steps: 5
   val_check_interval: 1.0
@@ -25,8 +25,10 @@ data:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    audio_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music/NSynth-dataset
-    meta_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music/NSynth-dataset
+    base_audio_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music
+  train_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/NSynthI_dataset/NSynth_dataset/NSynth_train_dataset
+  valid_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/NSynthI_dataset/NSynth_dataset/NSynth_valid_dataset
+  test_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/NSynthI_dataset/NSynth_dataset/NSynth_test_dataset
   codec_name: ${codec_name}
   train_batch_size: 256
   valid_batch_size: 32
@@ -34,6 +36,7 @@ data:
   train_num_workers: 8
   valid_num_workers: 4
   test_num_workers: 4
+
 
 model:
   _target_: codec_evaluation.probe.model.lit_prober.Prober
@@ -96,6 +99,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/nsynth_i
+  save_dir: ???
   name: ${codec_name}_${mode}
   log_graph: true

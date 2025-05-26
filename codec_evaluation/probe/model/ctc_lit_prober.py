@@ -1,6 +1,5 @@
 from pytorch_lightning import LightningModule
 from codec_evaluation.codecs.init_codecs import init_codec
-from codec_evaluation.utils.utils import cut_or_pad
 import torch
 from codec_evaluation.utils.logger import RankedLogger
 import os
@@ -26,6 +25,7 @@ class CtcLitProber(LightningModule):
         lr_scheduler_builder: Any = None,
         accumulate_grad_batches: int = 1,
         feature_extractor_config_path: Any = None,
+        teacher_ckpt_path: Any = None,
     ):
         super(CtcLitProber, self).__init__()
         self.codec_model = init_codec(
@@ -35,7 +35,8 @@ class CtcLitProber(LightningModule):
             model_ckpt_dir=model_ckpt_dir,
             device="cpu",
             freeze=True,
-            feature_extractor_config_path=feature_extractor_config_path
+            feature_extractor_config_path=feature_extractor_config_path,
+            teacher_ckpt_path = teacher_ckpt_path
         )
         if codec_name == 'semanticodec':
             self.dim = self.codec_model.dim * 2
@@ -124,7 +125,7 @@ class CtcLitProber(LightningModule):
         self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True, logger=True, sync_dist=True, batch_size=batch_size)
     
     def on_train_batch_end(self, outputs: torch.Tensor | os.Mapping[str, Any] | None, batch: Any, batch_idx: int) -> None:
-        if (batch_idx+1) % (self.accumulate_grad_batches * 10) == 0: # per 10 steps empty cache
+        if (batch_idx+1) % (self.accumulate_grad_batches * 10) == 0: # per 5 steps empty cache
             torch.cuda.empty_cache()
         return super().on_train_batch_end(outputs, batch, batch_idx)
 

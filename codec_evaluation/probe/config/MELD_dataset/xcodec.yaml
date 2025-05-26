@@ -2,7 +2,7 @@ mode: quantized_emb
 sample_rate: 48000
 target_sec: 3
 num_outputs: 7
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/MELD_dataset/xcodec/${mode} # 需要更改
+probe_ckpt_dir: ???
 seed: 666
 codec_name: xcodec # 需要更改
 task: multiclass
@@ -11,7 +11,7 @@ save_result: null #/home/wsy/project/Codec-Evaluation/codec_evaluation/probe/pro
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [7,8]
+  devices: ???
   precision: 32
   max_epochs: 100
   limit_val_batches: 10
@@ -24,8 +24,10 @@ data:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    audio_dir: /mnt/sda/a6000/sdb/data1/MELD.Raw
-    meta_dir: /mnt/sda/a6000/sdb/data1/MELD.Raw
+    base_audio_dir: /mnt/sda/a6000/sdb/data1
+  train_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MELD_dataset/MELD_dataset/MELD_train_dataset
+  valid_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MELD_dataset/MELD_dataset/MELD_valid_dataset
+  test_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MELD_dataset/MELD_dataset/MELD_test_dataset
   codec_name: ${codec_name}
   train_batch_size: 64
   valid_batch_size: 2
@@ -96,6 +98,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/MELD_dataset # 需要更改
+  save_dir: ???
   name: ${codec_name}_${mode}
   log_graph: true

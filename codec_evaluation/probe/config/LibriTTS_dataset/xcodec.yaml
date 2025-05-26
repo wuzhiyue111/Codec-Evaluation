@@ -1,25 +1,26 @@
 mode: quantized_emb
 sample_rate: 24000
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/LibriTTS_dataset/xcodec/${mode}
+probe_ckpt_dir: ???
 seed: 666
 codec_name: xcodec
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [0]
+  devices: ???
   precision: 32
-  max_epochs: 20
-  limit_val_batches: 10
+  max_epochs: 10
+  limit_val_batches: 5
   log_every_n_steps: 20
   val_check_interval: 1.0
 
 data:
   _target_: codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc.LibriTTS_ctc_module
-  train_audio_dir: /mnt/sda/a6000/sdb/data1/speech/24kHz/LibriTTS/train-clean-100
-  valid_audio_dir: /mnt/sda/a6000/sdb/data1/speech/24kHz/LibriTTS/dev-other
-  test_audio_dir: /mnt/sda/a6000/sdb/data1/speech/24kHz/LibriTTS/test-clean
-  train_batch_size: 10
+  train_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/LibriTTS_dataset/train_clean
+  valid_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/LibriTTS_dataset/dev-other
+  test_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/LibriTTS_dataset/test-clean
+  base_audio_dir: /mnt/sda/a6000/sdb/data1/speech/24kHz
+  train_batch_size: 8
   valid_batch_size: 4
   train_num_workers: 4
   valid_num_workers: 1
@@ -40,6 +41,7 @@ model:
     dropout: 0.1
     conformer_head: 8
   model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/xcodec
+  teacher_ckpt_path: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/xcodec/hubert_base_general_audio
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -83,6 +85,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/LibriTTS
-  name: ${codec_name}_${mode}
+  save_dir: ???
+  name: ${codec_name}_800hours_${trainer.max_epochs}epoch
   log_graph: true

@@ -1,5 +1,4 @@
 import torch
-import json
 import os
 import torchaudio
 from torch.utils.data import Dataset
@@ -8,6 +7,7 @@ import pytorch_lightning as pl
 from codec_evaluation.utils.logger import RankedLogger
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import random_split
+from datasets import load_from_disk
 
 logger = RankedLogger(__name__, rank_zero_only=True)
 
@@ -15,24 +15,23 @@ logger = RankedLogger(__name__, rank_zero_only=True)
 class MuChin_ctc_dataset(Dataset):
     def __init__(
         self,
-        audio_dir,
-        meta_path
+        dataset_path: str,       
+        base_audio_dir: str     
     ):
-        self.audio_dir = audio_dir
-
-        with open(meta_path) as f:
-            self.metadata = json.load(f)
-        
-        logger.info(f"Found {len(self.metadata)} metadata in {meta_path}")
+        super().__init__()
+        self.dataset = load_from_disk(dataset_path)  # 加载.arrow数据集
+        self.base_audio_dir = base_audio_dir                # 音频根目录
+        self.dataset_path = dataset_path
+        print(f"Found {len(self.dataset)} audio files in {base_audio_dir}")
 
     def __len__(self):
-        return len(self.metadata)
+        return len(self.dataset)
 
     def __getitem__(self, index):
         try:
             return self.get_item(index)
         except Exception as e:
-            print(f"Error loading audio file {self.metadata[index]['filename']}: {e}")
+            print(f"Error loading audio file {self.dataset[index]['audio_path']}: {e}")
             return None
 
     def get_item(self, index):
@@ -41,14 +40,19 @@ class MuChin_ctc_dataset(Dataset):
             segments: [1, wavform_length]
             labels: [1, 20]
         """
-        audio_file = self.metadata[index]['filename']
-        audio_path = os.path.join(self.audio_dir, audio_file)
-        waveform, _ = torchaudio.load(audio_path)  # [1, T]
+        sample = self.dataset[index]
+        audio_path = os.path.join(self.base_audio_dir, sample["audio_path"])  # 拼接完整路径
+            
+        # 加载音频
+        waveform, _ = torchaudio.load(audio_path)
         if waveform.shape[0] > 1:
-            waveform = waveform.mean(dim=0, keepdim=True)
+            waveform = waveform.mean(dim=0, keepdim=True)  # 转单声道
 
-        text = self.metadata[index]['lyric']
-        return {"audio": waveform, "text": text, "audio_length": waveform.shape[1]}
+        return {
+            "audio": waveform, 
+            "text": sample['lyric'], 
+            "audio_length": waveform.shape[1]
+        }
 
     def collate_fn(self, batch):
         """
@@ -73,9 +77,10 @@ class MuChin_ctc_dataset(Dataset):
 class MuChin_ctc_module(pl.LightningDataModule):
     def __init__(
         self,
-        audio_dir,
-        meta_path,
-        train_split: 0.9,
+        dataset_path,
+        base_audio_dir,
+        train_split: 0.85,
+        valid_split:0.05,
         test_split: 0.1,
         train_batch_size=16,
         valid_batch_size=16,
@@ -89,14 +94,17 @@ class MuChin_ctc_module(pl.LightningDataModule):
         self.valid_batch_size = valid_batch_size
         self.test_batch_size = test_batch_size
         self.train_split = train_split
+        self.valid_split = valid_split
         self.test_split = test_split
         self.train_num_workers = train_num_workers
         self.valid_num_workers = valid_num_workers
         self.test_num_workers = test_num_workers
-        self.dataset = MuChin_ctc_dataset(audio_dir, meta_path)
+        self.dataset = MuChin_ctc_dataset(dataset_path, base_audio_dir)
         self.train_size = int(len(self.dataset) * self.train_split)
-        self.test_size = len(self.dataset) - self.train_size
-        self.train_dataset, self.test_dataset = random_split(self.dataset, [self.train_size, self.test_size])
+        self.vaild_size = int(len(self.dataset) * self.valid_split)
+        self.test_size = len(self.dataset) - self.vaild_size - self.train_size
+        self.train_dataset, self.valid_dataset, self.test_dataset = random_split(self.dataset, 
+                                                                  [self.train_size, self.vaild_size, self.test_size])
 
     def train_dataloader(self):
         return DataLoader(
@@ -109,7 +117,7 @@ class MuChin_ctc_module(pl.LightningDataModule):
 
     def val_dataloader(self):
         return DataLoader(
-            dataset=self.test_dataset,
+            dataset=self.valid_dataset,
             batch_size=self.valid_batch_size,
             shuffle=False,
             collate_fn=self.dataset.collate_fn,

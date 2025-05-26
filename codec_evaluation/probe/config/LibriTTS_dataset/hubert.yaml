@@ -1,22 +1,22 @@
 mode: unquantized_emb
 sample_rate: 24000
-probe_ckpt_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_ckpt/LibriTTS_dataset/hubert/${mode}
+probe_ckpt_dir: ???
 seed: 666
 codec_name: hubert
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [2]
+  devices: ???
   precision: 32
-  max_epochs: 20
+  max_epochs: 5
   limit_val_batches: 10
   log_every_n_steps: 20
   val_check_interval: 1.0
 
 data:
   _target_: codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc.LibriTTS_ctc_module
-  train_audio_dir: /mnt/sda/a6000/sdb/data1/speech/24kHz/LibriTTS/train-clean-100
+  train_audio_dir: /mnt/sda/a6000/sdb/data1/speech/24kHz/LibriTTS/train/train-clean-100
   valid_audio_dir: /mnt/sda/a6000/sdb/data1/speech/24kHz/LibriTTS/dev-other
   test_audio_dir: /mnt/sda/a6000/sdb/data1/speech/24kHz/LibriTTS/test-clean
   train_batch_size: 10
@@ -84,6 +84,6 @@ callbacks:
 
 tensorboard:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/tb_log/LibriTTS
+  save_dir: ???
   name: ${codec_name}_${mode}
   log_graph: true

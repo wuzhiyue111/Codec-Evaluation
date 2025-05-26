@@ -15,8 +15,7 @@ trainer:
   devices: ???
   precision: 32
   max_epochs: 100
-  check_val_every_n_epoch: 10
-  limit_val_batches: 1.0
+  limit_val_batches: 10
   log_every_n_steps: 5
   val_check_interval: 1.0
 
@@ -26,8 +25,10 @@ data:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    audio_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music/NSynth-dataset
-    meta_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music/NSynth-dataset
+    base_audio_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music
+  train_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/NSynthI_dataset/NSynth_dataset/NSynth_train_dataset
+  valid_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/NSynthI_dataset/NSynth_dataset/NSynth_valid_dataset
+  test_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/NSynthI_dataset/NSynth_dataset/NSynth_test_dataset
   codec_name: ${codec_name}
   train_batch_size: 256
   valid_batch_size: 32
