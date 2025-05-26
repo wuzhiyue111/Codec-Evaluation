@@ -35,12 +35,17 @@ def main(dataset_name: str,
         config_dir=f"{root_path}/probe/config/{dataset_name}",
         version_base=None
     ):
+        overrides = [
+                    f"mode={mode}",
+                    f"probe_ckpt_dir={weights_save_dir}",
+                    f"model.model_ckpt_dir={pretrained_model_dir}",
+                    f"tensorboard.save_dir={tensorboard_save_dir}",
+                ]
+        if IS_DEBUG:
+            overrides.append("trainer.max_epochs=1")
+
         config: DictConfig = hydra.compose(config_name=config_name,
-                                           overrides=[f"mode={mode}",
-                                                      f"probe_ckpt_dir={weights_save_dir}",
-                                                      f"model.model_ckpt_dir={pretrained_model_dir}",
-                                                      f"tensorboard.save_dir={tensorboard_save_dir}",
-                                                      "trainer.max_epochs=1" if IS_DEBUG else ""])
+                                           overrides=overrides)
 
         print_config_tree(config, resolve=True)
 
@@ -222,3 +227,4 @@ def cli():
 
 if __name__ == "__main__":
     cli()
+# python /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/train/train_inference.py --dataset_name LibriTTS --config_name speechtokenizer_train --mode quantized_emb --pretrained_model_dir "/mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/speechtokenizer" --devices "1," 
