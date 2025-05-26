@@ -1,10 +1,5 @@
 import argparse
-import argparse
 import logging
-import os
-from pathlib import Path
-import time
-
 import os
 from pathlib import Path
 import time
@@ -13,11 +8,6 @@ import codec_evaluation
 from codec_evaluation.utils.logger import RankedLogger
 from codec_evaluation.utils.utils import find_lastest_ckpt
 from codec_evaluation.utils.print_config import print_config_tree
-import hydra
-from omegaconf import DictConfig, OmegaConf
-import pytorch_lightning as pl
-import torch
-
 import hydra
 from omegaconf import DictConfig, OmegaConf
 import pytorch_lightning as pl
@@ -41,37 +31,22 @@ def main(dataset_name: str,
          weights_save_dir: str,
          tensorboard_save_dir: str,
          output_file: str):
-IS_DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
-if IS_DEBUG:
-    logger.setLevel(logging.DEBUG)
-
-
-def main(dataset_name: str,
-         config_name: str,
-         mode: str,
-         devices: str,
-         pretrained_model_dir: str,
-         weights_save_dir: str,
-         tensorboard_save_dir: str,
-         output_file: str):
     with hydra.initialize_config_dir(
         config_dir=f"{root_path}/probe/config/{dataset_name}",
         version_base=None
     ):
-        config: DictConfig = hydra.compose(config_name=config_name,
-                                           overrides=[f"mode={mode}",
-                                                      f"probe_ckpt_dir={weights_save_dir}",
-                                                      f"model.model_ckpt_dir={pretrained_model_dir}",
-                                                      f"tensorboard.save_dir={tensorboard_save_dir}",
-                                                      "trainer.max_epochs=1" if IS_DEBUG else ""])
-        config: DictConfig = hydra.compose(config_name=config_name,
-                                           overrides=[f"mode={mode}",
-                                                      f"probe_ckpt_dir={weights_save_dir}",
-                                                      f"model.model_ckpt_dir={pretrained_model_dir}",
-                                                      f"tensorboard.save_dir={tensorboard_save_dir}",
-                                                      "trainer.max_epochs=1" if IS_DEBUG else ""])
+        overrides = [
+                    f"mode={mode}",
+                    f"probe_ckpt_dir={weights_save_dir}",
+                    f"model.model_ckpt_dir={pretrained_model_dir}",
+                    f"tensorboard.save_dir={tensorboard_save_dir}",
+                ]
+        if IS_DEBUG:
+            overrides.append("trainer.max_epochs=1")
 
-        print_config_tree(config, resolve=True)
+        config: DictConfig = hydra.compose(config_name=config_name,
+                                           overrides=overrides)
+
         print_config_tree(config, resolve=True)
 
         pl.seed_everything(config.seed)
@@ -87,12 +62,9 @@ def main(dataset_name: str,
             for _, cb_conf in config["callbacks"].items():
                 if "_target_" in cb_conf:
                     logger.info(f"Instantiating callback <{cb_conf._target_}>.")
-                    logger.info(f"Instantiating callback <{cb_conf._target_}>.")
                     callbacks.append(hydra.utils.instantiate(cb_conf, _convert_="partial"))
 
         logger.info("Instantiating tensorboard_logger...")
-        tensorboard_logger = hydra.utils.instantiate(config.tensorboard,
-                                                     _convert_="partial")
         tensorboard_logger = hydra.utils.instantiate(config.tensorboard,
                                                      _convert_="partial")
 
@@ -102,38 +74,23 @@ def main(dataset_name: str,
             callbacks=callbacks, 
             logger=tensorboard_logger,
             devices=devices,
-            logger=tensorboard_logger,
-            devices=devices,
             _convert_="partial")
 
-    Path(weights_save_dir).mkdir(exist_ok=True, parents=True)
-    logger.info(f"Training start, weights_save_dir: {weights_save_dir}")
     Path(weights_save_dir).mkdir(exist_ok=True, parents=True)
     logger.info(f"Training start, weights_save_dir: {weights_save_dir}")
     trainer.fit(
         model=model,
         datamodule=datamodule,
         ckpt_path=None,
-        ckpt_path=None,
     )
-    logger.info("Training finished")
     logger.info("Training finished")
 
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     
     latest_ckpt_path = find_lastest_ckpt(weights_save_dir)
-    latest_ckpt_path = find_lastest_ckpt(weights_save_dir)
     if latest_ckpt_path is None:
         logger.error("No checkpoint found for testing!")
-        return
-
-    checkpoint = None
-    try:
-        with open(latest_ckpt_path, "rb") as f:
-            checkpoint = torch.load(f, map_location="cpu")
-    except Exception as e:
-        logger.error(f"Failed to load checkpoint: {e}")
         return
 
     checkpoint = None
@@ -148,12 +105,10 @@ def main(dataset_name: str,
     model.eval()
     
     logger.info(f"Testing start, using ckpt: {latest_ckpt_path}")
-    logger.info(f"Testing start, using ckpt: {latest_ckpt_path}")
     trainer.test(
         model=model,
         datamodule=datamodule,
     )
-    logger.info("Testing finished")
     logger.info("Testing finished")
 
     # 保存结果
@@ -190,48 +145,15 @@ def cli():
     # 获取所有数据集目录
     dataset_choices = sorted([d.name.replace("_dataset", "") for d in (Path(root_path) / "probe" / "dataset").iterdir() if d.is_dir()])
     
-    if output_file is not None:
-        try:
-            Path(output_file).parent.mkdir(parents=True, exist_ok=True)
-            with open(f"{output_file}", "w") as f:
-                result = None
-                if "result" in model.test_step_outputs:
-                    result = model.test_step_outputs["result"]
-                else:
-                    result = model.test_step_outputs
-                if result is None:
-                    raise ValueError("No result found in model.test_step_outputs")
-
-                # 将结果转换为 key: value 格式
-                if not isinstance(result, dict):
-                    raise ValueError("Result is not a dictionary")
-
-                for key, value in result.items():
-                    # 如果是tensor，取出item
-                    if isinstance(value, torch.Tensor):
-                        value = value.item()
-                    cur_line = f"{key}: {value}"
-                    f.write(cur_line)
-                    f.write("\n")
-                    logger.info(cur_line)
-
-                logger.info(f"Save result to {output_file}")
-        except Exception as e:
-            logger.error(f"Failed to save result to {output_file}: {e}")
-
-def cli():
-    # 获取所有数据集目录
-    dataset_choices = sorted([d.name.replace("_dataset", "") for d in (Path(root_path) / "probe" / "dataset").iterdir() if d.is_dir()])
-    
     parser = argparse.ArgumentParser()
-    
+
     # 第一步：只添加 dataset_name 参数
     parser.add_argument('--dataset_name',
                         type=str,
                         required=True,
                         help=f'Dataset name', 
                         choices=dataset_choices)
-    
+
     # 首先解析 dataset_name
     args, _ = parser.parse_known_args()
 
@@ -305,21 +227,4 @@ def cli():
 
 if __name__ == "__main__":
     cli()
-
-    
-    # 打印选择的配置信息
-    logger.info(f"Selected dataset: {args.dataset_name}")
-    logger.info(f"Available configs for this dataset: {config_choices}")
-    logger.info(f"Selected config: {args.config_name}")
-    
-    main(dataset_name=dataset_name,
-         config_name=args.config_name,
-         mode=args.mode,
-         devices=args.devices,
-         pretrained_model_dir=args.pretrained_model_dir,
-         weights_save_dir=args.weights_save_dir,
-         tensorboard_save_dir=args.tensorboard_save_dir,
-         output_file=args.output_file)
-
-if __name__ == "__main__":
-    cli()
+# python /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/train/train_inference.py --dataset_name LibriTTS --config_name speechtokenizer_train --mode quantized_emb --pretrained_model_dir "/mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/speechtokenizer" --devices "1," 
