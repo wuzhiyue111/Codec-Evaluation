@@ -1,8 +1,8 @@
 mode: quantized_emb
 sample_rate: 24000
-probe_root_dir: /sdb/tmp/user/wzy/codec_eval/ctc_libritts
+probe_ckpt_dir: ???
 seed: 666
-codec_name: wavtokenizer
+codec_name: speechtokenizer
 
 trainer:
   _target_: pytorch_lightning.Trainer
@@ -16,10 +16,10 @@ trainer:
 
 data:
   _target_: codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc.LibriTTS_ctc_module
-  train_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/train-clean-100
-  valid_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/dev-other
-  test_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/test-clean
-  train_batch_size: 10
+  train_audio_dir: /mnt/sda/a6000/sdb/data1/speech/24kHz/LibriTTS/train
+  valid_audio_dir: /mnt/sda/a6000/sdb/data1/speech/24kHz/LibriTTS/dev-other
+  test_audio_dir: /mnt/sda/a6000/sdb/data1/speech/24kHz/LibriTTS/test-clean
+  train_batch_size: 8
   valid_batch_size: 4
   train_num_workers: 4
   valid_num_workers: 1
@@ -35,11 +35,11 @@ model:
     _partial_: true
     tokenizer:
       _target_: transformers.Speech2TextProcessor.from_pretrained
-      pretrained_model_name_or_path: /sdb/model_weight/s2t-small-librispeech-asr
+      pretrained_model_name_or_path: /mnt/sda/a6000/sdb/data1/model_weight/s2t-small-librispeech-asr
     vocab_size: 10000
     dropout: 0.1
     conformer_head: 8
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/wavTokenizer/models--novateur--WavTokenizer-large-unify-40token
+  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/speechtokenizer
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -74,7 +74,7 @@ callbacks:
   model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
     monitor: val_loss
-    dirpath: ${probe_root_dir}/ckpt
+    dirpath: ${probe_ckpt_dir}
     every_n_epochs: 1
     mode: min
     save_top_k: 1

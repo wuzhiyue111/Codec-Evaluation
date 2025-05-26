@@ -13,27 +13,29 @@ trainer:
   accelerator: gpu
   devices: ???
   precision: 32
-  max_epochs: 100
+  max_epochs: 50
   limit_val_batches: 10
   log_every_n_steps: 5
   val_check_interval: 1.0
 
 data:
-  _target_: codec_evaluation.probe.dataset.MTT_dataset.MTTdataModule
+  _target_: codec_evaluation.probe.dataset.MTT_dataset.MTT_dataset.MTTdataModule
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
     task: ${task}
-    audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/MTT/mp3
-    meta_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/MTT
+    base_audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data
+  train_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MTT_dataset/MTT_dataset/MTT_train_dataset
+  valid_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MTT_dataset/MTT_dataset/MTT_valid_dataset
+  test_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MTT_dataset/MTT_dataset/MTT_test_dataset
   codec_name: ${codec_name}
   train_batch_size: 64
-  valid_batch_size: 2
-  test_batch_size: 32
-  train_num_workers: 8
+  valid_batch_size: 8
+  test_batch_size: 64
+  train_num_workers: 16
   valid_num_workers: 4
-  test_num_workers: 4
+  test_num_workers: 16
 
 model:
   _target_: codec_evaluation.probe.model.lit_prober.Prober

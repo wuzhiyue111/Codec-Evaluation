@@ -26,8 +26,8 @@ data:
     target_sec: ${target_sec}
     task: ${task}
     is_mono: True
-    audio_dir: /sdb/data1/sound/ESC-50-master/audio
-    meta_path: /sdb/data1/sound/ESC-50-master/meta/esc50.csv
+    dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/ESC50_dataset/ESC50_dataset
+    base_audio_dir: /mnt/sda/a6000/sdb/data1/
   codec_name: ${codec_name}
   train_split: 0.9
   test_split: 0.1

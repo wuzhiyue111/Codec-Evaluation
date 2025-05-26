@@ -1,24 +1,24 @@
 mode: quantized_emb
 sample_rate: 24000
-probe_root_dir: /sdb/tmp/user/wzy/codec_eval/ctc_libritts
+probe_ckpt_dir: ???
 seed: 666
-codec_name: dac
+codec_name: yue
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
   devices: ???
   precision: 32
-  max_epochs: 20
+  max_epochs: 5
   limit_val_batches: 10
   log_every_n_steps: 20
   val_check_interval: 1.0
 
 data:
   _target_: codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc.LibriTTS_ctc_module
-  train_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/train-clean-100
-  valid_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/dev-other
-  test_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/test-clean
+  train_audio_dir: /mnt/sda/a6000/sdb/data1/speech/24kHz/LibriTTS/train/train-clean-100
+  valid_audio_dir: /mnt/sda/a6000/sdb/data1/speech/24kHz/LibriTTS/dev-other
+  test_audio_dir: /mnt/sda/a6000/sdb/data1/speech/24kHz/LibriTTS/test-clean
   train_batch_size: 10
   valid_batch_size: 4
   train_num_workers: 4
@@ -35,11 +35,11 @@ model:
     _partial_: true
     tokenizer:
       _target_: transformers.Speech2TextProcessor.from_pretrained
-      pretrained_model_name_or_path: /sdb/model_weight/s2t-small-librispeech-asr
+      pretrained_model_name_or_path: /mnt/sda/a6000/sdb/data1/model_weight/s2t-small-librispeech-asr
     vocab_size: 10000
     dropout: 0.1
     conformer_head: 8
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt
+  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/yue
 
   optimizer_builder:
       _target_: torch.optim.AdamW
