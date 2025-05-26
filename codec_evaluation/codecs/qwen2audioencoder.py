@@ -134,7 +134,7 @@ class Qwen2AudioEncoder(Codec):
         fixed_length = self.audio_max_length_sec * self.orig_sample_rate
         batch_size = raw_audio_mask.shape[0]
         if raw_audio_mask.shape[1] < fixed_length:
-            pad_mask = torch.zeros((batch_size, fixed_length),
+            pad_mask = torch.zeros(batch_size, fixed_length),
         if raw_audio_mask.shape[1] < fixed_length:
             pad_mask = torch.zeros((batch_size, fixed_length),
                                    dtype=raw_audio_mask.dtype,

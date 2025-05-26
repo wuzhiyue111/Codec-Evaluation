@@ -19,6 +19,7 @@ def init_codec(
         freeze: bool = True,
         need_resample: bool = True,
         feature_extractor_config_path = None,
+        teacher_ckpt_path = None,
         **kwargs,
         ):
     """
@@ -99,7 +100,7 @@ def init_codec(
             num_codebooks=num_codebooks,
             model_ckpt_dir=model_ckpt_dir,
             need_resample=need_resample,
-            teacher_ckpt_path=kwargs.get("teacher_ckpt_path", None)
+            teacher_ckpt_path=teacher_ckpt_path
         ).to(device)
     elif modelname == "qwen2audioencoder":
         model = Qwen2AudioEncoder(
@@ -107,7 +108,7 @@ def init_codec(
             mode=mode,
             need_resample=need_resample,
             model_ckpt_dir=model_ckpt_dir,
-            feature_extractor_config_path=kwargs.get("feature_extractor_config_path", None)
+            feature_extractor_config_path=feature_extractor_config_path
         ).to(device)
     elif modelname == "hubert":
         model = Hubert(
