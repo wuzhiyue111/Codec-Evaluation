@@ -2,36 +2,42 @@ import os
 import torch
 import torchaudio
 from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
-import pytorch_lightning as pl
-from torch.utils.data import random_split
 from datasets import load_from_disk
 from codec_evaluation.utils.utils import cut_or_pad
 from codec_evaluation.utils.logger import RankedLogger
+import pytorch_lightning as pl
+from torch.utils.data import DataLoader
 
 logger = RankedLogger(__name__, rank_zero_only=True)
 
-class ESC50dataset(Dataset):
+class VocalSetTechdataset(Dataset):
     def __init__(
         self,
+        split,
+        dataset_path,  
+        base_audio_dir,  
         sample_rate,
         target_sec,
         is_mono,
-        dataset_path,  # 修改：接收保存的数据集路径
-        task,
-        base_audio_dir,  # 可选：如果使用相对路径，指定音频文件的基础目录
     ):
+        """
+        split: train/valid/test
+        dataset_path: .arrow数据集路径
+        base_audio_dir: 音频文件的绝对根目录（用于拼接相对路径）
+        """
+        self.split = split
         self.sample_rate = sample_rate
         self.target_sec = target_sec
-        self.target_length = self.target_sec * self.sample_rate
+        self.target_length = self.target_sec * sample_rate if target_sec is not None else None
         self.is_mono = is_mono
-        self.task = task
-        self.base_audio_dir = base_audio_dir
+        self.base_audio_dir = base_audio_dir  # 绝对路径，如"/data/GTZAN/audio"
         
-        # 加载保存的数据集
-        self.dataset = load_from_disk(dataset_path)
-        # 假设数据集中包含 'wav' 列（音频路径）和 'id' 列（标签）
-    
+        # 加载.arrow数据集并根据split过滤（假设数据集中有"split"字段）
+        self.dataset = load_from_disk(dataset_path).filter(lambda x: x["split"] == split)
+        
+        self.class2id = {'belt': 0, 'breathy': 1, 'inhaled': 2, 'lip_trill': 3, 'spoken': 4, 'straight': 5, 'trill': 6, 'trillo': 7, 'vibrato': 8, 'vocal_fry': 9}
+        self.id2class = {v: k for k, v in self.class2id.items()}
+        
     def __len__(self):
         return len(self.dataset)
 
@@ -39,28 +45,31 @@ class ESC50dataset(Dataset):
         try:
             return self.get_item(index)
         except Exception as e:
-            audio_path = self.dataset[index]["audio_path"]
+            audio_path = self.dataset[index]["audio_path"]  # 数据集中的相对路径
             full_path = os.path.join(self.base_audio_dir, audio_path)
-            logger.error(f"Error loading audio file {full_path}: {e}")
-            return None
-        
+            logger.error(f"Error loading {full_path}: {e}")
+            return None  
+
     def get_item(self, index):
         """
-        return:
-            segments: [n_segments, segments_length]
-            labels: [n_segments, 2]
+            return:
+                segments: [n_segments, segments_length]
+                labels: [n_segments, 10]
         """
-        # 从数据集中获取音频路径和标签
         example = self.dataset[index]
         audio_path = example["audio_path"]  # 数据集中的相对路径（如"blues/blues.00037.wav"）
-        audio_file = os.path.join(self.base_audio_dir, audio_path)
+        audio_file = os.path.join(self.base_audio_dir, audio_path)  # 拼接绝对路径
         
         segments, pad_mask = self.load_audio(audio_file)
-        label = torch.tensor([example['target']], dtype=torch.int64)
 
+        label = self.class2id[audio_path.split('/')[2]]
+        labels = []
+        labels.extend([label] * len(pad_mask))
+        
+        labels = torch.tensor(labels)
         segments = torch.vstack(segments)
-
-        return {"audio": segments, "labels": label, "n_segments": len(pad_mask)}
+        
+        return {"audio": segments, "labels": labels, "n_segments": len(pad_mask)}
 
     def load_audio(
         self, 
@@ -68,25 +77,25 @@ class ESC50dataset(Dataset):
     ):
         """
         input:
-            audio_file: one of audio_file path
+            audio_file:one of audio_file path
         return:
-            waveform: [T]
+            waveform:[T]
         """
         waveform, _ = torchaudio.load(audio_file)
-
         if waveform.shape[0] > 1 and self.is_mono:
             waveform = torch.mean(waveform, dim=0, keepdim=True)
+        
+        waveform, pad_mask = cut_or_pad(waveform, self.target_length)
 
-        waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length, task=self.task)
-
-        return waveform, pad_mask 
+        return waveform, pad_mask
 
     def collate_fn(self, batch):
         audio_list = [item["audio"] for item in batch if item is not None]
         label_list = [item["labels"] for item in batch if item is not None]
         n_segments_list = [item["n_segments"] for item in batch if item is not None]
+
         audio_tensor = torch.vstack(audio_list)
-        label_tensor = torch.vstack(label_list).squeeze(1)
+        label_tensor = torch.cat(label_list, dim=0)
 
         return {
             "audio": audio_tensor,
@@ -94,24 +103,20 @@ class ESC50dataset(Dataset):
             "n_segments_list": n_segments_list
         }
 
-class ESC50dataModule(pl.LightningDataModule):
+class VocalSetdataModule(pl.LightningDataModule):
     def __init__(
         self,
-        dataset_args, 
+        dataset_args,  
         codec_name,
-        train_split: 0.9,
-        test_split: 0.1,
-        train_batch_size=16,
-        valid_batch_size=16,
+        train_batch_size=32,
+        valid_batch_size=2,
         test_batch_size=16,
-        train_num_workers=4,
+        train_num_workers=8,
         valid_num_workers=4,
-        test_num_workers=4
+        test_num_workers=4,
     ):
         super().__init__()
         self.dataset_args = dataset_args
-        self.train_split = train_split
-        self.test_split = test_split
         self.train_batch_size = train_batch_size
         self.valid_batch_size = valid_batch_size
         self.test_batch_size = test_batch_size
@@ -119,34 +124,39 @@ class ESC50dataModule(pl.LightningDataModule):
         self.train_num_workers = train_num_workers
         self.valid_num_workers = valid_num_workers
         self.test_num_workers = test_num_workers
-        self.dataset = ESC50dataset(**self.dataset_args)
-        self.train_size = int(len(self.dataset) * self.train_split)
-        self.test_size = len(self.dataset) - self.train_size
-        self.train_dataset, self.test_dataset = random_split(self.dataset, [self.train_size, self.test_size])
+
+    def setup(self, stage=None):
+        if stage == "fit" or stage is None:
+            self.train_dataset = VocalSetTechdataset(split="train", **self.dataset_args)  
+            self.valid_dataset = VocalSetTechdataset(split="valid", **self.dataset_args) 
+        if stage == "val":
+            self.valid_dataset = VocalSetTechdataset(split="valid", **self.dataset_args) 
+        if stage == "test":
+            self.test_dataset = VocalSetTechdataset(split="test", **self.dataset_args)
 
     def train_dataloader(self):
         return DataLoader(
             dataset=self.train_dataset,
             batch_size=self.train_batch_size,
             shuffle=True,
-            collate_fn=self.dataset.collate_fn,
+            collate_fn=self.train_dataset.collate_fn,
             num_workers=self.train_num_workers,
         )
 
     def val_dataloader(self):
         return DataLoader(
-            dataset=self.test_dataset,
+            dataset=self.valid_dataset,
             batch_size=self.valid_batch_size,
             shuffle=False,
-            collate_fn=self.dataset.collate_fn,
+            collate_fn=self.valid_dataset.collate_fn,
             num_workers=self.valid_num_workers,
         )
-    
+
     def test_dataloader(self):
         return DataLoader(
             dataset=self.test_dataset,
             batch_size=self.test_batch_size,
             shuffle=False,
-            collate_fn=self.dataset.collate_fn,
+            collate_fn=self.test_dataset.collate_fn,
             num_workers=self.test_num_workers,
         )
