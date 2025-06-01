@@ -393,7 +393,7 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
             <td align=center>quantized_emb</td>
             <td align=center>0.470</td>
             <td align=center>0.064</td>
-            <td align=center>0.353</td>
+            <td align=center>0.575</td>
             <td align=center>0.203</td>
 	    <td align=center>0.785</td>
 	    <td align=center>0.602</td>
@@ -438,7 +438,7 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
             <td align=center>quantized_emb</td>
             <td align=center>0.467</td>
             <td align=center>0.066</td>
-            <td align=center>0.339</td>
+            <td align=center>0.570</td>
             <td align=center>0.184</td>
             <td align=center>0.759</td>
 	    <td align=center>0.537</td>
@@ -483,7 +483,7 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
             <td align=center>quantized_emb</td>
             <td align=center>0.507</td>
             <td align=center>0.316</td>
-            <td align=center>0.502</td>
+            <td align=center>0.703</td>
             <td align=center>0.318</td>
             <td align=center>0.877</td>
 	    <td align=center>0.658</td>
@@ -528,7 +528,7 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
             <td align=center>quantized_emb</td>
             <td align=center>0.455</td>
             <td align=center>0.066</td>
-            <td align=center>0.329</td>
+            <td align=center>0.423</td>
             <td align=center>0.168</td>
             <td align=center>0.739</td>
 	    <td align=center>0.537</td>
@@ -545,6 +545,254 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 	    <td align=center>0.627</td>
 	    <td align=center>0.137</td>
 	    <td align=center>0.698</td>
+        </tr>
+	<tr>
+            <td align=center rowspan="2">Xcodec</td>
+            <td align=center>unquantized_emb</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+            <td align=center>quantized_emb</td>
+            <td align=center>0.553</td>
+            <td align=center>0.143</td>
+            <td align=center>0.664</td>
+            <td align=center>0.323</td>
+	    <td align=center>0.873</td>
+	    <td align=center>0.640</td>
+	    <td align=center>0.905</td>
+	    <td align=center>0.537</td>
+	    <td align=center>0.570</td>
+            <td align=center>0.455</td>
+	    <td align=center>0.481</td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+            <td align=center rowspan="2">YuE</td>
+            <td align=center>unquantized_emb</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+            <td align=center>quantized_emb</td>
+            <td align=center>0.573</td>
+            <td align=center>0.156</td>
+            <td align=center>0.669</td>
+            <td align=center>0.315</td>
+	    <td align=center>0.870</td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center>0.523</td>
+	    <td align=center>0.594</td>
+            <td align=center>0.454</td>
+	    <td align=center>0.463</td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+    </tbody>
+</table>
+
+#### Marble Probe codebook0(Music)
+<table border="1" >
+    
+   <thead>
+        <tr>
+            <th rowspan="3">Codec</th>
+            <th colspan="19">Dataset</th>
+        </tr>
+        <tr>
+            <th colspan="2">emomusic</th>
+            <th colspan="1">GTZAN</th>
+            <th colspan="2">MTT</th>
+            <th colspan="1">NSynthI</th>
+            <th colspan="1">NSynthP</th>
+	    <th colspan="1">VocalSetSinger</th>
+	    <th colspan="1">VocalSetTech</th>
+	    <th colspan="1">GS</th>
+	    <th colspan="1">Muchin</th>
+	    <th colspan="2">MTGGenre</th>
+	    <th colspan="2">MTGInstrument</th>
+	    <th colspan="2">MTGMoodtheme</th>
+	    <th colspan="2">MTGTop50</th>
+        </tr>
+	<tr>
+	    <td align=center>A</td>
+            <td align=center>V</td>
+	    <td align=center>Acc</td>
+            <td align=center>AP</td>
+	    <td align=center>AUCROC</td>
+	    <td align=center>Acc</td>
+	    <td align=center>Acc</td>
+	    <td align=center>Acc</td>
+	    <td align=center>Acc</td>
+	    <td align=center>Acc</td>	   
+	    <td align=center>CER</td>
+	    <td align=center>AP</td>
+	    <td align=center>AUCROC</td>
+	    <td align=center>AP</td>
+	    <td align=center>AUCROC</td>
+	    <td align=center>AP</td>
+	    <td align=center>AUCROC</td>
+	    <td align=center>AP</td>
+	    <td align=center>AUCROC</td>
+    </thead>
+    <tbody>
+        <tr>
+            <td align=center>DAC</td>
+            <td align=center>0.354</td>
+            <td align=center>0</td>
+            <td align=center>0.600</td>
+            <td align=center>0.175</td>
+	    <td align=center>0.741</td>
+	    <td align=center>0.563</td>
+	    <td align=center> </td>
+	    <td align=center>0.226</td>
+	    <td align=center>0.315</td>
+            <td align=center>0.088</td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+        <tr>
+            <td align=center>Encodec</td>
+            <td align=center>0.465</td>
+            <td align=center>0.092</td>
+            <td align=center>0.543</td>
+            <td align=center>0.119</td>
+	    <td align=center>0.681</td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center>0.086</td>
+	    <td align=center>0.268</td>
+            <td align=center>0.088</td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+        <tr>
+            <td align=center>SemantiCodec</td>
+            <td align=center>0.456</td>
+            <td align=center>0.267</td>
+            <td align=center>0.629</td>
+            <td align=center>0.227</td>
+	    <td align=center>0.825</td>
+	    <td align=center>0.625</td>
+	    <td align=center> </td>
+	    <td align=center>0.134</td>
+	    <td align=center>0.477</td>
+            <td align=center>0.229</td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+        <tr>
+            <td align=center>Xcodec</td>
+            <td align=center>0.375</td>
+            <td align=center>0.461</td>
+            <td align=center>0.628</td>
+            <td align=center>0.261</td>
+	    <td align=center>0.838</td>
+	    <td align=center>0.611</td>
+	    <td align=center> </td>
+	    <td align=center>0.320</td>
+	    <td align=center>0.488</td>
+            <td align=center>0.389</td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+        </tr>
+	<tr>
+            <td align=center>YuE</td>
+            <td align=center>0.439</td>
+            <td align=center>0.085</td>
+            <td align=center>0.616</td>
+            <td align=center>0.249</td>
+	    <td align=center>0.831</td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center>0.335</td>
+	    <td align=center>0.475</td>
+            <td align=center>0.346</td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center></td>
+	    <td align=center></td>
+            <td align=center></td>
+	    <td align=center> </td>
+	    <td align=center> </td>
+	    <td align=center> </td>
         </tr>
     </tbody>
 </table>
@@ -673,6 +921,131 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
             <td align=center>0.776</td>
             <td align=center>0.498</td>
 	    <td align=center>0.670</td>
+        </tr>
+	<tr>
+	    <td align=center rowspan="2">Xcodec</td>
+            <td align=center>unquantized_emb</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+	</tr>
+	<tr>
+            <td align=center>quantized_emb</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center>0.731</td>
+            <td align=center>0.491</td>
+            <td align=center>0.640</td>
+        </tr>
+	<tr>
+	    <td align=center rowspan="2">YuE</td>
+            <td align=center>unquantized_emb</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+	</tr>
+	<tr>
+            <td align=center>quantized_emb</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center>0.640</td>
+        </tr>
+	<tr>
+	    <td align=center rowspan="2">hubert</td>
+            <td align=center>unquantized_emb</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center>0.495</td>
+            <td align=center>0.525</td>
+	</tr>
+        </tr>
+    </tbody>
+</table>
+
+#### Speech and Sound Probe codebook0
+<table border="1" >
+    
+   <thead>
+        <tr>
+            <th rowspan="3">Codec</th>
+            <th colspan="12">Dataset</th>
+        </tr>
+        <tr>
+            <th colspan="2">libritts</th>
+            <th colspan="1">Vocalsound</th>
+            <th colspan="1">MELD</th>
+            <th colspan="1">ESC50</th>
+        </tr>
+	<tr>
+	    <td align=center>WER</td>
+            <td align=center>CER</td>
+	    <td align=center>Acc</td>
+            <td align=center>Acc</td>
+            <td align=center>Acc</td>
+    </thead>
+    <tbody>
+        <tr>
+            <td align=center>DAC</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center>0.511</td>
+            <td align=center>0.481</td>
+            <td align=center>0.285</td>
+        </tr>
+        <tr>
+            <td align=center>Encodec</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center>0.479</td>
+            <td align=center>0.481</td>
+            <td align=center>0.230</td>
+        </tr>
+        <tr>
+            <td align=center>SemantiCodec</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center>0.646</td>
+            <td align=center></td>
+            <td align=center>0.465</td>
+        </tr>
+	<tr>
+	    <td align=center>Mimi</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center>0.794</td>
+            <td align=center>0.481</td>
+            <td align=center>0.265</td>
+        </tr>
+	<tr>
+	    <td align=center>SpeechTokenizer</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center>0.698</td>
+            <td align=center>0.489</td>
+            <td align=center>0.420</td>
+        </tr>
+	<tr>
+	    <td align=center>Xcodec</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center>0.656</td>
+            <td align=center>0.487</td>
+            <td align=center>0.525</td>
+        </tr>
+	<tr>
+	    <td align=center>YuE</td>
+            <td align=center></td>
+            <td align=center></td>
+            <td align=center>0.684</td>
+            <td align=center>0.481</td>
+            <td align=center>0.515</td>
         </tr>
     </tbody>
 </table>
