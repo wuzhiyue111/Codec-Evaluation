@@ -44,6 +44,7 @@ model:
     dropout: 0.1
     conformer_head: 8
   model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/xcodec
+  teacher_ckpt_path: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/xcodec/hubert_base_general_audio
 
   optimizer_builder:
       _target_: torch.optim.AdamW

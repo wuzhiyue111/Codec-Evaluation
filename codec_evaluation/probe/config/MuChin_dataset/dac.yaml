@@ -3,30 +3,12 @@ sample_rate: 44100
 probe_ckpt_dir: ???
 seed: 666
 codec_name: dac
-========
-target_sec: 5
-num_outputs: 50
-probe_ckpt_dir: ???
-seed: 666
-codec_name: dac # 需要更改
-task: multiclass
-save_result: null
->>>>>>>> e45d815 (ppl_train, need inference):codec_evaluation/probe/config/ESC50_dataset/dac.yaml
-=======
-probe_ckpt_dir: ???
-seed: 666
-codec_name: dac
->>>>>>> e45d815 (ppl_train, need inference)
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
   devices: ???
   precision: 32
-<<<<<<< HEAD
-<<<<<<<< HEAD:codec_evaluation/probe/config/Muchin_dataset/dac_train.yaml
-=======
->>>>>>> e45d815 (ppl_train, need inference)
   max_epochs: 20
   limit_val_batches: 10
   log_every_n_steps: 20
@@ -45,72 +27,23 @@ data:
   train_num_workers: 16
   valid_num_workers: 2
   test_num_workers: 16
-<<<<<<< HEAD
-========
-  max_epochs: 100
-  limit_val_batches: 10
-  log_every_n_steps: 5
-  val_check_interval: 1.0
-
-data:
-  _target_: codec_evaluation.probe.dataset.ESC50_dataset.ESC50_dataset.ESC50dataModule
-  dataset_args:
-    sample_rate: ${sample_rate}
-    target_sec: ${target_sec}
-    task: ${task}
-    is_mono: True
-    audio_dir: /sdb/data1/sound/ESC-50-master/audio
-    meta_path: /sdb/data1/sound/ESC-50-master/meta/esc50.csv
-  codec_name: ${codec_name}
-  train_split: 0.9
-  test_split: 0.1
-  train_batch_size: 128
-  valid_batch_size: 2
-  test_batch_size: 128
-  train_num_workers: 32
-  valid_num_workers: 4
-  test_num_workers: 32
->>>>>>>> e45d815 (ppl_train, need inference):codec_evaluation/probe/config/ESC50_dataset/dac.yaml
-=======
->>>>>>> e45d815 (ppl_train, need inference)
 
 model:
   _target_: codec_evaluation.probe.model.ctc_lit_prober.CtcLitProber
   codec_name: ${codec_name}
   sample_rate: ${sample_rate}
   mode: ${mode}
-<<<<<<< HEAD
-<<<<<<<< HEAD:codec_evaluation/probe/config/Muchin_dataset/dac_train.yaml
-=======
->>>>>>> e45d815 (ppl_train, need inference)
   language: ch
   probe_model_builder:
     _target_: codec_evaluation.probe.model.ctc_model.Ctc_Probe
     _partial_: true
     tokenizer:
       _target_: transformers.Wav2Vec2Processor.from_pretrained
-      pretrained_model_name_or_path: /sdb/model_weight/wav2vec2-large-chinese-zh-cn
+      pretrained_model_name_or_path: /mnt/sda/a6000/sdb/data1/model_weight/wav2vec2-large-chinese-zh-cn
     vocab_size: 5171
     dropout: 0.1
     conformer_head: 8
-<<<<<<< HEAD
-========
-  task: ${task}
-  num_outputs: ${num_outputs}
-  probe_model_builder:
-    _target_: codec_evaluation.probe.model.multiclass_model.MulticlassProber
-    _partial_: true
-    num_outputs: ${num_outputs}
-    drop_out: 0.1
-    channel_reduction: 16
-    padding: 1
-    kernel_size: 3
-    stride: 1
-  target_sec: ${target_sec}
->>>>>>>> e45d815 (ppl_train, need inference):codec_evaluation/probe/config/ESC50_dataset/dac.yaml
-=======
->>>>>>> e45d815 (ppl_train, need inference)
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt
+  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -149,12 +82,7 @@ callbacks:
     every_n_epochs: 1
     mode: min
     save_top_k: 1
-<<<<<<< HEAD
-    save_last: False
-    filename: ${codec_name}_${mode}_{epoch}-{valid_loss:.4f}
-=======
     filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
->>>>>>> e45d815 (ppl_train, need inference)
     verbose: True
 
 tensorboard:
