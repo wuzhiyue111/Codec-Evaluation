@@ -13,7 +13,7 @@ trainer:
   accelerator: gpu
   devices: ???
   precision: 32
-  max_epochs: 50
+  max_epochs: 100
   limit_val_batches: 10
   log_every_n_steps: 5
   val_check_interval: 1.0
@@ -24,12 +24,14 @@ data:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    audio_dir: /mnt/sda/a6000/sdb/data1/MELD.Raw
-    meta_dir: /mnt/sda/a6000/sdb/data1/MELD.Raw
+    base_audio_dir: /mnt/sda/a6000/sdb/data1
+  train_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MELD_dataset/MELD_dataset/MELD_train_dataset
+  valid_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MELD_dataset/MELD_dataset/MELD_valid_dataset
+  test_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MELD_dataset/MELD_dataset/MELD_test_dataset
   codec_name: ${codec_name}
-  train_batch_size: 256
+  train_batch_size: 64
   valid_batch_size: 2
-  test_batch_size: 128
+  test_batch_size: 32
   train_num_workers: 8
   valid_num_workers: 4
   test_num_workers: 4

@@ -1,0 +1,92 @@
+mode: quantized_emb
+sample_rate: 44100
+probe_ckpt_dir: ???
+seed: 666
+codec_name: encodec
+
+trainer:
+  _target_: pytorch_lightning.Trainer
+  accelerator: gpu
+  devices: ???
+  precision: 32
+  max_epochs: 20
+  limit_val_batches: 10
+  log_every_n_steps: 20
+  val_check_interval: 1.0
+
+data:
+  _target_: codec_evaluation.probe.dataset.MuChin_dataset.MuChin_ctc.MuChin_ctc_module
+  dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MuChin_dataset/MuChin_dataset
+  base_audio_dir: /mnt/sda/a6000/sdb/data1/benchmark
+  train_split: 0.85
+  valid_split: 0.05
+  test_split: 0.1
+  train_batch_size: 8
+  valid_batch_size: 2
+  test_batch_size: 8
+  train_num_workers: 16
+  valid_num_workers: 2
+  test_num_workers: 16
+
+model:
+  _target_: codec_evaluation.probe.model.ctc_lit_prober.CtcLitProber
+  codec_name: ${codec_name}
+  sample_rate: ${sample_rate}
+  mode: ${mode}
+  language: ch
+  probe_model_builder:
+    _target_: codec_evaluation.probe.model.ctc_model.Ctc_Probe
+    _partial_: true
+    tokenizer:
+      _target_: transformers.Wav2Vec2Processor.from_pretrained
+      pretrained_model_name_or_path: /mnt/sda/a6000/sdb/data1/model_weight/wav2vec2-large-chinese-zh-cn
+    vocab_size: 5171
+    dropout: 0.1
+    conformer_head: 8
+  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz
+
+  optimizer_builder:
+      _target_: torch.optim.AdamW
+      _partial_: true
+      lr: 1e-4
+      betas: [0.8, 0.99]
+      eps: 1e-5
+      weight_decay: 0.08
+
+  lr_scheduler_builder:
+    _target_: torch.optim.lr_scheduler.LambdaLR
+    _partial_: true
+    lr_lambda:
+      _target_: codec_evaluation.utils.schedule.get_cosine_schedule_with_warmup_lr_lambda
+      _partial_: true
+      num_warmup_steps: 200
+      num_training_steps: 4000
+      final_lr_ratio: 0.2
+
+callbacks:
+  learning_rate_monitor:
+    _target_: pytorch_lightning.callbacks.LearningRateMonitor
+    logging_interval: step
+
+  rich_progress_bar:
+    _target_: pytorch_lightning.callbacks.RichProgressBar
+
+  model_summary:
+    _target_: pytorch_lightning.callbacks.ModelSummary
+    max_depth: 1
+
+  model_checkpoint:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    monitor: val_loss
+    dirpath: ${probe_ckpt_dir}
+    every_n_epochs: 1
+    mode: min
+    save_top_k: 1
+    filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
+    verbose: True
+
+tensorboard:
+  _target_: pytorch_lightning.loggers.TensorBoardLogger
+  save_dir: ???
+  name: ${codec_name}_${mode}
+  log_graph: true

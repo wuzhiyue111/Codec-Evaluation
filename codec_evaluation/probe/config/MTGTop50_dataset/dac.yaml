@@ -13,22 +13,21 @@ trainer:
   accelerator: gpu
   devices: ???
   precision: 32
-  max_epochs: 50
+  max_epochs: 100
   limit_val_batches: 10
   log_every_n_steps: 5
   val_check_interval: 1.0
 
 
-
 data:
-  _target_: codec_evaluation.probe.dataset.MTG_dataset.MTGTop50_dataset.MTGTop50Module
+  _target_: codec_evaluation.probe.dataset.MTGTop50_dataset.MTGTop50_dataset.MTGTop50Module
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
     task: ${task}
-    audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/MTG/audio-low
-    meta_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/MTG/mtg-jamendo-dataset
+    base_audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data
+    dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MTGTop50_dataset/MTGTop50_dataset
   codec_name: ${codec_name}
   train_batch_size: 8
   valid_batch_size: 2

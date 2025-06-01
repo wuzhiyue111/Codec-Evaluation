@@ -21,14 +21,14 @@ trainer:
 
 
 data:
-  _target_: codec_evaluation.probe.dataset.MTG_dataset.MTGMoodtheme_dataset.MTGMoodthemeModule
+  _target_: codec_evaluation.probe.dataset.MTGMoodtheme_dataset.MTGMoodtheme_dataset.MTGMoodthemeModule
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
     task: ${task}
-    audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/MTG/audio-low
-    meta_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/MTG/mtg-jamendo-dataset
+    base_audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data
+    dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MTGMoodtheme_dataset/MTGMoodtheme_dataset
   codec_name: ${codec_name}
   train_batch_size: 8
   valid_batch_size: 2

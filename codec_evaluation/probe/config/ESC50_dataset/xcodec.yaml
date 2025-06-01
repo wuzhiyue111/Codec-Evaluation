@@ -1,0 +1,104 @@
+mode: quantized_emb
+sample_rate: 44100
+target_sec: 5
+num_outputs: 50
+probe_ckpt_dir: ???
+seed: 666
+codec_name: xcodec # 需要更改
+task: multiclass
+save_result: null
+
+trainer:
+  _target_: pytorch_lightning.Trainer
+  accelerator: gpu
+  devices: ???
+  precision: 32
+  max_epochs: 100
+  limit_val_batches: 10
+  log_every_n_steps: 5
+  val_check_interval: 1.0
+
+data:
+  _target_: codec_evaluation.probe.dataset.ESC50_dataset.ESC50_dataset.ESC50dataModule
+  dataset_args:
+    sample_rate: ${sample_rate}
+    target_sec: ${target_sec}
+    task: ${task}
+    is_mono: True
+    dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/ESC50_dataset/ESC50_dataset
+    base_audio_dir: /mnt/sda/a6000/sdb/data1/
+  codec_name: ${codec_name}
+  train_split: 0.9
+  test_split: 0.1
+  train_batch_size: 128
+  valid_batch_size: 2
+  test_batch_size: 128
+  train_num_workers: 32
+  valid_num_workers: 4
+  test_num_workers: 32
+
+model:
+  _target_: codec_evaluation.probe.model.lit_prober.Prober
+  codec_name: ${codec_name}
+  sample_rate: ${sample_rate}
+  mode: ${mode}
+  task: ${task}
+  num_outputs: ${num_outputs}
+  probe_model_builder:
+    _target_: codec_evaluation.probe.model.multiclass_model.MulticlassProber
+    _partial_: true
+    num_outputs: ${num_outputs}
+    drop_out: 0.1
+    channel_reduction: 16
+    padding: 1
+    kernel_size: 3
+    stride: 1
+  target_sec: ${target_sec}
+  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/xcodec
+
+  optimizer_builder:
+      _target_: torch.optim.AdamW
+      _partial_: true
+      lr: 1e-4
+      betas: [0.8, 0.99]
+      eps: 1e-5
+      weight_decay: 0.08
+    
+  lr_scheduler_builder:
+    _target_: torch.optim.lr_scheduler.LambdaLR
+    _partial_: true
+    lr_lambda:
+      _target_: codec_evaluation.utils.schedule.get_cosine_schedule_with_warmup_lr_lambda
+      _partial_: true
+      num_warmup_steps: 10
+      num_training_steps: 10000
+      final_lr_ratio: 0.2
+
+callbacks:
+  learning_rate_monitor:
+    _target_: pytorch_lightning.callbacks.LearningRateMonitor
+    logging_interval: step
+
+  rich_progress_bar:
+    _target_: pytorch_lightning.callbacks.RichProgressBar
+
+  model_summary:
+    _target_: pytorch_lightning.callbacks.ModelSummary
+    max_depth: 1
+
+  model_checkpoint:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    monitor: valid_loss
+    dirpath: ${probe_ckpt_dir}
+    every_n_epochs: 1
+    mode: min
+    save_top_k: 1
+    save_last: False
+    filename: ${codec_name}_${mode}_{epoch}-{valid_loss:.4f}
+    verbose: True
+
+tensorboard:
+  _target_: pytorch_lightning.loggers.TensorBoardLogger
+  save_dir: ???
+  name: ${codec_name}_${mode}
+  log_graph: true

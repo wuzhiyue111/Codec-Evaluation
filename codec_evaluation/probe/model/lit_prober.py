@@ -28,6 +28,8 @@ class Prober(pl.LightningModule):
                  probe_model_builder: Any = None,
                  optimizer_builder: Any = None,
                  lr_scheduler_builder: Any = None,
+                 feature_extractor_config_path:Any = None,
+                 teacher_ckpt_path: Any = None,
                  ):
         """
             codec_name must in ['dac', 'encodec', 'mimi', 'semanticodec', 'speechtokenizer', wavtokenizer]
@@ -40,19 +42,25 @@ class Prober(pl.LightningModule):
                                 mode = mode, 
                                 model_ckpt_dir = model_ckpt_dir,
                                 device = 'cpu', 
-                                freeze = True)
+                                freeze = True,
+                                feature_extractor_config_path = feature_extractor_config_path,
+                                teacher_ckpt_path = teacher_ckpt_path)
         self.codec_name = codec_name
         self.sample_rate = sample_rate
         
         if codec_name == "semanticodec":
-            self.dim = self.codec.dim * 2
+            self.dim = self.codec.dim #* 2
             self.token_rate = self.codec.token_rate /2
         else:
             self.dim = self.codec.dim  
             self.token_rate = self.codec.token_rate
-
-        self.target_T = int(self.token_rate * target_sec )
+        if codec_name == "hubert":
+            self.target_T = int(self.token_rate * target_sec ) - 1
+        else:
+            self.target_T = int(self.token_rate * target_sec )
+        
         self.audio_length = target_sec * self.sample_rate
+
         self.probe_model = probe_model_builder(
             codec_dim = self.dim,
             target_T = self.target_T)
@@ -73,7 +81,7 @@ class Prober(pl.LightningModule):
         length = torch.ones(waveforms.shape[0])
         all_features = self.codec(waveforms, length)
         # import pdb; pdb.set_trace()
-        if self.codec_name == 'semanticodec' or self.codec_name == 'mimi':
+        if self.codec_name == 'semanticodec' or self.codec_name == 'mimi' or self.codec_name == 'qwen2audioencoder':
             assert expect_lenth is not None, "expect_lenth is required for semanticodec"
             if all_features.dim() == 4:
                 all_features = rearrange(all_features, 'b d c t -> b (d c) t')
@@ -118,6 +126,9 @@ class Prober(pl.LightningModule):
             feature_length = self.audio_length * (self.codec.orig_sample_rate / self.sample_rate) // self.codec.hop_length
         else:
             feature_length = self.audio_length // self.codec.hop_length
+            
+        if self.codec_name == "hubert":
+            feature_length = feature_length - 1
 
         audio_features = self.extract_feature(audio, int(feature_length))
 

@@ -14,19 +14,18 @@ trainer:
   devices: ???
   precision: 32
   max_epochs: 100
-  check_val_every_n_epoch: 5
-  limit_val_batches: 1.0
+  limit_val_batches: 10
   log_every_n_steps: 5
   val_check_interval: 1.0
 
 data:
-  _target_: codec_evaluation.probe.dataset.EMO_dataset.EMOdataModule
+  _target_: codec_evaluation.probe.dataset.EMO_dataset.EMO_dataset.EMOdataModule
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/EMO/emomusic/wav
-    meta_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data/EMO/emomusic
+    dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/EMO_dataset/EMO_dataset
+    base_audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data
   codec_name: ${codec_name}
   train_batch_size: 32
   valid_batch_size: 1
