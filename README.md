@@ -960,7 +960,7 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 	    <td align=center>hubert</td>
             <td align=center>unquantized_emb</td>
             <td align=center>0.400</td>
-            <td align=center0.097</td>
+            <td align=center>0.097</td>
             <td align=center>0.877</td>
             <td align=center>0.495</td>
             <td align=center>0.525</td>
