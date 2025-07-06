@@ -582,14 +582,14 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 	    <td align=center>0.570</td>
             <td align=center>0.455</td>
 	    <td align=center>0.481</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
+	    <td align=center>0.034</td>
+	    <td align=center>0.519</td>
+	    <td align=center>0.164</td>
+	    <td align=center>0.707</td>
+            <td align=center>0.101</td>
+	    <td align=center>0.710</td>
+	    <td align=center>0.216</td>
+	    <td align=center>0.777</td>
         </tr>
 	<tr>
             <td align=center rowspan="2">YuE</td>
@@ -621,20 +621,20 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
             <td align=center>0.669</td>
             <td align=center>0.315</td>
 	    <td align=center>0.870</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
+	    <td align=center>0.622</td>
+	    <td align=center>0.896</td>
 	    <td align=center>0.523</td>
 	    <td align=center>0.594</td>
             <td align=center>0.454</td>
 	    <td align=center>0.463</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
+	    <td align=center>0.034</td>
+	    <td align=center>0.517</td>
+	    <td align=center>0.133</td>
+	    <td align=center>0.700</td>
+            <td align=center>0.102</td>
+	    <td align=center>0.711</td>
+	    <td align=center>0.191</td>
+	    <td align=center>0.758</td>
         </tr>
     </tbody>
 </table>
@@ -933,8 +933,8 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 	</tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
+            <td align=center>0.504</td>
+            <td align=center>0.216</td>
             <td align=center>0.731</td>
             <td align=center>0.491</td>
             <td align=center>0.640</td>
@@ -950,20 +950,29 @@ Regarding the testing and analysis of ID sensitivity, it is carried out from the
 	</tr>
 	<tr>
             <td align=center>quantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
+            <td align=center>0.533</td>
+            <td align=center>0.295</td>
+            <td align=center>0.782</td>
+            <td align=center>0.515</td>
             <td align=center>0.640</td>
         </tr>
 	<tr>
-	    <td align=center rowspan="2">hubert</td>
+	    <td align=center>hubert</td>
+            <td align=center>unquantized_emb</td>
+            <td align=center>0.400</td>
+            <td align=center0.097</td>
+            <td align=center>0.877</td>
+            <td align=center>0.495</td>
+            <td align=center>0.525</td>
+	</tr>
+	<tr>
+	    <td align=center>qwen2audioencoder</td>
             <td align=center>unquantized_emb</td>
             <td align=center></td>
             <td align=center></td>
-            <td align=center></td>
-            <td align=center>0.495</td>
-            <td align=center>0.525</td>
+            <td align=center>0.953</td>
+            <td align=center>0.590</td>
+            <td align=center>0.975</td>
 	</tr>
         </tr>
     </tbody>
