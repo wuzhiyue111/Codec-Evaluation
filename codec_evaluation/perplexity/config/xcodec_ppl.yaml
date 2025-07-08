@@ -1,11 +1,11 @@
-project: ppl_mimi
+project: ppl_xcodec
 seed: 114514
-ppl_ckpt_dir: /sdb/tmp/user/ch/codec_eval/ppl/ckpt/mimi
+ppl_ckpt_dir: /sdb/tmp/user/ch/codec_eval/ppl/ckpt/xcodec
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [0] 
+  devices: [0]  
   precision: bf16-mixed
   max_steps: 1000000
   val_check_interval: 400
@@ -28,10 +28,10 @@ model:
   ppl_model_config:
     _target_: transformers.models.qwen2.configuration_qwen2.Qwen2Config.from_pretrained
     pretrained_model_name_or_path: /home/ch/Codec-Evaluation/codec_evaluation/perplexity/config/ppl_model_config.json
-
+    
   sample_rate: 24000
-  codec_name: mimi
-  codec_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/mimi/models--kyutai--mimi
+  codec_name: xcodec
+  codec_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/xcodec
   lm_head_nums: 8
 
   optimizer_builder:
@@ -68,13 +68,14 @@ callbacks:
     mode: min
     every_n_train_steps: 2000
     dirpath: ${ppl_ckpt_dir}
-    filename: '{epoch:03d}-{step:06d}_music_mimi_ppl'
+    filename: '{epoch:03d}-{step:06d}_music_xcodec_ppl'
     save_top_k: 1
     verbose: true
-    save_last: true  # add this parameter to save the last epoch
+    save_last: true
 
 tensorboard_logger:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
   save_dir: /sdb/tmp/user/ch/codec_eval/ppl/tb_log
   name: ${project}
   log_graph: true
+  

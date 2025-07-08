@@ -71,7 +71,7 @@ def wer(gt_audio = None, rec_audio = None, gt_text = None, processor = None, mod
     if rec_audio is not None and gt_text is not None:
         rec_transcription = asr(audios=rec_audio, processor=processor, model=model, sample_rate=sample_rate, device=device)
 
-    if gt_transcription is None or rec_transcription is None:
+    if gt_transcription is not None or rec_transcription is None:
         try:  # if no words are predicted
             wer_gt = None
             wer_rec = None
@@ -100,7 +100,7 @@ def cer(gt_audio = None, rec_audio = None, gt_text = None, processor = None, mod
     if rec_audio is not None and gt_text is not None:
         rec_transcription = asr(audios=rec_audio, processor=processor, model=model, sample_rate=sample_rate, device=device)
 
-    if gt_transcription is None or rec_transcription is None:
+    if gt_transcription is not None or rec_transcription is None:
         try:  # if no words are predicted
             cer_gt = None
             cer_rec = None
