@@ -1,25 +1,23 @@
 project: ppl_dac
 seed: 114514
-ppl_ckpt_dir: /sdb/tmp/user/wzy/codec_eval/ppl/ckpt
+ppl_ckpt_dir: /sdb/tmp/user/ch/codec_eval/ppl/ckpt/dac
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  # devices: [0] # for debug
-  devices: -1
+  devices: [0] 
   precision: bf16-mixed
   max_steps: 1000000
   val_check_interval: 400
+  limit_val_batches: 100
   log_every_n_steps: 50
   max_epochs: 1000
   strategy: ddp_find_unused_parameters_true
 
-
 data:
-  _target_: codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc.LibriTTS_ctc_module
-  train_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/train-clean-100
-  valid_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/dev-other
-  test_audio_dir: /sdb/data1/speech/24kHz/LibriTTS/test-clean
+  _target_: codec_evaluation.perplexity.dataset.Emilia_EN.emilia_en_dataset.Emilia_ppl_module
+  base_audio_dir: /sdb/data1/speech/24kHz/Emilia/EN
+  dataset_path: /home/ch/Codec-Evaluation/codec_evaluation/perplexity/dataset/Emilia_EN/Emilia_EN_dataset
   train_batch_size: 10
   valid_batch_size: 4
   train_num_workers: 4
@@ -29,7 +27,7 @@ model:
   _target_: codec_evaluation.perplexity.model.lit_modules.PPL_lit_modules
   ppl_model_config:
     _target_: transformers.models.qwen2.configuration_qwen2.Qwen2Config.from_pretrained
-    pretrained_model_name_or_path: /home/wzy/projects/Codec-Evaluation/codec_evaluation/perplexity/config/ppl_model_config.json
+    pretrained_model_name_or_path: /home/ch/Codec-Evaluation/codec_evaluation/perplexity/config/ppl_model_config.json
 
   sample_rate: 24000
   codec_name: dac
@@ -53,7 +51,7 @@ model:
       _target_: codec_evaluation.utils.schedule.get_cosine_schedule_with_warmup_lr_lambda
       _partial_: true
       num_warmup_steps: 50
-      num_training_steps: ${trainer.max_steps} 
+      num_training_steps: ${trainer.max_steps}
       final_lr_ratio: 0.99
 
 callbacks:
@@ -70,13 +68,13 @@ callbacks:
     mode: min
     every_n_train_steps: 2000
     dirpath: ${ppl_ckpt_dir}
-    filename: '{epoch:03d}-{step:06d}_dac_ppl'
+    filename: '{epoch:03d}-{step:06d}_music_dac_ppl'
     save_top_k: 1
     verbose: true
     save_last: true  # add this parameter to save the last epoch
 
 tensorboard_logger:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /sdb/tmp/user/wzy/codec_eval/ppl/tb_log
-  name: ppl_dac
+  save_dir: /sdb/tmp/user/ch/codec_eval/ppl/tb_log
+  name: ${project}
   log_graph: true
