@@ -1,5 +1,4 @@
 import pytorch_lightning as pl
-import torch.nn as nn
 from codec_evaluation.codecs.init_codecs import init_codec
 from codec_evaluation.perplexity.model.decoder_only_100M_qwen import PPL_100M_ForCausalLM
 from transformers.models.qwen2.configuration_qwen2 import Qwen2Config
@@ -12,7 +11,7 @@ class PPL_lit_modules(pl.LightningModule):
                  codec_name: str,
                  codec_ckpt_dir: str,
                  mode = "encode",
-                 sample_rate: int = 24000, # libritts
+                 sample_rate: int = 24000, # audio
                  lm_head_nums: int = 1,
                  lr_scheduler_builder: Any = None,
                  optimizer_builder: Any = None,
@@ -35,6 +34,7 @@ class PPL_lit_modules(pl.LightningModule):
         self.eos_id = self.codec.vocab_size + 1
         self.lr_scheduler_builder = lr_scheduler_builder
         self.optimizer_builder = optimizer_builder
+        self.codebook_size = self.codec.vocab_size
 
     def configure_optimizers(self):
         optimizer = self.optimizer_builder(self.model.parameters())
@@ -88,16 +88,29 @@ class PPL_lit_modules(pl.LightningModule):
     def log_loss_list(self, loss_list, stage, batch_size):
         loss = torch.stack(loss_list).mean()
         if stage == "train":
-            self.log(f"{stage}/loss_mean", loss, on_step = True, on_epoch = True, prog_bar = True, logger = True, batch_size = batch_size)
+            self.log(f"{stage}/loss_mean", loss, on_step = True, on_epoch = True, prog_bar = True, logger = True, sync_dist=True, batch_size = batch_size)
         else:
             self.log(f"{stage}_loss_mean", loss, on_step = False, on_epoch = True, prog_bar = True, logger = True, sync_dist=True, batch_size = batch_size)
-
+        
         for i, tmp_loss in enumerate(loss_list):
             if stage == "train":
-                self.log(f"{stage}/loss_codebook_{i}", tmp_loss, on_step = True, on_epoch = True, prog_bar = False, logger = True, batch_size = batch_size)
+                self.log(f"{stage}/loss_codebook_{i}", tmp_loss, on_step = True, on_epoch = True, prog_bar = False, logger = True, sync_dist=True, batch_size = batch_size)
             else:
                 self.log(f"{stage}_loss_codebook_{i}", tmp_loss, on_step = False, on_epoch = True, prog_bar = False, logger = True, sync_dist=True, batch_size = batch_size)
         return loss
+
+    def log_ppl_list(self, loss_list, stage, batch_size):
+        ppl_list = [torch.exp(loss) / (self.codebook_size / 1024) for loss in loss_list]
+        loss = torch.stack(loss_list).mean()
+        ppl = torch.exp(loss) / (self.codebook_size / 1024)
+        if stage != "train":
+            self.log(f"{stage}_ppl_mean", ppl, on_step = False, on_epoch = True, prog_bar = True, logger = True, sync_dist=True, batch_size = batch_size)
+        
+        for i, tmp_ppl in enumerate(ppl_list):
+            if stage != "train":
+                self.log(f"{stage}_ppl_codebook_{i}", tmp_ppl, on_step = False, on_epoch = True, prog_bar = False, logger = True, sync_dist=True, batch_size = batch_size)
+        
+        return ppl
 
     def calculate_and_log_acc(self, logits_list, labels, topk: list[int] = [1, 5], stage: str = "train", batch_size: int = 1):
         accuracy_list = []
@@ -106,7 +119,7 @@ class PPL_lit_modules(pl.LightningModule):
         
         for i in range(len(topk)):
             acc = torch.mean(torch.stack([accuracy_list[j][i] for j in range(self.model.lm_head_nums)]))
-            self.log(f"{stage}/id_acc_{topk[i]}", acc, on_step = True, on_epoch = True, prog_bar = True, logger = True, batch_size = batch_size)
+            self.log(f"{stage}/id_acc_{topk[i]}", acc, on_step = True, on_epoch = True, prog_bar = True, logger = True, sync_dist=True, batch_size = batch_size)
 
     def training_step(self, batch, batch_idx):
         logits_list, loss_list, labels, batch_size = self._step(batch, batch_idx)
@@ -120,14 +133,16 @@ class PPL_lit_modules(pl.LightningModule):
         self.calculate_and_log_acc(logits_list, labels, topk = [1, 5, 10, 50, 100, 200], stage = "val", batch_size = batch_size)
 
         loss = self.log_loss_list(loss_list, "val", batch_size)
-        return loss
+        ppl = self.log_ppl_list(loss_list, "val", batch_size)
+        return loss, ppl
 
     def test_step(self, batch, batch_idx):
         logits_list, loss_list, labels, batch_size = self._step(batch, batch_idx)
         self.calculate_and_log_acc(logits_list, labels, topk = [1, 5, 10, 50, 100, 200], stage = "test", batch_size = batch_size)
 
         loss = self.log_loss_list(loss_list, "test", batch_size)
-        return loss
+        ppl = self.log_ppl_list(loss_list, "test", batch_size)
+        return loss, ppl
 
     def get_accuracy(
         self,
