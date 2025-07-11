@@ -1,6 +1,5 @@
 import argparse
 from codec_evaluation.codecs.init_codecs import init_codec
-import torchaudio
 import random
 import numpy as np
 import torch
@@ -35,7 +34,8 @@ class IDSensitiveEvaluation:
         sample_rate: int,
         num_codebooks: int,
         need_resample: bool,
-        dataset_audio_dir: str,
+        dataset_path: str,
+        base_audio_dir: str,
         device: str,
         task: str,
         batch_size: int = 24,
@@ -50,7 +50,8 @@ class IDSensitiveEvaluation:
             sample_rate: audio sample rate
             num_codebooks: number of codebooks
             need_resample: boolean, whether to resample the audio after decoding
-            dataset_audio_dir: dataset audio directory
+            dataset_path: .arrow dataset path
+            base_audio_dir: audio file root directory
             task: task name "MRC" or "OS"  MRC: multi-round reconstruction, OS: offset
             num_workers: number of workers
             shift_time: shift time in ms
@@ -86,11 +87,10 @@ class IDSensitiveEvaluation:
         self.codec_sample_rate = self.codec_encode.orig_sample_rate
         self.sample_rate = sample_rate
         self.batch_size = batch_size
-        self.device = device
         self.shift_time = shift_time
         self.subset_step = subset_step
         self.task = task
-        dataset = LibriTTS_ctc_dataset(audio_dir=dataset_audio_dir)
+        dataset = LibriTTS_ctc_dataset(dataset_path=dataset_path, base_audio_dir=base_audio_dir)
         dataset = torch.utils.data.Subset(dataset, range(subset_step))
         self.dataloader = DataLoader(
             dataset,
@@ -259,13 +259,13 @@ class IDSensitiveEvaluation:
 def main():
     seed_all(666)
     parser = argparse.ArgumentParser()
-    parser.add_argument("--codec_name", type=str, default="speechtokenizer")
+    parser.add_argument("--codec_name", type=str, default="dac")
     parser.add_argument(
         "--model_ckpt_dir",
         type=str,
-        default="/sdb/model_weight/codec_evaluation/codec_ckpt/speechtokenizer",
+        default="/sdb/model_weight/codec_evaluation/codec_ckpt",
     )
-    parser.add_argument("--device", type=str, default="cuda:2")
+    parser.add_argument("--device", type=str, default="cuda:0")
     parser.add_argument("--sample_rate", type=int, default=24000)
     parser.add_argument("--num_codebooks", type=int, default=8)
     parser.add_argument("--need_resample", type=bool, default=True)
@@ -275,9 +275,14 @@ def main():
     parser.add_argument("--shift_time", type=int, default=2)
     parser.add_argument("--subset_step", type=int, default=1200)
     parser.add_argument(
-        "--dataset_audio_dir",
+        "--dataset_path",
         type=str,
-        default="/sdb/data1/speech/24kHz/LibriTTS/test-other",
+        default="/home/ch/Codec-Evaluation/codec_evaluation/marble_dataset/LibriTTS/LibriTTS_dataset/test_other",
+    )
+    parser.add_argument(
+        "--base_audio_dir",
+        type=str,
+        default="/sdb/data1/speech/24kHz"
     )
     parser.add_argument("--use_vocos", type=bool, default=False)
     parser.add_argument("--vocos_ckpt_dir", type=Optional[str], default=None)
@@ -290,7 +295,8 @@ def main():
         sample_rate=args.sample_rate,
         num_codebooks=args.num_codebooks,
         need_resample=args.need_resample,
-        dataset_audio_dir=args.dataset_audio_dir,
+        dataset_path=args.dataset_path,
+        base_audio_dir=args.base_audio_dir,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
         use_vocos=args.use_vocos,
