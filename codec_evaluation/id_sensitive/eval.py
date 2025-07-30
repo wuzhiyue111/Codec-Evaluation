@@ -35,7 +35,6 @@ class IDSensitiveEvaluation:
         num_codebooks: int,
         need_resample: bool,
         dataset_path: str,
-        base_audio_dir: str,
         device: str,
         task: str,
         batch_size: int = 24,
@@ -51,7 +50,6 @@ class IDSensitiveEvaluation:
             num_codebooks: number of codebooks
             need_resample: boolean, whether to resample the audio after decoding
             dataset_path: .arrow dataset path
-            base_audio_dir: audio file root directory
             task: task name "MRC" or "OS"  MRC: multi-round reconstruction, OS: offset
             num_workers: number of workers
             shift_time: shift time in ms
@@ -90,7 +88,7 @@ class IDSensitiveEvaluation:
         self.shift_time = shift_time
         self.subset_step = subset_step
         self.task = task
-        dataset = LibriTTS_ctc_dataset(dataset_path=dataset_path, base_audio_dir=base_audio_dir)
+        dataset = LibriTTS_ctc_dataset(dataset_path=dataset_path)
         dataset = torch.utils.data.Subset(dataset, range(subset_step))
         self.dataloader = DataLoader(
             dataset,
@@ -269,7 +267,7 @@ def main():
     parser.add_argument("--sample_rate", type=int, default=24000)
     parser.add_argument("--num_codebooks", type=int, default=8)
     parser.add_argument("--need_resample", type=bool, default=True)
-    parser.add_argument("--task", type=str, default="MRC")
+    parser.add_argument("--task", type=str, default="MRC", choices=["MRC", "OS"])
     parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument("--shift_time", type=int, default=2)
@@ -277,12 +275,7 @@ def main():
     parser.add_argument(
         "--dataset_path",
         type=str,
-        default="/home/ch/Codec-Evaluation/codec_evaluation/marble_dataset/LibriTTS/LibriTTS_dataset/test_other",
-    )
-    parser.add_argument(
-        "--base_audio_dir",
-        type=str,
-        default="/sdb/data1/speech/24kHz"
+        default="/sdb/data1/codec_eval_data_arrow/LibriTTS/LibriTTS_dataset/test-other",
     )
     parser.add_argument("--use_vocos", type=bool, default=False)
     parser.add_argument("--vocos_ckpt_dir", type=Optional[str], default=None)
@@ -296,7 +289,6 @@ def main():
         num_codebooks=args.num_codebooks,
         need_resample=args.need_resample,
         dataset_path=args.dataset_path,
-        base_audio_dir=args.base_audio_dir,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
         use_vocos=args.use_vocos,
