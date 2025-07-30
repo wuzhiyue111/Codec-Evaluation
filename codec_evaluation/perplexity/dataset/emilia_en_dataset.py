@@ -68,7 +68,7 @@ class Emilia_ppl_dataset(Dataset):
             "audio_length": audio_length_tensor,
         }
 
-class Emilia_ppl_module(pl.LightningDataModule):
+class Emilia_ppl_Module(pl.LightningDataModule):
     def __init__(
         self,
         dataset_path,
@@ -91,7 +91,6 @@ class Emilia_ppl_module(pl.LightningDataModule):
         self.train_batch_size = train_batch_size
         self.valid_batch_size = valid_batch_size
         self.test_batch_size = test_batch_size
-        self.base_audio_dir = base_audio_dir
         self.train_num_workers = train_num_workers
         self.valid_num_workers = valid_num_workers
         self.test_num_workers = test_num_workers

@@ -1,6 +1,6 @@
 project: ppl_dac
 seed: 114514
-ppl_ckpt_dir: /sdb/tmp/user/ch/codec_eval/ppl/ckpt/dac
+ppl_ckpt_dir: /path/to/your/codec_eval/ppl/ckpt/dac
 
 trainer:
   _target_: pytorch_lightning.Trainer
@@ -15,21 +15,35 @@ trainer:
   strategy: ddp_find_unused_parameters_true
 
 data:
-  _target_: codec_evaluation.perplexity.dataset.Emilia_EN.emilia_en_dataset.Emilia_ppl_module
+  # Emilia-en
+  _target_: codec_evaluation.perplexity.dataset.emilia_en_dataset.Emilia_ppl_Module
   base_audio_dir: /sdb/data1/speech/24kHz/Emilia/EN
-  dataset_path: /home/ch/Codec-Evaluation/codec_evaluation/perplexity/dataset/Emilia_EN/Emilia_EN_dataset
+  dataset_path: /sdb/data1/codec_eval_data_arrow/Emilia_EN/Emilia_EN_dataset
   train_batch_size: 10
   valid_batch_size: 4
   train_num_workers: 4
   valid_num_workers: 1
 
+  # MTG-Jamendo
+  # _target_: codec_evaluation.perplexity.dataset.mtg_jamendo_dataset.Jamendo_ppl_Module
+  # base_audio_dir: /sdb/data1/music/mix_music/marble_dataset/data
+  # train_audio_dir: /sdb/data1/codec_eval_data_arrow/MTG/MTG_dataset/MTGGenre_dataset/MTGGenre_train_dataset
+  # valid_audio_dir: /sdb/data1/codec_eval_data_arrow/MTG/MTG_dataset/MTGGenre_dataset/MTGGenre_validation_dataset
+  # test_audio_dir: /sdb/data1/codec_eval_data_arrow/MTG/MTG_dataset/MTGGenre_dataset/MTGGenre_test_dataset
+  # train_batch_size: 10
+  # valid_batch_size: 4
+  # train_num_workers: 4
+  # valid_num_workers: 1
+  # sample_rate: 44100
+  # target_sec: 15
+
 model:
   _target_: codec_evaluation.perplexity.model.lit_modules.PPL_lit_modules
   ppl_model_config:
     _target_: transformers.models.qwen2.configuration_qwen2.Qwen2Config.from_pretrained
-    pretrained_model_name_or_path: /home/ch/Codec-Evaluation/codec_evaluation/perplexity/config/ppl_model_config.json
+    pretrained_model_name_or_path: /path/to/your/Codec-Evaluation/codec_evaluation/perplexity/config/ppl_model_config.json
 
-  sample_rate: 24000
+  sample_rate: 24000    # audio sample rate
   codec_name: dac
   codec_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt
   lm_head_nums: 8
@@ -68,13 +82,13 @@ callbacks:
     mode: min
     every_n_train_steps: 2000
     dirpath: ${ppl_ckpt_dir}
-    filename: '{epoch:03d}-{step:06d}_music_dac_ppl'
+    filename: '{epoch:03d}-{step:06d}_speech_dac_ppl'
     save_top_k: 1
     verbose: true
     save_last: true  # add this parameter to save the last epoch
 
 tensorboard_logger:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /sdb/tmp/user/ch/codec_eval/ppl/tb_log
+  save_dir: /path/to/your/codec_eval/ppl/tb_log
   name: ${project}
   log_graph: true

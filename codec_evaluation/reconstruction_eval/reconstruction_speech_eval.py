@@ -47,7 +47,6 @@ class CodecEvaluation:
         sample_rate: int,
         asr_model_path_or_name: str,
         dataset_path: str,
-        base_audio_dir: str,
         batch_size: int = 32,
         num_workers: int = 8,
         mode: str = "reconstruct",
@@ -59,7 +58,6 @@ class CodecEvaluation:
         asr_model_path_or_name: asr model path or name for wer compute
         wav2vec_model_path_or_name: wav2vec model for computing spk_sim
         dataset_path: .arrow dataset path
-        base_audio_dir: audio file root directory
         sample_rate: audio sample rate
         device: cuda:0 or cpu
         batch_size: batch size
@@ -93,7 +91,7 @@ class CodecEvaluation:
 
         self.batch_size = batch_size
         self.device = device
-        dataset = LibriTTS_ctc_dataset(dataset_path=dataset_path, base_audio_dir=base_audio_dir)
+        dataset = LibriTTS_ctc_dataset(dataset_path=dataset_path)
         self.dataloader = DataLoader(
             dataset,
             batch_size=batch_size,
@@ -252,11 +250,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--codec_name", type=str, default="yue")
     parser.add_argument("--model_ckpt_dir", type=str, default="/sdb/model_weight/codec_evaluation/codec_ckpt/yue")
-    parser.add_argument("--device", type=str, default="cuda:3")
+    parser.add_argument("--device", type=str, default="cuda:0")
     parser.add_argument("--sample_rate", type=int, default=24000)
     parser.add_argument("--asr_model_path_or_name", type=str, default="/sdb/model_weight/whisper-base")
-    parser.add_argument("--dataset_path", type=str, default="/home/ch/Codec-Evaluation/codec_evaluation/marble_dataset/LibriTTS/LibriTTS_dataset/test_other")
-    parser.add_argument("--base_audio_dir",type=str,default="/sdb/data1/speech/24kHz")
+    parser.add_argument("--dataset_path", type=str, default="/sdb/data1/codec_eval_data_arrow/LibriTTS/LibriTTS_dataset/test-other")
     parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument("--mode", type=str, default="reconstruct")
@@ -272,7 +269,6 @@ def main():
         sample_rate=args.sample_rate,
         asr_model_path_or_name=args.asr_model_path_or_name,
         dataset_path=args.dataset_path,
-        base_audio_dir=args.base_audio_dir,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
         mode=args.mode,
