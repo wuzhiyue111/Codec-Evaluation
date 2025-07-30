@@ -41,7 +41,6 @@ class CodecEvaluation:
         device: str,
         sample_rate: int,
         dataset_path: str,
-        base_audio_dir: str,
         batch_size: int = 32,
         num_workers: int = 8,
         mode: str = "reconstruct",
@@ -52,7 +51,6 @@ class CodecEvaluation:
         asr_model_path_or_name: asr model path or name for wer compute
         wav2vec_model_path_or_name: wav2vec model for computing spk_sim
         dataset_path: .arrow dataset path
-        base_audio_dir: audio file root directory
         sample_rate: audio sample rate
         device: cuda:0 or cpu
         batch_size: batch size
@@ -76,7 +74,6 @@ class CodecEvaluation:
         self.device = device
         dataset = GTZANdataset(
             dataset_path=dataset_path,
-            base_audio_dir=base_audio_dir,
             sample_rate=sample_rate,
             target_sec=None,
             is_mono=True,
@@ -193,12 +190,7 @@ def main():
     parser.add_argument(
         "--dataset_path",
         type=str,
-        default="/home/ch/Codec-Evaluation/codec_evaluation/marble_dataset/GTZAN/GTZAN_dataset/GTZAN_test_dataset",
-    )
-    parser.add_argument(
-        "--base_audio_dir",
-        type=str,
-        default="/sdb/data1/music/mix_music/marble_dataset/data",
+        default="/sdb/data1/codec_eval_data_arrow/GTZAN/GTZAN/GTZAN_test_dataset",
     )
     parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_workers", type=int, default=8)
@@ -213,7 +205,6 @@ def main():
         device=args.device,
         sample_rate=args.sample_rate,
         dataset_path=args.dataset_path,
-        base_audio_dir=args.base_audio_dir,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
         mode=args.mode,
