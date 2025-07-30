@@ -1,6 +1,6 @@
 project: ppl_semanticodec
 seed: 114514
-ppl_ckpt_dir: /sdb/tmp/user/ch/codec_eval/ppl/ckpt/semanticodec
+ppl_ckpt_dir: /path/to/your/codec_eval/ppl/ckpt/semanticodec
 
 trainer:
   _target_: pytorch_lightning.Trainer
@@ -15,9 +15,9 @@ trainer:
   strategy: ddp_find_unused_parameters_true
 
 data:
-  _target_: codec_evaluation.perplexity.dataset.Emilia_EN.emilia_en_dataset.Emilia_ppl_module
+  _target_: codec_evaluation.perplexity.dataset.emilia_en_dataset.Emilia_ppl_Module
   base_audio_dir: /sdb/data1/speech/24kHz/Emilia/EN
-  dataset_path: /home/ch/Codec-Evaluation/codec_evaluation/perplexity/dataset/Emilia_EN/Emilia_EN_dataset
+  dataset_path: /sdb/data1/codec_eval_data_arrow/Emilia_EN/Emilia_EN_dataset
   train_batch_size: 10
   valid_batch_size: 4
   train_num_workers: 4
@@ -27,7 +27,7 @@ model:
   _target_: codec_evaluation.perplexity.model.lit_modules.PPL_lit_modules
   ppl_model_config:
     _target_: transformers.models.qwen2.configuration_qwen2.Qwen2Config.from_pretrained
-    pretrained_model_name_or_path: /home/ch/Codec-Evaluation/codec_evaluation/perplexity/config/ppl_model_config.json
+    pretrained_model_name_or_path: /path/to/your/Codec-Evaluation/codec_evaluation/perplexity/config/ppl_model_config.json
   
   sample_rate: 24000
   codec_name: semanticodec
@@ -68,13 +68,13 @@ callbacks:
     mode: min
     every_n_train_steps: 2000
     dirpath: ${ppl_ckpt_dir}
-    filename: '{epoch:03d}-{step:06d}_music_semanticodec_ppl'
+    filename: '{epoch:03d}-{step:06d}_speech_semanticodec_ppl'
     save_top_k: 1
     verbose: true   
     save_last: true
 
 tensorboard_logger:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /sdb/tmp/user/ch/codec_eval/ppl/tb_log
+  save_dir: /path/to/your/codec_eval/ppl/tb_log
   name: ${project}
   log_graph: true
