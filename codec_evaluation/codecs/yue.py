@@ -1,4 +1,7 @@
-""" YuE (see https://arxiv.org/abs/2503.08638)"""
+""" YuE (see https://arxiv.org/abs/2503.08638)
+    1、Go to https://huggingface.co/datasets/LeBeGut/AudioCodecBench to download the required weight file (Download the entire semantic_ckpts file)
+    2、Put the weight file in Codec-Evaluation/codec_evaluation/codecs/YuE
+"""
 
 import os 
 import sys
