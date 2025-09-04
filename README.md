@@ -276,274 +276,142 @@ The following will introduce how to conduct evaluations using codecs and downstr
     </thead>
     <tbody>
         <tr>
-            <td align=center rowspan="2">DAC</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-        </tr>
-	<tr>
+            <td align=center>DAC</td>
             <td align=center>quantized_emb</td>
             <td align=center>0.470</td>
             <td align=center>0.064</td>
             <td align=center>0.575</td>
             <td align=center>0.203</td>
-	    <td align=center>0.785</td>
-	    <td align=center>0.602</td>
-	    <td align=center>0.468</td>
-	    <td align=center>0.419</td>
-	    <td align=center>0.376</td>
+		    <td align=center>0.785</td>
+		    <td align=center>0.602</td>
+		    <td align=center>0.468</td>
+		    <td align=center>0.419</td>
+		    <td align=center>0.376</td>
             <td align=center>0.088</td>
-	    <td align=center>0.579</td>
-	    <td align=center>0.0295</td>
-	    <td align=center>0.530</td>
-	    <td align=center>0.108</td>
-	    <td align=center>0.638</td>
+		    <td align=center>0.579</td>
+		    <td align=center>0.0295</td>
+		    <td align=center>0.530</td>
+		    <td align=center>0.108</td>
+		    <td align=center>0.638</td>
             <td align=center>0.076</td>
-	    <td align=center>0.651</td>
-	    <td align=center>0.141</td>
-	    <td align=center>0.687</td>
+		    <td align=center>0.651</td>
+		    <td align=center>0.141</td>
+		    <td align=center>0.687</td>
         </tr>
         <tr>
-            <td align=center rowspan="2">Encodec</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-        </tr>
-	<tr>
+            <td align=center>Encodec</td>
             <td align=center>quantized_emb</td>
             <td align=center>0.467</td>
             <td align=center>0.066</td>
             <td align=center>0.570</td>
             <td align=center>0.184</td>
             <td align=center>0.759</td>
-	    <td align=center>0.537</td>
-	    <td align=center>0.547</td>
-	    <td align=center>0.299</td>
-	    <td align=center>0.301</td>
-	    <td align=center>0.102</td>
-	    <td align=center>0.507</td>
-	    <td align=center>0.035</td>
-	    <td align=center>0.528</td>
-	    <td align=center>0.104</td>
-	    <td align=center>0.620</td>
+		    <td align=center>0.537</td>
+		    <td align=center>0.547</td>
+		    <td align=center>0.299</td>
+		    <td align=center>0.301</td>
+		    <td align=center>0.102</td>
+		    <td align=center>0.507</td>
+		    <td align=center>0.035</td>
+		    <td align=center>0.528</td>
+		    <td align=center>0.104</td>
+		    <td align=center>0.620</td>
             <td align=center>0.057</td>
-	    <td align=center>0.642</td>
-	    <td align=center>0.137</td>
-	    <td align=center>0.701</td>
+		    <td align=center>0.642</td>
+		    <td align=center>0.137</td>
+		    <td align=center>0.701</td>
         </tr>
         <tr>
-            <td align=center rowspan="2">SemantiCodec</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-        </tr>
-	<tr>
+            <td align=center>SemantiCodec</td>
             <td align=center>quantized_emb</td>
             <td align=center>0.507</td>
             <td align=center>0.316</td>
             <td align=center>0.703</td>
             <td align=center>0.318</td>
             <td align=center>0.877</td>
-	    <td align=center>0.658</td>
-	    <td align=center>0.764</td>
-	    <td align=center>0.344</td>
-	    <td align=center>0.451</td>
-	    <td align=center>0.343</td>
-	    <td align=center>0.578</td>
-	    <td align=center>0.035</td>
-	    <td align=center>0.526</td>
-	    <td align=center>0.149</td>
-	    <td align=center>0.720</td>
-            <td align=center>0.099</td>
-	    <td align=center>0.723</td>
-	    <td align=center>0.230</td>
-	    <td align=center>0.795</td>
+		    <td align=center>0.658</td>
+		    <td align=center>0.764</td>
+		    <td align=center>0.344</td>
+		    <td align=center>0.451</td>
+		    <td align=center>0.343</td>
+		    <td align=center>0.578</td>
+		    <td align=center>0.035</td>
+		    <td align=center>0.526</td>
+		    <td align=center>0.149</td>
+		    <td align=center>0.720</td>
+			<td align=center>0.099</td>
+		    <td align=center>0.723</td>
+		    <td align=center>0.230</td>
+		    <td align=center>0.795</td>
         </tr>
         <tr>
-            <td align=center rowspan="2">WavTokenizer</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-        </tr>
-	<tr>
+            <td align=center>WavTokenizer</td>
             <td align=center>quantized_emb</td>
             <td align=center>0.455</td>
             <td align=center>0.066</td>
             <td align=center>0.423</td>
             <td align=center>0.168</td>
             <td align=center>0.739</td>
-	    <td align=center>0.537</td>
-	    <td align=center>0.444</td>
-	    <td align=center>0.130</td>
-	    <td align=center>0.287</td>
-	    <td align=center>0.093</td>
+		    <td align=center>0.537</td>
+		    <td align=center>0.444</td>
+		    <td align=center>0.130</td>
+		    <td align=center>0.287</td>
+		    <td align=center>0.093</td>
             <td align=center>0.721</td>
-	    <td align=center>0.034</td>
-	    <td align=center>0.530</td>
-	    <td align=center>0.107</td>
-	    <td align=center>0.635</td>
+		    <td align=center>0.034</td>
+		    <td align=center>0.530</td>
+		    <td align=center>0.107</td>
+		    <td align=center>0.635</td>
             <td align=center>0.056</td>
-	    <td align=center>0.627</td>
-	    <td align=center>0.137</td>
-	    <td align=center>0.698</td>
+		    <td align=center>0.627</td>
+		    <td align=center>0.137</td>
+		    <td align=center>0.698</td>
         </tr>
 	<tr>
-            <td align=center rowspan="2">Xcodec</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-        </tr>
-	<tr>
+            <td align=center>Xcodec</td>
             <td align=center>quantized_emb</td>
             <td align=center>0.553</td>
             <td align=center>0.143</td>
             <td align=center>0.664</td>
             <td align=center>0.323</td>
-	    <td align=center>0.873</td>
-	    <td align=center>0.640</td>
-	    <td align=center>0.905</td>
-	    <td align=center>0.537</td>
-	    <td align=center>0.570</td>
+		    <td align=center>0.873</td>
+		    <td align=center>0.640</td>
+		    <td align=center>0.905</td>
+		    <td align=center>0.537</td>
+		    <td align=center>0.570</td>
             <td align=center>0.455</td>
-	    <td align=center>0.481</td>
-	    <td align=center>0.034</td>
-	    <td align=center>0.519</td>
-	    <td align=center>0.164</td>
-	    <td align=center>0.707</td>
+		    <td align=center>0.481</td>
+		    <td align=center>0.034</td>
+		    <td align=center>0.519</td>
+		    <td align=center>0.164</td>
+		    <td align=center>0.707</td>
             <td align=center>0.101</td>
-	    <td align=center>0.710</td>
-	    <td align=center>0.216</td>
-	    <td align=center>0.777</td>
+		    <td align=center>0.710</td>
+		    <td align=center>0.216</td>
+		    <td align=center>0.777</td>
         </tr>
 	<tr>
-            <td align=center rowspan="2">YuE</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-        </tr>
-	<tr>
+            <td align=center>YuE</td>
             <td align=center>quantized_emb</td>
             <td align=center>0.573</td>
             <td align=center>0.156</td>
             <td align=center>0.669</td>
             <td align=center>0.315</td>
-	    <td align=center>0.870</td>
-	    <td align=center>0.622</td>
-	    <td align=center>0.896</td>
-	    <td align=center>0.523</td>
-	    <td align=center>0.594</td>
+		    <td align=center>0.870</td>
+		    <td align=center>0.622</td>
+		    <td align=center>0.896</td>
+		    <td align=center>0.523</td>
+		    <td align=center>0.594</td>
             <td align=center>0.454</td>
-	    <td align=center>0.463</td>
-	    <td align=center>0.034</td>
-	    <td align=center>0.517</td>
-	    <td align=center>0.133</td>
-	    <td align=center>0.700</td>
+		    <td align=center>0.463</td>
+		    <td align=center>0.034</td>
+		    <td align=center>0.517</td>
+		    <td align=center>0.133</td>
+		    <td align=center>0.700</td>
             <td align=center>0.102</td>
-	    <td align=center>0.711</td>
-	    <td align=center>0.191</td>
-	    <td align=center>0.758</td>
+		    <td align=center>0.711</td>
+		    <td align=center>0.191</td>
+		    <td align=center>0.758</td>
         </tr>
     </tbody>
 </table>
@@ -561,59 +429,43 @@ The following will introduce how to conduct evaluations using codecs and downstr
             <th colspan="1">GTZAN</th>
             <th colspan="2">MTT</th>
             <th colspan="1">NSynthI</th>
-            <th colspan="1">NSynthP</th>
-	    <th colspan="1">VocalSetSinger</th>
-	    <th colspan="1">VocalSetTech</th>
-	    <th colspan="1">GS</th>
-	    <th colspan="1">Muchin</th>
-	    <th colspan="2">MTGGenre</th>
-	    <th colspan="2">MTGInstrument</th>
-	    <th colspan="2">MTGMoodtheme</th>
-	    <th colspan="2">MTGTop50</th>
+		    <th colspan="1">VocalSetSinger</th>
+		    <th colspan="1">VocalSetTech</th>
+		    <th colspan="1">GS</th>
+		    <th colspan="2">MTGInstrument</th>
+		    <th colspan="2">MTGTop50</th>
         </tr>
 	<tr>
-	    <td align=center>A</td>
-            <td align=center>V</td>
-	    <td align=center>Acc</td>
-            <td align=center>AP</td>
-	    <td align=center>AUCROC</td>
-	    <td align=center>Acc</td>
-	    <td align=center>Acc</td>
-	    <td align=center>Acc</td>
-	    <td align=center>Acc</td>
-	    <td align=center>Acc</td>	   
-	    <td align=center>CER</td>
-	    <td align=center>AP</td>
-	    <td align=center>AUCROC</td>
-	    <td align=center>AP</td>
-	    <td align=center>AUCROC</td>
-	    <td align=center>AP</td>
-	    <td align=center>AUCROC</td>
-	    <td align=center>AP</td>
-	    <td align=center>AUCROC</td>
+			<td align=center>A</td>
+			<td align=center>V</td>
+			<td align=center>Acc</td>
+			<td align=center>AP</td>
+			<td align=center>AUCROC</td>
+			<td align=center>Acc</td>
+			<td align=center>Acc</td>
+			<td align=center>Acc</td>
+			<td align=center>Acc</td>	   
+			<td align=center>AP</td>
+			<td align=center>AUCROC</td>
+			<td align=center>AP</td>
+			<td align=center>AUCROC</td>
     </thead>
     <tbody>
         <tr>
             <td align=center>DAC</td>
             <td align=center>0.354</td>
-            <td align=center>0</td>
+            <td align=center>0.000</td>
             <td align=center>0.600</td>
             <td align=center>0.175</td>
-	    <td align=center>0.741</td>
-	    <td align=center>0.563</td>
-	    <td align=center> </td>
-	    <td align=center>0.226</td>
-	    <td align=center>0.315</td>
+			<td align=center>0.741</td>
+			<td align=center>0.563</td>
+			<td align=center>0.226</td>
+			<td align=center>0.315</td>
             <td align=center>0.088</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
+		    <td align=center>0.117</td>
+		    <td align=center>0.638</td>
+		    <td align=center>0.135</td>
+		    <td align=center>0.690</td>
         </tr>
         <tr>
             <td align=center>Encodec</td>
@@ -621,21 +473,15 @@ The following will introduce how to conduct evaluations using codecs and downstr
             <td align=center>0.092</td>
             <td align=center>0.543</td>
             <td align=center>0.119</td>
-	    <td align=center>0.681</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center>0.086</td>
-	    <td align=center>0.268</td>
+		    <td align=center>0.681</td>
+		    <td align=center>0.563</td>
+		    <td align=center>0.086</td>
+		    <td align=center>0.268</td>
             <td align=center>0.088</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
+		    <td align=center>0.110</td>
+		    <td align=center>0.630</td>
+		    <td align=center>0.136</td>
+		    <td align=center>0.701</td>
         </tr>
         <tr>
             <td align=center>SemantiCodec</td>
@@ -643,21 +489,15 @@ The following will introduce how to conduct evaluations using codecs and downstr
             <td align=center>0.267</td>
             <td align=center>0.629</td>
             <td align=center>0.227</td>
-	    <td align=center>0.825</td>
-	    <td align=center>0.625</td>
-	    <td align=center> </td>
-	    <td align=center>0.134</td>
-	    <td align=center>0.477</td>
+		    <td align=center>0.825</td>
+		    <td align=center>0.625</td>
+		    <td align=center>0.134</td>
+		    <td align=center>0.477</td>
             <td align=center>0.229</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
+		    <td align=center>0.150</td>
+		    <td align=center>0.724</td>
+		    <td align=center>0.224</td>
+		    <td align=center>0.793</td>
         </tr>
         <tr>
             <td align=center>Xcodec</td>
@@ -665,21 +505,15 @@ The following will introduce how to conduct evaluations using codecs and downstr
             <td align=center>0.461</td>
             <td align=center>0.628</td>
             <td align=center>0.261</td>
-	    <td align=center>0.838</td>
-	    <td align=center>0.611</td>
-	    <td align=center> </td>
-	    <td align=center>0.320</td>
-	    <td align=center>0.488</td>
-            <td align=center>0.389</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
+		    <td align=center>0.838</td>
+		    <td align=center>0.611</td>
+		    <td align=center>0.320</td>
+		    <td align=center>0.488</td>
+			<td align=center>0.389</td>
+		    <td align=center>0.140</td>
+		    <td align=center>0.669</td>
+		    <td align=center>0.191</td>
+		    <td align=center>0.755</td>
         </tr>
 	<tr>
             <td align=center>YuE</td>
@@ -687,21 +521,15 @@ The following will introduce how to conduct evaluations using codecs and downstr
             <td align=center>0.085</td>
             <td align=center>0.616</td>
             <td align=center>0.249</td>
-	    <td align=center>0.831</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center>0.335</td>
-	    <td align=center>0.475</td>
+		    <td align=center>0.831</td>
+		    <td align=center>0.623</td>
+		    <td align=center>0.335</td>
+		    <td align=center>0.475</td>
             <td align=center>0.346</td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center></td>
-	    <td align=center></td>
-            <td align=center></td>
-	    <td align=center> </td>
-	    <td align=center> </td>
-	    <td align=center> </td>
+		    <td align=center>0.133</td>
+		    <td align=center>0.670</td>
+		    <td align=center>0.191</td>
+		    <td align=center>0.758</td>
         </tr>
     </tbody>
 </table>
@@ -716,151 +544,87 @@ The following will introduce how to conduct evaluations using codecs and downstr
             <th colspan="12">Dataset</th>
         </tr>
         <tr>
-            <th colspan="2">libritts</th>
+            <th colspan="2">Common_Voice</th>
             <th colspan="1">Vocalsound</th>
             <th colspan="1">MELD</th>
             <th colspan="1">ESC50</th>
         </tr>
 	<tr>
-	    <td align=center>WER</td>
+	    	<td align=center>WER</td>
             <td align=center>CER</td>
-	    <td align=center>Acc</td>
+	   	 	<td align=center>Acc</td>
             <td align=center>Acc</td>
             <td align=center>Acc</td>
     </thead>
     <tbody>
         <tr>
-            <td align=center rowspan="2">DAC</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-        </tr>
-	<tr>
-            <td align=center>quantized_emb</td>
-            <td align=center>0.573</td>
-            <td align=center>0.369</td>
+            <td align=center>DAC</td>
+			<td align=center>quantized_emb</td>
+            <td align=center>0.526</td>
+            <td align=center>0.229</td>
             <td align=center>0.535</td>
             <td align=center>0.483</td>
-	    <td align=center>0.325</td>
+	   		<td align=center>0.325</td>
         </tr>
         <tr>
-            <td align=center rowspan="2">Encodec</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-        </tr>
-	<tr>
+            <td align=center>Encodec</td>
             <td align=center>quantized_emb</td>
-            <td align=center>0.584</td>
-            <td align=center>0.369</td>
-	    <td align=center>0.574</td>
-	    <td align=center>0.481</td>
-	    <td align=center>0.275</td>
+            <td align=center>0.503</td>
+            <td align=center>0.209</td>
+		    <td align=center>0.574</td>
+		    <td align=center>0.481</td>
+		    <td align=center>0.275</td>
         </tr>
         <tr>
-            <td align=center rowspan="2">SemantiCodec</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-        </tr>
-	<tr>
+            <td align=center>SemantiCodec</td>
             <td align=center>quantized_emb</td>
-            <td align=center>0.445</td>
-            <td align=center>0.183</td>
+            <td align=center>0.490</td>
+            <td align=center>0.200</td>
             <td align=center>0.723</td>
             <td align=center>0.482</td>
-	    <td align=center>0.620</td>
+	    	<td align=center>0.620</td>
         </tr>
         <tr>
-            <td align=center rowspan="2">WavTokenizer</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-        </tr>
-	<tr>
+            <td align=center>WavTokenizer</td>
             <td align=center>quantized_emb</td>
-            <td align=center>0.645</td>
-            <td align=center>0.416</td>
+            <td align=center>0.582</td>
+            <td align=center>0.288</td>
             <td align=center>0.524</td>
             <td align=center>0.484</td>
-	    <td align=center>0.135</td>
+	    	<td align=center>0.135</td>
         </tr>
 	<tr>
-	    <td align=center rowspan="2">Mimi</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-	</tr>
-	<tr>
+	    <td align=center>Mimi</td>
             <td align=center>quantized_emb</td>
-            <td align=center>0.499</td>
-            <td align=center>0.22</td>
+            <td align=center>0.442</td>
+            <td align=center>0.168</td>
             <td align=center>0.833</td>
             <td align=center>0.481</td>
-	    <td align=center>0.335</td>
+	   		<td align=center>0.335</td>
         </tr>
 	<tr>
-	    <td align=center rowspan="2">SpeechTokenizer</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-	</tr>
-	<tr>
+	    <td align=center>SpeechTokenizer</td>
             <td align=center>quantized_emb</td>
-            <td align=center>0.433</td>
-            <td align=center>0.164</td>
+            <td align=center>0.469</td>
+            <td align=center>0.190</td>
             <td align=center>0.776</td>
             <td align=center>0.498</td>
-	    <td align=center>0.670</td>
+	    	<td align=center>0.670</td>
         </tr>
 	<tr>
-	    <td align=center rowspan="2">Xcodec</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-	</tr>
-	<tr>
+	    <td align=center>Xcodec</td>
             <td align=center>quantized_emb</td>
-            <td align=center>0.504</td>
-            <td align=center>0.216</td>
+            <td align=center>0.474</td>
+            <td align=center>0.188</td>
             <td align=center>0.731</td>
             <td align=center>0.491</td>
             <td align=center>0.640</td>
         </tr>
 	<tr>
-	    <td align=center rowspan="2">YuE</td>
-            <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-            <td align=center></td>
-	</tr>
-	<tr>
+	    <td align=center>YuE</td>
             <td align=center>quantized_emb</td>
-            <td align=center>0.533</td>
-            <td align=center>0.295</td>
+            <td align=center>0.472</td>
+            <td align=center>0.187</td>
             <td align=center>0.782</td>
             <td align=center>0.515</td>
             <td align=center>0.640</td>
@@ -868,8 +632,8 @@ The following will introduce how to conduct evaluations using codecs and downstr
 	<tr>
 	    <td align=center>hubert</td>
             <td align=center>unquantized_emb</td>
-            <td align=center>0.400</td>
-            <td align=center>0.097</td>
+            <td align=center>-</td>
+            <td align=center>-</td>
             <td align=center>0.877</td>
             <td align=center>0.495</td>
             <td align=center>0.525</td>
@@ -877,8 +641,8 @@ The following will introduce how to conduct evaluations using codecs and downstr
 	<tr>
 	    <td align=center>qwen2audioencoder</td>
             <td align=center>unquantized_emb</td>
-            <td align=center></td>
-            <td align=center></td>
+            <td align=center>-</td>
+            <td align=center>-</td>
             <td align=center>0.953</td>
             <td align=center>0.590</td>
             <td align=center>0.975</td>
@@ -896,71 +660,54 @@ The following will introduce how to conduct evaluations using codecs and downstr
             <th colspan="12">Dataset</th>
         </tr>
         <tr>
-            <th colspan="2">libritts</th>
             <th colspan="1">Vocalsound</th>
             <th colspan="1">MELD</th>
             <th colspan="1">ESC50</th>
         </tr>
-	<tr>
-	    <td align=center>WER</td>
-            <td align=center>CER</td>
-	    <td align=center>Acc</td>
+	<tr>	
+			<td align=center>Acc</td>
             <td align=center>Acc</td>
             <td align=center>Acc</td>
     </thead>
     <tbody>
         <tr>
             <td align=center>DAC</td>
-            <td align=center></td>
-            <td align=center></td>
             <td align=center>0.511</td>
             <td align=center>0.481</td>
             <td align=center>0.285</td>
         </tr>
         <tr>
             <td align=center>Encodec</td>
-            <td align=center></td>
-            <td align=center></td>
             <td align=center>0.479</td>
             <td align=center>0.481</td>
             <td align=center>0.230</td>
         </tr>
         <tr>
             <td align=center>SemantiCodec</td>
-            <td align=center></td>
-            <td align=center></td>
             <td align=center>0.646</td>
-            <td align=center></td>
+            <td align=center>0.482</td>
             <td align=center>0.465</td>
         </tr>
 	<tr>
 	    <td align=center>Mimi</td>
-            <td align=center></td>
-            <td align=center></td>
             <td align=center>0.794</td>
             <td align=center>0.481</td>
             <td align=center>0.265</td>
         </tr>
 	<tr>
 	    <td align=center>SpeechTokenizer</td>
-            <td align=center></td>
-            <td align=center></td>
             <td align=center>0.698</td>
             <td align=center>0.489</td>
             <td align=center>0.420</td>
         </tr>
 	<tr>
 	    <td align=center>Xcodec</td>
-            <td align=center></td>
-            <td align=center></td>
             <td align=center>0.656</td>
             <td align=center>0.487</td>
             <td align=center>0.525</td>
         </tr>
 	<tr>
 	    <td align=center>YuE</td>
-            <td align=center></td>
-            <td align=center></td>
             <td align=center>0.684</td>
             <td align=center>0.481</td>
             <td align=center>0.515</td>
