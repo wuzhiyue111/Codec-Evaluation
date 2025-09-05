@@ -112,8 +112,11 @@ class RegressionProber(nn.Module):
         output_tensor = torch.stack(result, dim=0) 
         return output_tensor
 
-    def forward(self, x, y, n_segment_list):
-        # x = x.float()  
+    def forward(self, x, truth_label, n_segment_list):
+        """
+        x:[B*n_segments, D, T] 
+        n_segments: Number of audio segments
+        """ 
         x = x.permute(0, 2, 1)  #[B*n_segments, T, D] 
         x_channel = self.channel_attention1(x)
         x_conv = self.dsconv1(x_channel)  
@@ -125,10 +128,10 @@ class RegressionProber(nn.Module):
         x_flattened = x_conv.flatten(start_dim=1, end_dim=-1)    #[B*n_segments, input_dim=T' * D//16]
 
         output = self.output(x_flattened)  #[B*n_segments, 2]
-        if output.shape[0] != y.shape[0]:
+        if output.shape[0] != truth_label.shape[0]:
             output = self.group_mean(data=output, n_segment_list=n_segment_list) 
         output = self.drop_out(output)
 
-        loss = F.mse_loss(output, y)
+        loss = F.mse_loss(output, truth_label)
 
         return loss, output

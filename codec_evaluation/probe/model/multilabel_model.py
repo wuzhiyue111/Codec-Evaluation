@@ -12,25 +12,31 @@ class SEBlock(nn.Module):
             nn.Sigmoid()  
         )
 
-    def forward(self, x):
+    def forward(self, feature):
         """
-        input: [B, T, D]
+        feature: [B, T, D]
         B: batch size
         T: 时间维度
         D: 特征维度（即音频的通道数）
         """
-        b, t, _ = x.shape  
-        y = self.avg_pool(x)    
+        B, T, _ = feature.shape  
+        feature_avg = self.avg_pool(feature)    
     
-        y = y.view(b, t)  
-        y = self.fc(y)    
+        feature_avg = feature_avg.view(B, T)  
+        feature_fc = self.fc(feature_avg)    
         
-        y = y.view(b, t, 1)  
-        return x * y.expand_as(x)  
+        feature_fc = feature_fc.view(B, T, 1)  
+        return feature * feature_fc.expand_as(feature)  
     
 
 class DSConv(nn.Module):
     def __init__(self, in_ch, out_ch, kernel_size, stride, padding):
+        """
+        Args:
+            in_ch: Number of input feature channels 
+            out_ch: Number of output feature channels
+        """
+
         super(DSConv, self).__init__()
         # deep convolution
         self.depthwise_conv = nn.Conv1d(
@@ -111,8 +117,12 @@ class MultilabelProber(nn.Module):
         output_tensor = torch.stack(result, dim=0) 
         return output_tensor
 
-    def forward(self, x, y, n_segment_list):
-        y = y.float()  
+    def forward(self, x, truth_label, n_segment_list):    
+        """
+        x:[B*n_segments, D, T] 
+        n_segments: Number of audio segments
+        """ 
+        truth_label = truth_label.float()  
         x = x.permute(0, 2, 1)  #[B*n_segments, T, D] 
         x_channel = self.channel_attention1(x)
         x_conv = self.dsconv1(x_channel)  
@@ -124,11 +134,11 @@ class MultilabelProber(nn.Module):
         x_flattened = x_conv.flatten(start_dim=1, end_dim=-1)    #[B*n_segments, input_dim=T' * D//16]
 
         output = self.output(x_flattened)  #[B*n_segments, 2]
-        if output.shape[0] != y.shape[0]:
+        if output.shape[0] != truth_label.shape[0]:
             output = self.group_mean(data=output, n_segment_list=n_segment_list) 
         output = self.drop_out(output)
 
         loss_fn = nn.BCEWithLogitsLoss()
-        loss = loss_fn(output, y)
+        loss = loss_fn(output, truth_label)
 
         return loss, output
