@@ -1,13 +1,12 @@
 mode: quantized_emb
 sample_rate: 16000
-target_sec: 4
-n_segments: 1
-num_outputs: 128
+target_sec: 10
+num_outputs: 6
 probe_ckpt_dir: ???
 seed: 666
-codec_name: xcodec
+codec_name: yue # 需要更改
 task: multiclass
-save_result: null
+save_result: null #/home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_result/vocalsound_dataset/dac/unquantized.json
 
 trainer:
   _target_: pytorch_lightning.Trainer
@@ -20,22 +19,22 @@ trainer:
   val_check_interval: 1.0
 
 data:
-  _target_: codec_evaluation.probe.dataset.NSynthP_dataset.NSynthP_dataset.NSynthPdataModule
+  _target_: codec_evaluation.probe.dataset.VocalSound_dataset.VocalSound_dataset.VocalSoundDataModule
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    base_audio_dir: /sdb/data1/music/symbolic_music
-  train_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/NSynthI_dataset/NSynth_dataset/NSynth_train_dataset
-  valid_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/NSynthI_dataset/NSynth_dataset/NSynth_valid_dataset
-  test_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/NSynthI_dataset/NSynth_dataset/NSynth_test_dataset
+    base_audio_dir: /sdb/data1/
+  train_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/VocalSound_dataset/VocalSound_dataset/Vocalsound_train_dataset
+  valid_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/VocalSound_dataset/VocalSound_dataset/Vocalsound_valid_dataset
+  test_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/VocalSound_dataset/VocalSound_dataset/Vocalsound_test_dataset
   codec_name: ${codec_name}
-  train_batch_size: 256
-  valid_batch_size: 32
-  test_batch_size: 128
-  train_num_workers: 128
-  valid_num_workers: 8
-  test_num_workers: 64
+  train_batch_size: 32
+  valid_batch_size: 2
+  test_batch_size: 32
+  train_num_workers: 8
+  valid_num_workers: 4
+  test_num_workers: 4
 
 model:
   _target_: codec_evaluation.probe.model.lit_prober.Prober
@@ -48,15 +47,14 @@ model:
     _target_: codec_evaluation.probe.model.multiclass_model.MulticlassProber
     _partial_: true
     num_outputs: ${num_outputs}
-    drop_out: 0.2
+    drop_out: 0.1
     channel_reduction: 16
     padding: 1
     kernel_size: 3
     stride: 1
   target_sec: ${target_sec}
-  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/xcodec
-  teacher_ckpt_path: /sdb/model_weight/codec_evaluation/codec_ckpt/xcodec/hubert_base_general_audio
-  
+  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/yue
+
   optimizer_builder:
       _target_: torch.optim.AdamW
       _partial_: true
@@ -94,6 +92,7 @@ callbacks:
     every_n_epochs: 1
     mode: min
     save_top_k: 1
+    save_last: False
     filename: ${codec_name}_${mode}_{epoch}-{valid_loss:.4f}
     verbose: True
 

@@ -103,8 +103,8 @@ class Prober(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         """Validation step."""
         loss, batch_size, labels_pred, labels = self.step(batch)
-        self.log('valid_loss', loss, batch_size=batch_size, on_epoch=True, prog_bar=True, logger=True, on_step=True, sync_dist=True)
-        self.update_metrics("valid", labels, labels_pred)
+        self.log('validation_loss', loss, batch_size=batch_size, on_epoch=True, prog_bar=True, logger=True, on_step=True, sync_dist=True)
+        self.update_metrics("validation", labels, labels_pred)
 
         return loss
     
@@ -156,7 +156,7 @@ class Prober(pl.LightningModule):
         """
         self.all_metrics = set()
         if self.task == 'multilabel':
-            for split in ['train', 'valid', 'test']:
+            for split in ['train', 'validation', 'test']:
                 setattr(self, f"{split}_ap", torchmetrics.AveragePrecision(
                                                             task=self.task,
                                                             num_labels=self.num_outputs,
@@ -171,7 +171,7 @@ class Prober(pl.LightningModule):
        
 
         elif self.task == 'multiclass':
-            for split in ['train', 'valid', 'test']:
+            for split in ['train', 'validation', 'test']:
                 setattr(self, f"{split}_acc", torchmetrics.Accuracy(
                                                             task=self.task,
                                                             num_classes=self.num_outputs,
@@ -185,7 +185,7 @@ class Prober(pl.LightningModule):
                 self.all_metrics.add('f1')
 
         elif self.task == 'regression':        
-            for split in ['train', 'valid', 'test']:
+            for split in ['train', 'validation', 'test']:
                 # r2 score
                 setattr(self, f"{split}_r2", torchmetrics.R2Score(num_outputs=2, multioutput='uniform_average'))
                 self.all_metrics.add('r2')
@@ -263,7 +263,7 @@ class Prober(pl.LightningModule):
         self.log_metrics('train')
     
     def on_validation_epoch_end(self, outputs = None):        
-        self.log_metrics('valid')
+        self.log_metrics('validation')
 
     def on_test_epoch_end(self, outputs = None):
         self.save_result()

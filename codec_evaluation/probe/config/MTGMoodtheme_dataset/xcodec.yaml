@@ -3,6 +3,7 @@ sample_rate: 44100
 target_sec: 10
 num_outputs: 56
 probe_ckpt_dir: ???
+seed: 666
 codec_name: xcodec # 需要更改
 task: multilabel
 save_result: null
@@ -25,7 +26,7 @@ data:
     target_sec: ${target_sec}
     is_mono: True
     task: ${task}
-    base_audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data
+    base_audio_dir: /sdb/data1/music/mix_music/marble_dataset/data
     dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MTGMoodtheme_dataset/MTGMoodtheme_dataset
   codec_name: ${codec_name}
   train_batch_size: 8
@@ -53,6 +54,7 @@ model:
     stride: 1
   target_sec: ${target_sec}
   model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/xcodec
+  teacher_ckpt_path: /sdb/model_weight/codec_evaluation/codec_ckpt/xcodec/hubert_base_general_audio
 
   optimizer_builder:
       _target_: torch.optim.AdamW
