@@ -1,34 +1,36 @@
-from pytorch_lightning import LightningModule
-from codec_evaluation.codecs.init_codecs import init_codec
-from codec_evaluation.utils.utils import cut_or_pad
 import torch
-from codec_evaluation.utils.logger import RankedLogger
-import os
-from typing import Dict, Any
-from asr_decoder import CTCDecoder
-from jiwer import wer, cer
+import torch.nn as nn
+import pytorch_lightning as pl
+from typing import Any, Dict
+from codec_evaluation.codecs.init_codecs import init_codec
+from conformer import Conformer 
 from codec_evaluation.probe.model.ctc_model import Ctc_Probe
-from codec_evaluation.reconstruction_eval.utils import transform_text_list_for_wer, transform_text_list_for_cer
-from einops import rearrange
+from torchmetrics.text import WordErrorRate, CharErrorRate
+from asr_decoder import CTCDecoder
 
-logger = RankedLogger(__name__, rank_zero_only=True)
 
-class CtcLitProber(LightningModule):
+class CodecCTCProbe(pl.LightningModule):
     def __init__(
         self,
         codec_name: str,
+        mode: str,
         sample_rate: int,
         model_ckpt_dir: str,
-        language: str,
-        mode: str = "quantized_emb",
+        tokenizer: Any = None,
         probe_model_builder: Any = None,
-        optimizer_builder: Any = None,
+        optimizer_builder: Any= None,
         lr_scheduler_builder: Any = None,
-        accumulate_grad_batches: int = 1,
         feature_extractor_config_path: Any = None,
         teacher_ckpt_path: Any = None,
+        
     ):
-        super(CtcLitProber, self).__init__()
+        super().__init__()
+        self.codec_name = codec_name
+        self.mode = mode
+        self.sample_rate = sample_rate
+        self.optimizer_builder = optimizer_builder
+        self.lr_scheduler_builder = lr_scheduler_builder
+        self.tokenizer = tokenizer
         self.codec_model = init_codec(
             modelname=codec_name,
             mode=mode,
@@ -39,23 +41,19 @@ class CtcLitProber(LightningModule):
             feature_extractor_config_path=feature_extractor_config_path,
             teacher_ckpt_path = teacher_ckpt_path
         )
-        if codec_name == 'semanticodec':
-            self.dim = self.codec_model.dim * 2
-        else:
-            self.dim = self.codec_model.dim
+        
+        self.codec_dim = self.codec_model.dim * 2 if self.codec_name == 'semanticodec' else self.codec_model.dim
 
-        logger.info(f"{codec_name} dim: {self.dim}")
-        self.probe_model: Ctc_Probe = probe_model_builder(
-            codec_dim = self.dim)
-        self.language = language
-        self.codec_name = codec_name
-        self.optimizer_builder = optimizer_builder
-        self.lr_scheduler_builder = lr_scheduler_builder
-        self.automatic_optimization = False
-        self.accumulate_grad_batches = accumulate_grad_batches
+        self.probe_model: Ctc_Probe = probe_model_builder(self.tokenizer)
+
         self.ctc_decoder = CTCDecoder()
+
         self.test_step_outputs = []
-        self.sample_rate = sample_rate
+
+        self.val_wer = WordErrorRate()
+        self.val_cer = CharErrorRate()
+        self.test_wer = WordErrorRate()
+        self.test_cer = CharErrorRate()
 
     def extract_feature(self, waveforms, expect_lenth: torch.Tensor = None):
         """
@@ -64,150 +62,123 @@ class CtcLitProber(LightningModule):
             return: [B*n_segments, D, T]
         """
         length = torch.ones(waveforms.shape[0])
-        all_features = self.codec_model(waveforms, length)
 
+        input_ids, _ = self.codec_model(waveforms) # [B, T, K]
+        input_ids = input_ids.to(torch.long).clone()
+        
         if self.codec_name == 'semanticodec':
             assert expect_lenth is not None, "expect_lenth is required for semanticodec"
-            if all_features.dim() == 4:
-                all_features = rearrange(all_features, 'b d c t -> b (d c) t')
             max_length = max(expect_lenth).item()
-            all_features = all_features[:, :, :int(max_length)]
+            input_ids = input_ids[:, :int(max_length), :]
 
-        return all_features
-    
-    def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
-        # Do not save codec
-        state_dict = checkpoint["state_dict"]
-        for name in list(state_dict.keys()):
-            if "codec_model" in name:
-                state_dict.pop(name)
+        return input_ids
 
-    def step(self, batch):
-        audio = batch["audio"]
-        text = batch["text"]
-        audio_length = batch["audio_length"]
-        batch_size = audio.shape[0]
-
-        # consider the resample function of codec, libriTTS dataset is 24000 sample rate
+    def _get_feature_lengths(self, audio_lengths: torch.Tensor):
+        
         if self.codec_model.orig_sample_rate != self.sample_rate:
-            feature_length = audio_length * (self.codec_model.orig_sample_rate / self.sample_rate) // self.codec_model.hop_length
+            ratio = self.codec_model.orig_sample_rate / self.sample_rate
+            feature_lengths = (audio_lengths * ratio) // self.codec_model.hop_length
         else:
-            feature_length = audio_length // self.codec_model.hop_length
-
+            feature_lengths = audio_lengths // self.codec_model.hop_length
+        
         if self.codec_name == "hubert":
-            feature_length = feature_length - 1
+            feature_lengths -= 1
+        
+        return feature_lengths.to(torch.int32)
+
+    def _shared_step(self, batch):
+        
+        waveforms = batch["audio"]
+        texts = batch["text"]
+        audio_lengths = batch["audio_length"]
+
+        feature_lengths = self._get_feature_lengths(audio_lengths)
+        input_ids = self.extract_feature(waveforms, feature_lengths)
+        
+        loss, logits = self.probe_model(input_ids, feature_lengths, texts)
+
+        return loss, logits, texts, feature_lengths
+    
+    def _ctc_decode_batch(self, logits: torch.Tensor, feature_lengths: torch.Tensor):
+
+        log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
+        pred_texts = []
+
+        for i in range(log_probs.shape[0]):
+            current_log_probs = log_probs[i, :feature_lengths[i], :]
+            decoded_result = self.ctc_decoder.ctc_greedy_search(current_log_probs, is_last=True)
+            self.ctc_decoder.reset() 
+
+            text = self.tokenizer.decode(decoded_result["tokens"], skip_special_tokens=True)
+            pred_texts.append(text)
             
-        audio_features = self.extract_feature(audio, feature_length)
-        loss = self.probe_model(audio_features, feature_length, text)
-        return loss, batch_size
+        return pred_texts
+
 
     def training_step(self, batch, batch_idx):
-        optimizer = self.optimizers()
-        lr_scheduler = self.lr_schedulers()
-        loss, batch_size = self.step(batch)
+        loss, _, _ , _= self._shared_step(batch)
 
-        # 检查loss是否正常
         if torch.isnan(loss) or torch.isinf(loss):
-            logger.info(f"Skipping bad loss: {loss.item()}")
-            return {"loss": torch.tensor(0.0).to(self.device).requires_grad_(True).detach()}
+            
+            print(f"Skipping bad loss on batch {batch_idx}: {loss.item()}")
+            return None 
+
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, sync_dist=True)
+        return loss
+
+    def validation_step(self, batch):
+        loss, logits, ground_truth_texts, feature_lengths = self._shared_step(batch)
+
+        # _, pred_texts = self.ctc_greedy_decode(logits, feature_lengths)
+        pred_texts = self._ctc_decode_batch(logits, feature_lengths)
+
+        # 更新torchmetrics指标
+        self.val_wer.update(pred_texts, ground_truth_texts)
+        self.val_cer.update(pred_texts, ground_truth_texts)
+
+        # 在epoch结束时会自动计算和记录
+        self.log("val_loss", loss, on_epoch=True, prog_bar=True, sync_dist=True)
+        self.log("val_wer", self.val_wer, on_epoch=True, prog_bar=True)
+        self.log("val_cer", self.val_cer, on_epoch=True, prog_bar=True)
+
+    def test_step(self, batch):
         
-        # 梯度累积
-        self.manual_backward(loss / self.accumulate_grad_batches)
-        if (batch_idx+1) % self.accumulate_grad_batches == 0:
-            optimizer.step()
-            optimizer.zero_grad()
-            lr_scheduler.step()
+        _, logits, ground_truth_texts, feature_lengths = self._shared_step(batch)
+        pred_texts = self._ctc_decode_batch(logits, feature_lengths)
+        
+        self.test_wer.update(pred_texts, ground_truth_texts)
+        self.test_cer.update(pred_texts, ground_truth_texts)
 
-        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True, sync_dist=True, batch_size=batch_size)
-        return {"loss": loss}
+        # 在test_epoch_end时会自动计算和记录最终结果
+        self.log("test_wer", self.test_wer, on_epoch=True)
+        self.log("test_cer", self.test_cer, on_epoch=True)
+        self.test_step_outputs = {"wer": self.test_wer, "cer": self.test_cer}
 
-    def validation_step(self, batch, batch_idx):
-        loss, batch_size = self.step(batch)
-        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True, logger=True, sync_dist=True, batch_size=batch_size)
-    
-    def on_train_batch_end(self, outputs: torch.Tensor | os.Mapping[str, Any] | None, batch: Any, batch_idx: int) -> None:
-        if (batch_idx+1) % (self.accumulate_grad_batches * 10) == 0: # per 10 steps empty cache
-            torch.cuda.empty_cache()
-        return super().on_train_batch_end(outputs, batch, batch_idx)
+    def on_test_epoch_end(self):
+       
+        final_wer = self.test_wer.compute()
+        final_cer = self.test_cer.compute()
+        self.log("test_wer", final_wer)
+        self.log("test_cer", final_cer)
 
     def configure_optimizers(self):
-        """Configure the optimizer and scheduler."""
-        optimizer = self.optimizer_builder(self.probe_model.parameters())
-        if self.lr_scheduler_builder is not None:
-            lr_scheduler = self.lr_scheduler_builder(optimizer)
-            return {"optimizer": optimizer,
-                    "lr_scheduler": {
-                        "scheduler": lr_scheduler,
-                        "interval": "step",
-                    }}
-        else:
-            return optimizer
+        """配置优化器和学习率调度器"""
+
+        optimizer = self.optimizer_builder(self.parameters())
+        if self.lr_scheduler_builder:
+            scheduler = self.lr_scheduler_builder(optimizer)
+            return {
+                "optimizer": optimizer,
+                "lr_scheduler": {
+                    "scheduler": scheduler,
+                    "interval": "step", 
+                },
+            }
+        return optimizer
+    
+    def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
         
-    def post_process_text_for_wer(self, text_list):
-        # 如果输入是list，先合并成字符串
-        # 过滤掉特殊token
-        filtered = [word for word in text_list if word not in ["", "<pad>", "</s>", "<unk>", "[PAD]", "[UNK]"]]
-        text = " ".join(filtered)
-        text = transform_text_list_for_wer([text])[0]
-        return text
-    
-    def post_process_text_for_cer(self, text_list):
-        # 如果输入是list，先合并成字符串
-        # 过滤掉特殊token
-        filtered = [word for word in text_list if word not in ["", "<pad>", "</s>", "<unk>", "[PAD]", "[UNK]"]]
-        text = " ".join(filtered)
-        text = transform_text_list_for_cer([text])[0]
-        return text
-
-    def test_step(self, batch, batch_idx):
-        audio = batch["audio"]
-        text = batch["text"]
-
-        # semantic will pad the audio to multiple of 10.24
-        if self.codec_name == 'semanticodec':
-            audio_length = batch["audio_length"]
-            if self.codec_model.orig_sample_rate != self.sample_rate:
-                feature_length = audio_length * (self.codec_model.orig_sample_rate / self.sample_rate) // self.codec_model.hop_length
-            else:
-                feature_length = audio_length // self.codec_model.hop_length
-            audio_features = self.extract_feature(audio, feature_length)
-        else:
-            audio_features = self.extract_feature(audio)
-
-        feature_logits_prob = self.probe_model.inference(audio_features)
-
-        wer_list = []
-        result_list = []
-        cer_list = []
-        for i in range(len(text)):
-            result = self.ctc_decoder.ctc_greedy_search(feature_logits_prob[i], is_last=True)
-            self.ctc_decoder.reset()
-            pred_text = [self.probe_model.tokenizer.decode(r) for r in result["tokens"]]
-            pred_text_for_wer = self.post_process_text_for_wer(pred_text)
-            labels_text_for_wer = self.post_process_text_for_wer([text[i]])
-            pred_text_for_cer = self.post_process_text_for_cer(pred_text)
-            labels_text_for_cer = self.post_process_text_for_cer([text[i]])
-            wer_list.append(wer(labels_text_for_wer, pred_text_for_wer))
-            result_list.append({"pred_text": pred_text_for_wer, "labels_text": labels_text_for_wer})
-            cer_list.append(cer(labels_text_for_cer, pred_text_for_cer))
-        wer_result = sum(wer_list) / len(wer_list)
-        cer_result = sum(cer_list) / len(cer_list)
-
-        self.test_step_outputs.append({"wer": wer_result, "cer": cer_result, "result": result_list})
-    
-    def on_test_epoch_end(self):
-        wer_list = []
-        result = []
-        cer_list = []
-        for output in self.test_step_outputs:
-            wer_list.append(output["wer"])
-            for r in output["result"]:
-                result.append(r)
-            cer_list.append(output["cer"])
-        avg_wer = sum(wer_list) / len(wer_list)
-        avg_cer = sum(cer_list) / len(cer_list)
-
-        if self.language == 'en':
-            self.test_step_outputs = {"wer": avg_wer, "cer": avg_cer}
-        else:
-            self.test_step_outputs = {"cer": avg_cer}
+        state_dict = checkpoint["state_dict"]
+        for name in list(state_dict.keys()):
+            if name.startswith("codec_model."):
+                state_dict.pop(name)

@@ -178,7 +178,7 @@ def cli():
     parser.add_argument('--mode',
                         type=str,
                         required=True,
-                        choices=["unquantized_emb", "quantized_emb"],
+                        choices=["unquantized_emb", "quantized_emb","encode"],
                         help=f'Mode')
     
     args, _ = parser.parse_known_args()

@@ -1,57 +1,52 @@
 mode: quantized_emb
-sample_rate: 44100
-target_sec: 10
-num_outputs: 24
+sample_rate: 48000
 probe_ckpt_dir: ???
 seed: 666
-codec_name: dac # 需要更改
-task: multiclass
-save_result: null #/home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_result/GS_dataset/dac/unquantized.json
+codec_name: dac
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
   devices: ???
   precision: 32
-  max_epochs: 100
+  max_epochs: 10
   limit_val_batches: 10
-  log_every_n_steps: 5
+  log_every_n_steps: 20
   val_check_interval: 1.0
 
 data:
-  _target_: codec_evaluation.probe.dataset.GS_dataset.GS_dataset.GSdataModule
-  dataset_args:
-    sample_rate: ${sample_rate}
-    target_sec: ${target_sec}
-    is_mono: True
-    dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/GS_dataset/GS_dataset
-    base_audio_dir: /sdb/data1/music/mix_music/marble_dataset/data
-  codec_name: ${codec_name}
-  train_batch_size: 8
-  valid_batch_size: 1
-  test_batch_size: 8
+  _target_: codec_evaluation.probe.dataset.Common_Voice_dataset.Common_voice_dataset.Common_voice_module
+  target_samplerate: ${sample_rate}
+  dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/Common_Voice_dataset/common_voice/commonvoice_dataset/commonvoice_validated_dataset
+  base_audio_dir: /sdb/data1/speech/48kHz
+  train_split: 0.98
+  valid_split: 0.01
+  test_split: 0.01
+  train_batch_size: 4
+  valid_batch_size: 4
+  test_batch_size: 4
   train_num_workers: 4
-  valid_num_workers: 2
-  test_num_workers: 2
+  valid_num_workers: 1
+  test_num_workers: 1
 
 model:
-  _target_: codec_evaluation.probe.model.lit_prober.Prober
+  _target_: codec_evaluation.probe.model.ctc_lit_prober.CodecCTCProbe
   codec_name: ${codec_name}
   sample_rate: ${sample_rate}
   mode: ${mode}
-  task: ${task}
-  num_outputs: ${num_outputs}
+  tokenizer:
+    _target_: transformers.Speech2TextProcessor.from_pretrained
+    pretrained_model_name_or_path: /sdb/model_weight/s2t-small-librispeech-asr
   probe_model_builder:
-    _target_: codec_evaluation.probe.model.multiclass_model.MulticlassProber
+    _target_: codec_evaluation.probe.model.ctc_model.Ctc_Probe
     _partial_: true
-    num_outputs: ${num_outputs}
-    drop_out: 0.1
-    channel_reduction: 16
-    padding: 1
-    kernel_size: 3
-    stride: 1
-  target_sec: ${target_sec}
-  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt # 需要更改
+    vocab_size: 10000
+    codec_vocab_size: 1024
+    dropout: 0.1
+    lm_head_nums: 8
+    conformer_depth: 3
+    conformer_heads: 8
+  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -60,15 +55,15 @@ model:
       betas: [0.8, 0.99]
       eps: 1e-5
       weight_decay: 0.08
-    
+
   lr_scheduler_builder:
     _target_: torch.optim.lr_scheduler.LambdaLR
     _partial_: true
     lr_lambda:
       _target_: codec_evaluation.utils.schedule.get_cosine_schedule_with_warmup_lr_lambda
       _partial_: true
-      num_warmup_steps: 10
-      num_training_steps: 10000
+      num_warmup_steps: 200
+      num_training_steps: 4000
       final_lr_ratio: 0.2
 
 callbacks:
@@ -85,13 +80,12 @@ callbacks:
 
   model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
-    monitor: valid_loss
+    monitor: val_loss
     dirpath: ${probe_ckpt_dir}
     every_n_epochs: 1
     mode: min
     save_top_k: 1
-    save_last: False
-    filename: ${codec_name}_${mode}_{epoch}-{valid_loss:.4f}
+    filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
     verbose: True
 
 tensorboard:

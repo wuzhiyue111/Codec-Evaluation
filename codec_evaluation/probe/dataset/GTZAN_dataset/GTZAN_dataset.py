@@ -104,7 +104,7 @@ class GTZANdataset(Dataset):
             audio_tensor = torch.vstack(audio_list)
         else:
             audio_list = [audio.squeeze(0) for audio in audio_list]
-            audio_tensor = torch.nn.utils.rnn.pad_sequence(audio_list, batch_first=True).unsqueeze(1)
+            audio_tensor = torch.nn.utils.rnn.pad_sequence(audio_list, batch_first=True)
         
         label_tensor = torch.cat(label_list, dim=0)
         return {

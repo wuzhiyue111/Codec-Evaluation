@@ -8,42 +8,41 @@ from conformer import Conformer
 class Ctc_Probe(nn.Module):
     def __init__(
         self,
-        tokenizer,
-        codec_dim,
-        vocab_size=5000,
-        dropout=0.1,
-        conformer_head=8,
+        tokenizer: str, 
+        vocab_size: int,
+        codec_vocab_size: int,
+        lm_head_nums: int,
+        conformer_depth: int = 3,
+        conformer_heads: int = 8,
+        dropout: float = 0.1,
         **kwargs
     ):
         super(Ctc_Probe, self).__init__()
-        self.tokenizer = tokenizer.tokenizer
-        self.dropout = nn.Dropout(dropout)
 
-        self.ctc_decoder = CTCDecoder()
-        self.criterion = nn.CTCLoss(
-            blank=self.tokenizer.pad_token_id, reduction="mean", zero_infinity=True
-        )
-        self.automatic_optimization = False
+        self.vocab_size = vocab_size
+        self.conformer_depth = conformer_depth
+        self.conformer_heads = conformer_heads
+        self.dropout = dropout
+        self.codec_vocab_size = codec_vocab_size
+        self.tokenizer = tokenizer
+        self.lm_head_nums = lm_head_nums
 
-        # if codec_dim >= 1024, use the projection layer will get bad performance
-        if codec_dim < 1024:
-            self.codec_projection = nn.Linear(codec_dim, 1024)
-            input_dim = 1024
-            self.use_projection = True
-        else:
-            self.codec_projection = nn.Identity()
-            # self.codec_projection = nn.Linear(codec_dim, 1024)
-            # input_dim = 1024
-            input_dim = codec_dim
-            self.use_projection = False
-            # self.use_projection = True
+        self.embed_tokens = nn.ModuleList([nn.Embedding(num_embeddings=codec_vocab_size + 1,
+                                                        embedding_dim=1024,
+                                                        padding_idx=codec_vocab_size
+                                                    )
+                                            for _ in range(lm_head_nums)
+                                        ])
+        
+        self.dropout = nn.Dropout(self.dropout)
+        
+        self.feature_projection = nn.Linear(1024*lm_head_nums, 1024)
 
-        # assert input_dim % conformer_head == 0, "The dimension of the codec model must be divisible by the number of conformer heads"
         self.conformer = Conformer(
-            dim=input_dim, # 1024
-            depth=3,  # 3 blocks
-            dim_head=input_dim // conformer_head,
-            heads=conformer_head,
+            dim=1024,
+            depth=self.conformer_depth,
+            dim_head=1024 // self.conformer_heads,
+            heads=self.conformer_heads,
             ff_mult=4,
             conv_expansion_factor=2,
             conv_kernel_size=31,
@@ -51,34 +50,29 @@ class Ctc_Probe(nn.Module):
             ff_dropout=0.0,
             conv_dropout=0.0,
         )
-        self.conformer_head = nn.Linear(input_dim, vocab_size)
+        self.ctc_head = nn.Linear(1024, self.vocab_size)
+
+        self.criterion = nn.CTCLoss(
+            blank=self.tokenizer.tokenizer.pad_token_id, reduction="mean", zero_infinity=True
+        )
     
-    def forward(self, feature, feature_length, text):
+    def forward(self, input_ids, feature_lengths, texts):
         # feature: [B, D, T]
-        feature = feature.transpose(1, 2)
-        feature = self.dropout(feature)
-        if self.use_projection:
-            feature = self.codec_projection(feature)
-        feature = self.conformer(feature)
-        feature = self.conformer_head(feature)
-        feature_logits_prob = torch.nn.functional.log_softmax(
-            feature, dim=-1, dtype=torch.float32
-        )  # [B, T, V]
-        output = self.tokenizer(text, padding=True, return_tensors="pt")
-        labels = output["input_ids"].to(feature.device)
-        labels_mask = output["attention_mask"]
-        labels_lengths = tuple(mask.sum().item() for mask in labels_mask)
+        input_embeds_list = []
+        for i in range(self.lm_head_nums):
+            input_embeds_list.append(self.embed_tokens[i](input_ids[:, :, i]))
+        features = torch.cat(input_embeds_list, dim = 2)
+        features = self.feature_projection(features)
+        
+        features = self.dropout(features)
+        conformer_output = self.conformer(features)
+        logits = self.ctc_head(conformer_output) # [B, T, V]
 
-        loss = self.criterion(feature_logits_prob.transpose(0, 1), labels, tuple(int(length.item()) for length in feature_length), labels_lengths)
-        return loss
+        tokenized_output = self.tokenizer(text=texts, padding="longest", return_tensors="pt", add_special_tokens=False)
+        labels = tokenized_output.input_ids
+        label_lengths = tokenized_output.attention_mask.sum(dim=-1)
 
-    def inference(self, feature):
-        feature = feature.transpose(1, 2)
-        if self.use_projection:
-            feature = self.codec_projection(feature)
-        feature = self.conformer(feature)
-        feature = self.conformer_head(feature)
-        feature_logits_prob = torch.nn.functional.log_softmax(
-            feature, dim=-1, dtype=torch.float32
-        )  # [B, T, V]
-        return feature_logits_prob
+        log_probs = torch.nn.functional.log_softmax(logits, dim=-1).transpose(0, 1) # [T, B, V]
+        loss = self.criterion(log_probs, labels, feature_lengths, label_lengths)
+
+        return loss, logits
