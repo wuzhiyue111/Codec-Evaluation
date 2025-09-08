@@ -106,28 +106,28 @@ class EMOdataModule(pl.LightningDataModule):
         dataset_args,  # 包含dataset_path、base_audio_dir等参数
         codec_name,
         train_batch_size=16,
-        valid_batch_size=16,
+        val_batch_size=16,
         test_batch_size=16,
         train_num_workers=4,
-        valid_num_workers=4,
+        val_num_workers=4,
         test_num_workers=4,
     ):
         super().__init__()
         self.dataset_args = dataset_args
         self.train_batch_size = train_batch_size
-        self.valid_batch_size = valid_batch_size
+        self.val_batch_size = val_batch_size
         self.test_batch_size = test_batch_size
         self.codec_name = codec_name
         self.train_num_workers = train_num_workers
-        self.valid_num_workers = valid_num_workers
+        self.val_num_workers = val_num_workers
         self.test_num_workers = test_num_workers
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
             self.train_dataset = EMOdataset(split="train", **self.dataset_args)
-            self.valid_dataset = EMOdataset(split="valid", **self.dataset_args)
+            self.val_dataset = EMOdataset(split="valid", **self.dataset_args)
         if stage == "val":
-            self.valid_dataset = EMOdataset(split="valid", **self.dataset_args)
+            self.val_dataset = EMOdataset(split="valid", **self.dataset_args)
         if stage == "test":
             self.test_dataset = EMOdataset(split="test", **self.dataset_args)
 
@@ -142,11 +142,11 @@ class EMOdataModule(pl.LightningDataModule):
 
     def val_dataloader(self):
         return DataLoader(
-            dataset=self.valid_dataset,
-            batch_size=self.valid_batch_size,
+            dataset=self.val_dataset,
+            batch_size=self.val_batch_size,
             shuffle=False,
-            collate_fn=self.valid_dataset.collate_fn,
-            num_workers=self.valid_num_workers,
+            collate_fn=self.val_dataset.collate_fn,
+            num_workers=self.val_num_workers,
         )
 
     def test_dataloader(self):

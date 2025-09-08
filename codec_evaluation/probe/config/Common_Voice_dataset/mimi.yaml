@@ -1,4 +1,4 @@
-mode: quantized_emb
+mode: encode
 sample_rate: 48000
 probe_ckpt_dir: ???
 seed: 666
@@ -20,13 +20,13 @@ data:
   dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/Common_Voice_dataset/common_voice/commonvoice_dataset/commonvoice_validated_dataset
   base_audio_dir: /sdb/data1/speech/48kHz
   train_split: 0.98
-  valid_split: 0.01
+  val_split: 0.01
   test_split: 0.01
   train_batch_size: 4
-  valid_batch_size: 4
+  val_batch_size: 4
   test_batch_size: 4
   train_num_workers: 4
-  valid_num_workers: 1
+  val_num_workers: 1
   test_num_workers: 1
 
 model:

@@ -1,9 +1,7 @@
 import torch
-import torch.nn as nn
 import pytorch_lightning as pl
 from typing import Any, Dict
 from codec_evaluation.codecs.init_codecs import init_codec
-from conformer import Conformer 
 from codec_evaluation.probe.model.ctc_model import Ctc_Probe
 from torchmetrics.text import WordErrorRate, CharErrorRate
 from asr_decoder import CTCDecoder

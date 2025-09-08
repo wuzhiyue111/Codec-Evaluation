@@ -1,49 +1,61 @@
-mode: quantized_emb
+mode: unquantized_emb
 sample_rate: 44100
+target_sec: 5
+num_outputs: 50
 probe_ckpt_dir: ???
 seed: 666
-codec_name: encodec
+codec_name: qwen2audioencoder # 需要更改
+task: multiclass
+save_result: null 
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
   devices: ???
   precision: 32
-  max_epochs: 20
+  max_epochs: 100
   limit_val_batches: 10
-  log_every_n_steps: 20
+  log_every_n_steps: 5
   val_check_interval: 1.0
 
 data:
-  _target_: codec_evaluation.probe.dataset.MuChin_dataset.MuChin_ctc.MuChin_ctc_module
-  dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MuChin_dataset/MuChin_dataset
-  base_audio_dir: /mnt/sda/a6000/sdb/data1/benchmark
-  train_split: 0.85
-  valid_split: 0.05
+  _target_: codec_evaluation.probe.dataset.ESC50_dataset.ESC50_dataset.ESC50dataModule
+  dataset_args:
+    sample_rate: ${sample_rate}
+    target_sec: ${target_sec}
+    task: ${task}
+    is_mono: True
+    dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/ESC50_dataset/ESC50_dataset
+    base_audio_dir: /sdb/data1/sound
+  codec_name: ${codec_name}
+  train_split: 0.9
   test_split: 0.1
-  train_batch_size: 8
-  valid_batch_size: 2
-  test_batch_size: 8
-  train_num_workers: 16
-  valid_num_workers: 2
-  test_num_workers: 16
+  train_batch_size: 128
+  val_batch_size: 2
+  test_batch_size: 128
+  train_num_workers: 32
+  val_num_workers: 4
+  test_num_workers: 32
 
 model:
-  _target_: codec_evaluation.probe.model.ctc_lit_prober.CtcLitProber
+  _target_: codec_evaluation.probe.model.lit_prober.Prober
   codec_name: ${codec_name}
   sample_rate: ${sample_rate}
   mode: ${mode}
-  language: ch
+  task: ${task}
+  num_outputs: ${num_outputs}
   probe_model_builder:
-    _target_: codec_evaluation.probe.model.ctc_model.Ctc_Probe
+    _target_: codec_evaluation.probe.model.multiclass_model.MulticlassProber
     _partial_: true
-    tokenizer:
-      _target_: transformers.Wav2Vec2Processor.from_pretrained
-      pretrained_model_name_or_path: /mnt/sda/a6000/sdb/data1/model_weight/wav2vec2-large-chinese-zh-cn
-    vocab_size: 5171
-    dropout: 0.1
-    conformer_head: 8
-  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz
+    num_outputs: ${num_outputs}
+    drop_out: 0.1
+    channel_reduction: 16
+    padding: 1
+    kernel_size: 3
+    stride: 1
+  target_sec: ${target_sec}
+  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/qwen2audioencoder
+  feature_extractor_config_path: /sdb/model_weight/whisper-large-v3/preprocessor_config.json
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -52,15 +64,15 @@ model:
       betas: [0.8, 0.99]
       eps: 1e-5
       weight_decay: 0.08
-
+    
   lr_scheduler_builder:
     _target_: torch.optim.lr_scheduler.LambdaLR
     _partial_: true
     lr_lambda:
       _target_: codec_evaluation.utils.schedule.get_cosine_schedule_with_warmup_lr_lambda
       _partial_: true
-      num_warmup_steps: 200
-      num_training_steps: 4000
+      num_warmup_steps: 10
+      num_training_steps: 10000
       final_lr_ratio: 0.2
 
 callbacks:
@@ -82,6 +94,7 @@ callbacks:
     every_n_epochs: 1
     mode: min
     save_top_k: 1
+    save_last: False
     filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
     verbose: True
 
