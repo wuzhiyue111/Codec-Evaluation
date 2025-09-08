@@ -1,5 +1,4 @@
 import argparse
-import os
 import random
 import numpy as np
 import torch
@@ -7,9 +6,7 @@ import torchaudio
 from torch.nn.utils.rnn import pad_sequence
 from speechbrain.inference.speaker import EncoderClassifier
 from torch.utils.data.dataloader import DataLoader
-from codec_evaluation.probe.dataset.LibriTTS_dataset.libritts_ctc import (
-    LibriTTS_ctc_dataset,
-)
+from codec_evaluation.reconstruction_eval.libritts_dataset.libritts_dataset import LibriTTS_dataset
 from tqdm import tqdm
 from transformers import WhisperForConditionalGeneration, WhisperProcessor
 from codec_evaluation.codecs.init_codecs import init_codec
@@ -21,8 +18,6 @@ from codec_evaluation.reconstruction_eval.utils import (
     wer,
     cer,
 )
-from tqdm import tqdm
-
 
 def seed_all(seed):
     torch.manual_seed(seed)
@@ -47,6 +42,7 @@ class CodecEvaluation:
         sample_rate: int,
         asr_model_path_or_name: str,
         dataset_path: str,
+        base_audio_dir: str,
         batch_size: int = 32,
         num_workers: int = 8,
         mode: str = "reconstruct",
@@ -54,14 +50,17 @@ class CodecEvaluation:
         **kwargs,
     ):
         """
-        codec_model_safetensors_path: codec absolute path model.safetensors
+        codec_name: codec name, such as encodec, dac, etc.
+        model_ckpt_dir: codec model checkpoint directory
+        device: GPU device, such as cuda:0
+        sample_rate: dataset sample rate
         asr_model_path_or_name: asr model path or name for wer compute
+        dataset_path: dataset .arrow file path
+        base_audio_dir: base audio dir for dataset load
+        batch_size: batch size  
+        num_workers: number of workers for dataloader
+        mode: codec mode, such as reconstruct, encode_decode, etc.
         wav2vec_model_path_or_name: wav2vec model for computing spk_sim
-        dataset_path: .arrow dataset path
-        sample_rate: audio sample rate
-        device: cuda:0 or cpu
-        batch_size: batch size
-        codec_trunk_size: the trunk size (seconds) of extract code
         """
         self.codec = init_codec(
             modelname=codec_name,
@@ -91,7 +90,7 @@ class CodecEvaluation:
 
         self.batch_size = batch_size
         self.device = device
-        dataset = LibriTTS_ctc_dataset(dataset_path=dataset_path)
+        dataset = LibriTTS_dataset(dataset_path=dataset_path, base_audio_dir=base_audio_dir)
         self.dataloader = DataLoader(
             dataset,
             batch_size=batch_size,
@@ -248,18 +247,19 @@ class CodecEvaluation:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--codec_name", type=str, default="yue")
-    parser.add_argument("--model_ckpt_dir", type=str, default="/sdb/model_weight/codec_evaluation/codec_ckpt/yue")
+    parser.add_argument("--codec_name", type=str, default="dac", help="codecname")
+    parser.add_argument("--model_ckpt_dir", type=str, default="/sdb/model_weight/codec_evaluation/codec_ckpt", help="/path/to/your/codec_ckpt_dir")
     parser.add_argument("--device", type=str, default="cuda:0")
     parser.add_argument("--sample_rate", type=int, default=24000)
-    parser.add_argument("--asr_model_path_or_name", type=str, default="/sdb/model_weight/whisper-base")
-    parser.add_argument("--dataset_path", type=str, default="/sdb/data1/codec_eval_data_arrow/LibriTTS/LibriTTS_dataset/test-other")
+    parser.add_argument("--asr_model_path_or_name", type=str, default="/sdb/model_weight/whisper-base", help="/path/to/your/whisper-base")
+    parser.add_argument("--dataset_path", type=str, default="/home/ch/Codec-Evaluation/codec_evaluation/huggingface_dataset/LibriTTS/LibriTTS_dataset/test-other", help="/path/to/your/LibriTTS/LibriTTS_dataset/test-other")
+    parser.add_argument("--base_audio_dir", type=str, default="/sdb/data1/speech/24kHz", help="/path/to/your/base_audio_dir")
     parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument("--mode", type=str, default="reconstruct")
     parser.add_argument("--use_vocos", type=bool, default=False)
     parser.add_argument("--vocos_ckpt_dir", type=Optional[str], default=None)
-    parser.add_argument("--wav2vec_model_path_or_name", type=str, default="/sdb/model_weight/ecapa-voxceleb")
+    parser.add_argument("--wav2vec_model_path_or_name", type=str, default="/sdb/model_weight/ecapa-voxceleb", help="/path/to/your/ecapa-voxceleb")
     args = parser.parse_args()
     print(f"args: {args}")
     codec_eval = CodecEvaluation(
@@ -269,6 +269,7 @@ def main():
         sample_rate=args.sample_rate,
         asr_model_path_or_name=args.asr_model_path_or_name,
         dataset_path=args.dataset_path,
+        base_audio_dir=args.base_audio_dir,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
         mode=args.mode,
