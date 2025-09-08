@@ -1,14 +1,11 @@
 import argparse
-import os
 import random
 import numpy as np
 import torch
 import torchaudio
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data.dataloader import DataLoader
-from codec_evaluation.probe.dataset.GTZAN_dataset import (
-    GTZANdataset,
-)
+from codec_evaluation.reconstruction_eval.gtzan_dataset.gtzan_dataset import GTZANdataset
 from tqdm import tqdm
 from codec_evaluation.codecs.init_codecs import init_codec
 from typing import Optional
@@ -16,8 +13,6 @@ from codec_evaluation.reconstruction_eval.utils import (
     calculate_pesq,
     calculate_stoi,
 )
-from tqdm import tqdm
-
 
 def seed_all(seed):
     torch.manual_seed(seed)
@@ -29,9 +24,7 @@ def seed_all(seed):
     torch.backends.cudnn.deterministic = False
     torch.backends.cudnn.benchmark = False
 
-
 seed_all(666)
-
 
 class CodecEvaluation:
     def __init__(
@@ -47,14 +40,14 @@ class CodecEvaluation:
         **kwargs,
     ):
         """
-        codec_model_safetensors_path: codec absolute path model.safetensors
-        asr_model_path_or_name: asr model path or name for wer compute
-        wav2vec_model_path_or_name: wav2vec model for computing spk_sim
-        dataset_path: .arrow dataset path
-        sample_rate: audio sample rate
-        device: cuda:0 or cpu
+        codec_name: codec name, such as encodec, dac, etc.
+        model_ckpt_dir: codec model checkpoint directory
+        device: GPU device, such as cuda:0
+        sample_rate: dataset sample rate
+        dataset_path: dataset .arrow file path
         batch_size: batch size
-        codec_trunk_size: the trunk size (seconds) of extract code
+        num_workers: number of workers for dataloader
+        mode: codec mode, such as reconstruct, encode_decode, etc.
         """
         self.codec = init_codec(
             modelname=codec_name,
@@ -72,12 +65,7 @@ class CodecEvaluation:
 
         self.batch_size = batch_size
         self.device = device
-        dataset = GTZANdataset(
-            dataset_path=dataset_path,
-            sample_rate=sample_rate,
-            target_sec=None,
-            is_mono=True,
-        )
+        dataset = GTZANdataset(dataset_path=dataset_path)
         self.dataloader = DataLoader(
             dataset,
             batch_size=batch_size,
@@ -179,18 +167,20 @@ class CodecEvaluation:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--codec_name", type=str, default="encodec")
+    parser.add_argument("--codec_name", type=str, default="dac", help="codec name")
     parser.add_argument(
         "--model_ckpt_dir",
         type=str,
-        default="/sdb/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz",
+        default="/sdb/model_weight/codec_evaluation/codec_ckpt",
+        help="/path/to/your/codec_ckpt_dir",
     )
     parser.add_argument("--device", type=str, default="cuda:0")
     parser.add_argument("--sample_rate", type=int, default=22050)
     parser.add_argument(
         "--dataset_path",
         type=str,
-        default="/sdb/data1/codec_eval_data_arrow/GTZAN/GTZAN/GTZAN_test_dataset",
+        default="/home/ch/Codec-Evaluation/codec_evaluation/huggingface_dataset/GTZAN/GTZAN_dataset/GTZAN_test_dataset",
+        help="/path/to/your/GTZAN/GTZAN_dataset/GTZAN_test_dataset",
     )
     parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_workers", type=int, default=8)

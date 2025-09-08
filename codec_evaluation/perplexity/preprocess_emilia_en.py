@@ -3,12 +3,21 @@ import os
 import pandas as pd
 from datasets import Dataset, load_from_disk
 from tqdm import tqdm
+import argparse
 
 def convert_emilia_to_dataset(json_path: str, output_path: str):
     """Convert Emilia-en dataset from JSONL.GZ files to a Dataset object and save it to disk.
     Args:
         json_path (str): The path to the directory containing the JSONL.GZ files.
         output_path (str): The path to save the Dataset object.
+    arrow_file:
+        id: 唯一标识符
+        wav: 音频文件路径
+        text: 音频文本
+        duration: 音频时长
+        speaker: 说话人ID
+        language: 语言
+        dnsmos: DNSMOS分数,音频质量评估指标
     """
     print(f"Dataset processing start:")
     # 1、 Collect all .jsonl.gz files from the specified directory
@@ -46,6 +55,7 @@ def convert_emilia_to_dataset(json_path: str, output_path: str):
     dataset = Dataset.from_pandas(combined_df[existing_columns])
 
     # 5. Save the dataset and JSONL format
+    os.makedirs(output_path, exist_ok=True)
     dataset.save_to_disk(output_path)
     dataset.to_json(os.path.join(output_path, "..", "emilia_en_dataset.jsonl"))
 
@@ -53,15 +63,18 @@ def convert_emilia_to_dataset(json_path: str, output_path: str):
     return dataset
 
 if __name__ == "__main__":
-    json_path = "/path/to/your/Emilia/EN"
-    output_path = "/path/to/your/Emilia/Emilia_EN_dataset"
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    dataset = convert_emilia_to_dataset(json_path, output_path)
+    parser = argparse.ArgumentParser(description="Convert Emilia-en dataset to HuggingFace Dataset format.")
+    parser.add_argument("--json_path", type=str, required=True, help="Path to the directory containing JSONL.GZ files")
+    parser.add_argument("--output_path", type=str, required=True, help="Path to save processed dataset")
+
+    args = parser.parse_args()
+
+    dataset = convert_emilia_to_dataset(args.json_path, args.output_path)
     print("Dataset conversion completed.\n")
 
     # Test loading the dataset
-    dataset = load_from_disk(output_path)
-    print(f"Dataset structure: \n{dataset}")
+    dataset_loaded = load_from_disk(args.output_path)
+    print(f"Dataset structure: \n{dataset_loaded}")
     print("\n The first three data contents:")
-    for example in dataset.select(range(3)):
+    for example in dataset_loaded.select(range(3)):
         print(f"\n{example}")
