@@ -25,13 +25,13 @@ data:
     target_sec: ${target_sec}
     is_mono: True
     dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/GS_dataset/GS_dataset
-    base_audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data
+    base_audio_dir: /sdb/data1/music/mix_music/marble_dataset/data
   codec_name: ${codec_name}
   train_batch_size: 8
-  valid_batch_size: 1
+  val_batch_size: 1
   test_batch_size: 8
   train_num_workers: 4
-  valid_num_workers: 2
+  val_num_workers: 2
   test_num_workers: 2
 
 model:
@@ -85,7 +85,7 @@ callbacks:
 
   model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
-    monitor: valid_loss
+    monitor: val_loss
     dirpath: ${probe_ckpt_dir}
     every_n_epochs: 1
     mode: min

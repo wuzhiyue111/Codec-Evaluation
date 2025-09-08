@@ -25,14 +25,14 @@ data:
     target_sec: ${target_sec}
     is_mono: True
     task: ${task}
-    base_audio_dir: /mnt/sda/a6000/sdb/data1/marble_dataset/data
+    base_audio_dir: /sdb/data1/music/mix_music/marble_dataset/data
     dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MTGInstrument_dataset/MTGInstrument_dataset
   codec_name: ${codec_name}
   train_batch_size: 8
-  valid_batch_size: 2
+  val_batch_size: 2
   test_batch_size: 8
   train_num_workers: 8
-  valid_num_workers: 4
+  val_num_workers: 4
   test_num_workers: 8
 
 model:
@@ -86,13 +86,13 @@ callbacks:
 
   model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
-    monitor: valid_loss
+    monitor: val_loss
     dirpath: ${probe_ckpt_dir}
     every_n_epochs: 1
     mode: min
     save_top_k: 1
     save_last: False
-    filename: ${codec_name}_${mode}_{epoch}-{valid_loss:.4f}
+    filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
     verbose: True
 
 tensorboard:

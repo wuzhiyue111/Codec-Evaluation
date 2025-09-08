@@ -88,50 +88,33 @@ class Common_voice_module(pl.LightningDataModule):
         base_audio_dir,
         target_samplerate,
         train_split: 0.98,
-        valid_split:0.01,
+        val_split:0.01,
         test_split: 0.01,
-        # train_audio_dir=None,
-        # valid_audio_dir=None,
-        # test_audio_dir=None,
-        # base_audio_dir=None,
         train_batch_size=16,
-        valid_batch_size=16,
+        val_batch_size=16,
         test_batch_size=1,
         train_num_workers=1,
-        valid_num_workers=1,
+        val_num_workers=1,
         test_num_workers=1,
         
     ):
         super().__init__()
         self.train_split = train_split
-        self.valid_split = valid_split
+        self.val_split = val_split
         self.test_split = test_split
         self.target_samplerate = target_samplerate
         self.train_batch_size = train_batch_size
-        self.valid_batch_size = valid_batch_size
+        self.val_batch_size = val_batch_size
         self.test_batch_size = test_batch_size
-        # self.train_audio_dir = train_audio_dir
-        # self.valid_audio_dir = valid_audio_dir
-        # self.test_audio_dir = test_audio_dir
-        # self.base_audio_dir = base_audio_dir
         self.train_num_workers = train_num_workers
-        self.valid_num_workers = valid_num_workers
+        self.val_num_workers = val_num_workers
         self.test_num_workers = test_num_workers
         self.dataset = Common_voice_dataset(dataset_path, base_audio_dir, self.target_samplerate)
         self.train_size = int(len(self.dataset) * self.train_split)
-        self.vaild_size = int(len(self.dataset) * self.valid_split)
-        self.test_size = len(self.dataset) - self.vaild_size - self.train_size
-        self.train_dataset, self.valid_dataset, self.test_dataset = random_split(self.dataset, 
-                                                                  [self.train_size, self.vaild_size, self.test_size])
-
-    # def setup(self, stage=None):
-    #     if stage == "fit" or stage is None:
-    #         self.train_dataset = Common_voice_dataset(self.train_audio_dir, self.base_audio_dir, self.target_samplerate)
-    #         self.valid_dataset = Common_voice_dataset(self.valid_audio_dir, self.base_audio_dir, self.target_samplerate)
-    #     if stage == "val":
-    #         self.valid_dataset = Common_voice_dataset(self.valid_audio_dir, self.base_audio_dir, self.target_samplerate)
-    #     if stage == "test":
-    #         self.test_dataset = Common_voice_dataset(self.test_audio_dir, self.base_audio_dir, self.target_samplerate)
+        self.val_size = int(len(self.dataset) * self.val_split)
+        self.test_size = len(self.dataset) - self.val_size - self.train_size
+        self.train_dataset, self.val_dataset, self.test_dataset = random_split(self.dataset, 
+                                                                  [self.train_size, self.val_size, self.test_size])
 
     def train_dataloader(self):
         return DataLoader(
@@ -144,11 +127,11 @@ class Common_voice_module(pl.LightningDataModule):
 
     def val_dataloader(self):
         return DataLoader(
-            dataset=self.valid_dataset,
-            batch_size=self.valid_batch_size,
+            dataset=self.val_dataset,
+            batch_size=self.val_batch_size,
             shuffle=False,
             collate_fn=self.dataset.collate_fn,
-            num_workers=self.valid_num_workers,
+            num_workers=self.val_num_workers,
         )
 
     def test_dataloader(self):

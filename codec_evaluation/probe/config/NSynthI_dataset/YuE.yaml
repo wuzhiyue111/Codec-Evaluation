@@ -14,7 +14,7 @@ trainer:
   accelerator: gpu
   devices: ???
   precision: 32
-  max_epochs: 100
+  max_epochs: 50
   limit_val_batches: 10
   log_every_n_steps: 5
   val_check_interval: 1.0
@@ -25,16 +25,16 @@ data:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    base_audio_dir: /mnt/sda/a6000/sdb/data1/music/symbolic_music
+    base_audio_dir: /sdb/data1/music/symbolic_music
   train_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/NSynthI_dataset/NSynth_dataset/NSynth_train_dataset
-  valid_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/NSynthI_dataset/NSynth_dataset/NSynth_valid_dataset
+  val_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/NSynthI_dataset/NSynth_dataset/NSynth_valid_dataset
   test_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/NSynthI_dataset/NSynth_dataset/NSynth_test_dataset
   codec_name: ${codec_name}
   train_batch_size: 256
-  valid_batch_size: 32
+  val_batch_size: 32
   test_batch_size: 256
   train_num_workers: 8
-  valid_num_workers: 4
+  val_num_workers: 4
   test_num_workers: 4
   
 
@@ -89,12 +89,12 @@ callbacks:
 
   model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
-    monitor: valid_loss
+    monitor: val_loss
     dirpath: ${probe_ckpt_dir}
     every_n_epochs: 1
     mode: min
     save_top_k: 1
-    filename: ${codec_name}_${mode}_{epoch}-{valid_loss:.4f}
+    filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
     verbose: True
 
 tensorboard:

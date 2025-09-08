@@ -26,15 +26,15 @@ data:
     task: ${task}
     is_mono: True
     dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/ESC50_dataset/ESC50_dataset
-    base_audio_dir: /mnt/sda/a6000/sdb/data1/
+    base_audio_dir: /sdb/data1/sound
   codec_name: ${codec_name}
   train_split: 0.9
   test_split: 0.1
   train_batch_size: 128
-  valid_batch_size: 2
+  val_batch_size: 2
   test_batch_size: 128
   train_num_workers: 32
-  valid_num_workers: 4
+  val_num_workers: 4
   test_num_workers: 32
 
 
@@ -89,13 +89,13 @@ callbacks:
 
   model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
-    monitor: valid_loss
+    monitor: val_loss
     dirpath: ${probe_ckpt_dir}
     every_n_epochs: 1
     mode: min
     save_top_k: 1
     save_last: False
-    filename: ${codec_name}_${mode}_{epoch}-{valid_loss:.4f}
+    filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
     verbose: True
 
 tensorboard:

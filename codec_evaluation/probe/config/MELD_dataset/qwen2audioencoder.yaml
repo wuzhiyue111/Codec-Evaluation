@@ -24,16 +24,16 @@ data:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
     is_mono: True
-    base_audio_dir: /mnt/sda/a6000/sdb/data1
+    base_audio_dir: /sdb/data1
   train_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MELD_dataset/MELD_dataset/MELD_train_dataset
-  valid_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MELD_dataset/MELD_dataset/MELD_valid_dataset
+  val_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MELD_dataset/MELD_dataset/MELD_valid_dataset
   test_audio_dir: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/MELD_dataset/MELD_dataset/MELD_test_dataset
   codec_name: ${codec_name}
   train_batch_size: 64
-  valid_batch_size: 2
+  val_batch_size: 2
   test_batch_size: 32
-  train_num_workers: 4
-  valid_num_workers: 2
+  train_num_workers: 8
+  val_num_workers: 4
   test_num_workers: 4
 
 model:
@@ -53,8 +53,8 @@ model:
     kernel_size: 3
     stride: 1
   target_sec: ${target_sec}
-  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/qwen2audioencoder
-  feature_extractor_config_path: /mnt/sda/a6000/sdb/model_weight/whisper-large-v3/preprocessor_config.json
+  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/qwen2audioencoder
+  feature_extractor_config_path: /sdb/model_weight/whisper-large-v3/preprocessor_config.json
 
   optimizer_builder:
       _target_: torch.optim.AdamW
@@ -88,13 +88,13 @@ callbacks:
 
   model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
-    monitor: valid_loss
+    monitor: val_loss
     dirpath: ${probe_ckpt_dir}
     every_n_epochs: 1
     mode: min
     save_top_k: 1
     save_last: False
-    filename: ${codec_name}_${mode}_{epoch}-{valid_loss:.4f}
+    filename: ${codec_name}_${mode}_{epoch}-{val_loss:.4f}
     verbose: True
 
 tensorboard:

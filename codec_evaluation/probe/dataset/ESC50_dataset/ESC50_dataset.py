@@ -102,10 +102,10 @@ class ESC50dataModule(pl.LightningDataModule):
         train_split: 0.9,
         test_split: 0.1,
         train_batch_size=16,
-        valid_batch_size=16,
+        val_batch_size=16,
         test_batch_size=16,
         train_num_workers=4,
-        valid_num_workers=4,
+        val_num_workers=4,
         test_num_workers=4
     ):
         super().__init__()
@@ -113,11 +113,11 @@ class ESC50dataModule(pl.LightningDataModule):
         self.train_split = train_split
         self.test_split = test_split
         self.train_batch_size = train_batch_size
-        self.valid_batch_size = valid_batch_size
+        self.val_batch_size = val_batch_size
         self.test_batch_size = test_batch_size
         self.codec_name = codec_name
         self.train_num_workers = train_num_workers
-        self.valid_num_workers = valid_num_workers
+        self.val_num_workers = val_num_workers
         self.test_num_workers = test_num_workers
         self.dataset = ESC50dataset(**self.dataset_args)
         self.train_size = int(len(self.dataset) * self.train_split)
@@ -136,10 +136,10 @@ class ESC50dataModule(pl.LightningDataModule):
     def val_dataloader(self):
         return DataLoader(
             dataset=self.test_dataset,
-            batch_size=self.valid_batch_size,
+            batch_size=self.val_batch_size,
             shuffle=False,
             collate_fn=self.dataset.collate_fn,
-            num_workers=self.valid_num_workers,
+            num_workers=self.val_num_workers,
         )
     
     def test_dataloader(self):

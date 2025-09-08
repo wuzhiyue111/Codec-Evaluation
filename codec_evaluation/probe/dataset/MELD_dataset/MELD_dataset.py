@@ -92,35 +92,35 @@ class MELDdataModule(pl.LightningDataModule):
             self,
             dataset_args,
             train_audio_dir,
-            valid_audio_dir,
+            val_audio_dir,
             test_audio_dir,
             codec_name,
             train_batch_size=32,
-            valid_batch_size=2,
+            val_batch_size=2,
             test_batch_size=16,
             train_num_workers=8,
-            valid_num_workers=4,
+            val_num_workers=4,
             test_num_workers=4
         ):
         super().__init__()
         self.dataset_args = dataset_args
         self.train_audio_dir = train_audio_dir
-        self.valid_audio_dir = valid_audio_dir
+        self.val_audio_dir = val_audio_dir
         self.test_audio_dir = test_audio_dir
         self.train_batch_size = train_batch_size
-        self.valid_batch_size = valid_batch_size
+        self.val_batch_size = val_batch_size
         self.test_batch_size = test_batch_size
         self.codec_name = codec_name
         self.train_num_workers = train_num_workers
-        self.valid_num_workers = valid_num_workers
+        self.val_num_workers = val_num_workers
         self.test_num_workers = test_num_workers
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
             self.train_dataset = MELDdataset(dataset_path=self.test_audio_dir, **self.dataset_args)
-            self.valid_dataset = MELDdataset(dataset_path=self.valid_audio_dir, **self.dataset_args)
+            self.val_dataset = MELDdataset(dataset_path=self.val_audio_dir, **self.dataset_args)
         if stage == "val":
-            self.valid_dataset = MELDdataset(dataset_path=self.valid_audio_dir, **self.dataset_args)
+            self.val_dataset = MELDdataset(dataset_path=self.val_audio_dir, **self.dataset_args)
         if stage == "test":
             self.test_dataset = MELDdataset(dataset_path=self.test_audio_dir, **self.dataset_args)
 
@@ -135,11 +135,11 @@ class MELDdataModule(pl.LightningDataModule):
     
     def val_dataloader(self):
         return DataLoader(
-            dataset=self.valid_dataset,
-            batch_size=self.valid_batch_size,
+            dataset=self.val_dataset,
+            batch_size=self.val_batch_size,
             shuffle=False,
-            num_workers=self.valid_num_workers,
-            collate_fn=self.valid_dataset.collate_fn,
+            num_workers=self.val_num_workers,
+            collate_fn=self.val_dataset.collate_fn,
         )
     
     def test_dataloader(self):
