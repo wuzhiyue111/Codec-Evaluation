@@ -254,31 +254,43 @@ class IDSensitiveEvaluation:
             return f"codebook same id: {percent_same_id_avg_list}"
 
 
-def main():
+def cli():
     seed_all(666)
     parser = argparse.ArgumentParser()
-    parser.add_argument("--codec_name", type=str, default="dac", help="codecname")
-    parser.add_argument(
-        "--model_ckpt_dir",
-        type=str,
-        default="/sdb/model_weight/codec_evaluation/codec_ckpt",
-        help="/path/to/your/codec_ckpt_dir",
-    )
-    parser.add_argument("--base_audio_dir", type=str, default="/sdb/data1/speech/24kHz", help="/path/to/your/base_audio_dir")
+    parser.add_argument("--codec_name", 
+                        type=str, 
+                        required=True, 
+                        help="Name of the audio codec model to be used (e.g., 'encodec', 'dac').")
+    parser.add_argument("--model_ckpt_dir",
+                        type=str,
+                        required=True,
+                        help="Directory containing the pretrained checkpoint files for the specified audio codec.")
+    parser.add_argument("--base_audio_dir", 
+                        type=str, 
+                        required=True, 
+                        help="The root directory where the raw audio files are stored.(Used to splice the complete audio path)")
     parser.add_argument("--device", type=str, default="cuda:0")
-    parser.add_argument("--sample_rate", type=int, default=24000)
-    parser.add_argument("--num_codebooks", type=int, default=8)
+    parser.add_argument("--sample_rate", 
+                        type=int, 
+                        required=True, 
+                        help="The sample rate of the audio files.")
+    parser.add_argument("--num_codebooks", 
+                        type=int, 
+                        required=True,
+                        help="The number of codebooks used by the audio codec model.")
     parser.add_argument("--need_resample", type=bool, default=True)
-    parser.add_argument("--task", type=str, default="MRC", choices=["MRC", "OS"])
+    parser.add_argument("--task", 
+                        type=str, 
+                        required=True, 
+                        choices=["MRC", "OS"])
     parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument("--shift_time", type=int, default=2)
     parser.add_argument("--subset_step", type=int, default=1200)
-    parser.add_argument(
-        "--dataset_path",
-        type=str,
-        default="/home/ch/Codec-Evaluation/codec_evaluation/huggingface_dataset/LibriTTS/LibriTTS_dataset/test-other",
-        help="/path/to/your/LibriTTS/LibriTTS_dataset/test-other",
+    parser.add_argument("--dataset_path",
+                        type=str,
+                        required=True,
+                        help="The huggingface dataset path obtained using the script.",
     )
     parser.add_argument("--use_vocos", type=bool, default=False)
     parser.add_argument("--vocos_ckpt_dir", type=Optional[str], default=None)
@@ -306,4 +318,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    cli()
