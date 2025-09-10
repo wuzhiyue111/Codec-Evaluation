@@ -13,25 +13,19 @@ logger = RankedLogger(__name__, rank_zero_only=True)
 class VocalSetSingerdataset(Dataset):
     def __init__(
         self,
-        split,
         dataset_path,  
-        base_audio_dir,  
         sample_rate,
         target_sec,
-        is_mono,
     ):
         """
         split: train/valid/test
         dataset_path: .arrow dataset path
         base_audio_dir: audio root path
         """
-        self.split = split
         self.sample_rate = sample_rate
         self.target_sec = target_sec
-        self.is_mono = is_mono
-        self.base_audio_dir = base_audio_dir  #root path like "/data/GTZAN/audio"
     
-        self.dataset = load_from_disk(dataset_path).filter(lambda x: x["split"] == split)
+        self.dataset = load_from_disk(dataset_path)
         
         self.class2id = {'f1':0, 'f2':1, 'f3':2, 'f4':3, 'f5':4, 'f6':5, 'f7':6, 'f8':7, 'f9':8, 'm1':9, 'm2':10, 'm3':11, 'm4':12, 'm5':13, 'm6':14, 'm7':15, 'm8':16, 'm9':17, 'm10':18, 'm11':19}
         self.id2class = {v: k for k, v in self.class2id.items()}
@@ -43,10 +37,10 @@ class VocalSetSingerdataset(Dataset):
         try:
             return self.get_item(index)
         except Exception as e:
-            audio_path = self.dataset[index]["audio_path"] 
-            full_path = os.path.join(self.base_audio_dir, audio_path)
-            logger.error(f"Error loading {full_path}: {e}")
-            return None  
+            example = self.dataset[index]
+            audio_path = example["audio_path"]
+            logger.error(f"Error loading {audio_path}: {e}")
+            return None 
 
     def get_item(self, index):
         """
@@ -55,31 +49,14 @@ class VocalSetSingerdataset(Dataset):
                 labels: [1]
         """
         example = self.dataset[index]
-        audio_path = example["audio_path"]
-        audio_file = os.path.join(self.base_audio_dir, audio_path)
-        audio = self.load_audio(audio_file)
+        audio = torch.from_numpy(example["audio"]["array"])
+        if audio.ndim > 1:
+            audio = audio.mean(axis=0)
+        audio = audio.float().unsqueeze(0)
+        label = torch.tensor([self.class2id[example["labels"]]]) 
         
-        label = self.class2id[audio_path.split('/')[3].split('_')[0]]
-        labels = torch.tensor([label])
-        
-        return {"audio": audio, "labels": labels, "audio_length": audio.shape[1]}
+        return {"audio": audio, "labels": label, "audio_length": audio.shape[1]}
 
-    def load_audio(
-        self, 
-        audio_file
-    ):
-        """
-        input:
-            audio_file:one of audio_file path
-        return:
-            audio:[T]
-              T:audio timestep
-        """
-        audio, _ = torchaudio.load(audio_file)
-        if audio.shape[0] > 1 and self.is_mono:
-            audio = torch.mean(audio, dim=0, keepdim=True)
-
-        return audio
 
     def collate_fn(self, batch):
 
@@ -113,7 +90,9 @@ class VocalSetdataModule(pl.LightningDataModule):
     def __init__(
         self,
         dataset_args,  
-        codec_name,
+        train_audio_dir,
+        val_audio_dir,
+        test_audio_dir,
         train_batch_size=32,
         val_batch_size=2,
         test_batch_size=16,
@@ -123,22 +102,24 @@ class VocalSetdataModule(pl.LightningDataModule):
     ):
         super().__init__()
         self.dataset_args = dataset_args
+        self.train_audio_dir = train_audio_dir
+        self.val_audio_dir = val_audio_dir
+        self.test_audio_dir = test_audio_dir
         self.train_batch_size = train_batch_size
         self.val_batch_size = val_batch_size
         self.test_batch_size = test_batch_size
-        self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.val_num_workers = val_num_workers
         self.test_num_workers = test_num_workers
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            self.train_dataset = VocalSetSingerdataset(split="train", **self.dataset_args)  
-            self.val_dataset = VocalSetSingerdataset(split="valid", **self.dataset_args) 
+            self.train_dataset = VocalSetSingerdataset(dataset_path=self.train_audio_dir, **self.dataset_args)  
+            self.val_dataset = VocalSetSingerdataset(dataset_path=self.val_audio_dir, **self.dataset_args) 
         if stage == "val":
-            self.val_dataset = VocalSetSingerdataset(split="valid", **self.dataset_args) 
+            self.val_dataset = VocalSetSingerdataset(dataset_path=self.val_audio_dir, **self.dataset_args) 
         if stage == "test":
-            self.test_dataset = VocalSetSingerdataset(split="test", **self.dataset_args)
+            self.test_dataset = VocalSetSingerdataset(dataset_path=self.test_audio_dir, **self.dataset_args)
 
     def train_dataloader(self):
         return DataLoader(

@@ -1,6 +1,4 @@
-import os
 import torch
-import torchaudio
 from torch.utils.data import Dataset
 from datasets import load_from_disk
 from einops import rearrange, repeat
@@ -15,10 +13,8 @@ class GTZANdataset(Dataset):
     def __init__(
         self,
         dataset_path,
-        base_audio_dir,
         sample_rate,
         target_sec,
-        is_mono,
     ):
         """
         split: train/valid/test
@@ -28,8 +24,6 @@ class GTZANdataset(Dataset):
         self.sample_rate = sample_rate
         self.target_sec = target_sec
         self.target_length = self.target_sec * self.sample_rate
-        self.is_mono = is_mono
-        self.base_audio_dir = base_audio_dir  
         
         self.dataset = load_from_disk(dataset_path)
         
@@ -44,10 +38,10 @@ class GTZANdataset(Dataset):
         try:
             return self.get_item(index)
         except Exception as e:
-            audio_path = self.dataset[index]["audio_path"]
-            full_path = os.path.join(self.base_audio_dir, audio_path)
-            logger.error(f"Error loading {full_path}: {e}")
-            return None  
+            example = self.dataset[index]
+            audio_path = example["audio_path"]
+            logger.error(f"Error loading {audio_path}: {e}")
+            return None
 
     def get_item(self, index):
         """
@@ -56,31 +50,13 @@ class GTZANdataset(Dataset):
                 labels: [1]
         """
         example = self.dataset[index]
-        audio_path = example["audio_path"] 
-        audio_file = os.path.join(self.base_audio_dir, audio_path)  
-        
-        audio = self.load_audio(audio_file)
-        label = self.class2id[audio_path.split("/")[2]]
-        label = torch.tensor([label])
+        audio = torch.from_numpy(example["audio"]["array"])
+        if audio.ndim > 1:
+            audio = audio.mean(axis=0)
+        audio = audio.float().unsqueeze(0)
+        label = torch.tensor([self.class2id[example["labels"]]]) 
         
         return {"audio": audio, "labels": label, "audio_length": audio.shape[1]}
-
-    def load_audio(
-        self, 
-        audio_file
-    ):
-        """
-        input:
-            audio_file:one of audio_file path
-        return:
-            audio:[T]
-              T:audio timestep
-        """
-        audio, _ = torchaudio.load(audio_file)
-        if audio.shape[0] > 1 and self.is_mono:
-            audio = torch.mean(audio, dim=0, keepdim=True)
-
-        return audio
 
     def collate_fn(self, batch):
         """
@@ -112,8 +88,6 @@ class GTZANdataset(Dataset):
             "audio_length": audio_length_tensor,
         }
 
-    
-
 class GTZANdataModule(pl.LightningDataModule):
     def __init__(
         self,
@@ -121,7 +95,6 @@ class GTZANdataModule(pl.LightningDataModule):
         train_audio_dir,
         val_audio_dir,
         test_audio_dir,
-        codec_name,
         train_batch_size=32,
         val_batch_size=2,
         test_batch_size=16,
@@ -137,14 +110,13 @@ class GTZANdataModule(pl.LightningDataModule):
         self.train_batch_size = train_batch_size
         self.val_batch_size = val_batch_size
         self.test_batch_size = test_batch_size
-        self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.val_num_workers = val_num_workers
         self.test_num_workers = test_num_workers
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            self.train_dataset = GTZANdataset(dataset_path=self.test_audio_dir, **self.dataset_args)  
+            self.train_dataset = GTZANdataset(dataset_path=self.train_audio_dir, **self.dataset_args)  
             self.val_dataset = GTZANdataset(dataset_path=self.val_audio_dir, **self.dataset_args) 
         if stage == "val":
             self.val_dataset = GTZANdataset(dataset_path=self.val_audio_dir, **self.dataset_args) 
