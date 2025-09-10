@@ -9,7 +9,7 @@ accumulate_grad_batches: 1 # 1 means no accumulate grad batches
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [0] 
+  devices: ???
   precision: bf16-mixed
   accumulate_grad_batches: ${accumulate_grad_batches}
   max_steps: 1000000
@@ -24,23 +24,21 @@ data:
   _target_: codec_evaluation.perplexity.dataset.emilia_en_dataset.Emilia_ppl_Module
   base_audio_dir: /sdb/data1/speech/24kHz/Emilia/EN
   dataset_path: /sdb/data1/codec_eval_data_arrow/Emilia_EN/Emilia_EN_dataset
-  train_batch_size: 10
-  valid_batch_size: 4
+  train_batch_size: ???
+  valid_batch_size: ???
   train_num_workers: 4
   valid_num_workers: 1
 
   # MTG-Jamendo
-  # _target_: codec_evaluation.perplexity.dataset.mtg_jamendo_dataset.Jamendo_ppl_Module
-  # base_audio_dir: /sdb/data1/music/mix_music/marble_dataset/data
-  # train_audio_dir: /sdb/data1/codec_eval_data_arrow/MTG/MTG_dataset/MTGGenre_dataset/MTGGenre_train_dataset
-  # valid_audio_dir: /sdb/data1/codec_eval_data_arrow/MTG/MTG_dataset/MTGGenre_dataset/MTGGenre_validation_dataset
-  # test_audio_dir: /sdb/data1/codec_eval_data_arrow/MTG/MTG_dataset/MTGGenre_dataset/MTGGenre_test_dataset
-  # train_batch_size: 10
-  # valid_batch_size: 4
-  # train_num_workers: 4
-  # valid_num_workers: 1
-  # sample_rate: 44100
-  # target_sec: 15
+  #_target_: codec_evaluation.perplexity.dataset.mtg_jamendo_dataset.Jamendo_ppl_Module
+  #base_audio_dir: /path/to/your/base_audio_dir
+  #dataset_path: /path/to/your/MTG/MTG_dataset/MTGGenre_dataset/MTG_full_dataset
+  #train_batch_size: ???
+  #valid_batch_size: ???
+  #train_num_workers: 4
+  #valid_num_workers: 1
+  #sample_rate: 44100
+  #target_sec: 15
 
 model:
   _target_: codec_evaluation.perplexity.model.lit_modules.PPL_lit_modules
@@ -49,7 +47,7 @@ model:
     _target_: transformers.models.qwen2.configuration_qwen2.Qwen2Config.from_pretrained
     pretrained_model_name_or_path: perplexity/config/ppl_model_config.json
 
-  sample_rate: 24000    # audio sample rate
+  sample_rate: 44100    # audio sample rate
   codec_name: ${codec_name}
   codec_ckpt_dir: ${codec_ckpt_dir}
   lm_head_nums: 8
