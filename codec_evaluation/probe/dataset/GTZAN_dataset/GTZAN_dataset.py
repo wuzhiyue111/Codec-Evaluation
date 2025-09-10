@@ -3,7 +3,8 @@ import torch
 import torchaudio
 from torch.utils.data import Dataset
 from datasets import load_from_disk
-from codec_evaluation.utils.utils import cut_or_pad
+from einops import rearrange, repeat
+from torch.nn.utils.rnn import pad_sequence
 from codec_evaluation.utils.logger import RankedLogger
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
@@ -13,24 +14,23 @@ logger = RankedLogger(__name__, rank_zero_only=True)
 class GTZANdataset(Dataset):
     def __init__(
         self,
-        dataset_path,  # .arrow数据集路径（如"/path/to/GTZAN_train_dataset"）
-        base_audio_dir,  # 音频文件的绝对根目录（如"/sdb/data1/GTZAN/audio"）
+        dataset_path,
+        base_audio_dir,
         sample_rate,
         target_sec,
         is_mono,
     ):
         """
         split: train/valid/test
-        dataset_path: .arrow数据集路径
-        base_audio_dir: 音频文件的绝对根目录（用于拼接相对路径）
+        dataset_path: .arrow dataset path
+        base_audio_dir: root path for audio files
         """
         self.sample_rate = sample_rate
         self.target_sec = target_sec
-        self.target_length = self.target_sec * sample_rate if target_sec is not None else None
+        self.target_length = self.target_sec * self.sample_rate
         self.is_mono = is_mono
-        self.base_audio_dir = base_audio_dir  # 绝对路径，如"/data/GTZAN/audio"
+        self.base_audio_dir = base_audio_dir  
         
-        # 加载.arrow数据集并根据split过滤（假设数据集中有"split"字段）
         self.dataset = load_from_disk(dataset_path)
         
         self.class2id = {'blues': 0, 'classical': 1, 'country': 2, 'disco': 3, 
@@ -44,7 +44,7 @@ class GTZANdataset(Dataset):
         try:
             return self.get_item(index)
         except Exception as e:
-            audio_path = self.dataset[index]["audio_path"]  # 数据集中的相对路径
+            audio_path = self.dataset[index]["audio_path"]
             full_path = os.path.join(self.base_audio_dir, audio_path)
             logger.error(f"Error loading {full_path}: {e}")
             return None  
@@ -52,27 +52,18 @@ class GTZANdataset(Dataset):
     def get_item(self, index):
         """
             return:
-                segments: [n_segments, segments_length]
-                labels: [n_segments, 10]
+                audio: [1,T]
+                labels: [1]
         """
         example = self.dataset[index]
-        audio_path = example["audio_path"]  # 数据集中的相对路径（如"blues/blues.00037.wav"）
-        audio_file = os.path.join(self.base_audio_dir, audio_path)  # 拼接绝对路径
+        audio_path = example["audio_path"] 
+        audio_file = os.path.join(self.base_audio_dir, audio_path)  
         
-        segments, pad_mask = self.load_audio(audio_file)
-        # 从路径中提取类别（与原代码一致：取第一个目录名，如"blues"）
+        audio = self.load_audio(audio_file)
         label = self.class2id[audio_path.split("/")[2]]
-        labels = []
-        for mask in pad_mask:
-            if mask == 1:
-                labels.append(label)
-            else:
-                labels.append(-100)
-        labels = torch.tensor(labels)
-        if self.target_length is not None:
-            segments = torch.vstack(segments)
+        label = torch.tensor([label])
         
-        return {"audio": segments, "labels": labels, "n_segments": len(pad_mask)}
+        return {"audio": audio, "labels": label, "audio_length": audio.shape[1]}
 
     def load_audio(
         self, 
@@ -82,36 +73,46 @@ class GTZANdataset(Dataset):
         input:
             audio_file:one of audio_file path
         return:
-            waveform:[T]
+            audio:[T]
+              T:audio timestep
         """
-        waveform, _ = torchaudio.load(audio_file)
-        if waveform.shape[0] > 1 and self.is_mono:
-            waveform = torch.mean(waveform, dim=0, keepdim=True)
-        
-        if self.target_length is not None:
-            waveform, pad_mask = cut_or_pad(waveform, self.target_length)
-        else:
-            pad_mask = [1]  # 不截断时，pad_mask为1
-        
-        return waveform, pad_mask
+        audio, _ = torchaudio.load(audio_file)
+        if audio.shape[0] > 1 and self.is_mono:
+            audio = torch.mean(audio, dim=0, keepdim=True)
+
+        return audio
 
     def collate_fn(self, batch):
-        audio_list = [item["audio"] for item in batch if item is not None]
+        """
+        return:
+            features_tensor:(batch_size * split_count, target_length)
+            labels_tensor:(batch_size * split_count)
+        """
+        audio_list = [item["audio"].squeeze(0) for item in batch if item is not None]
         label_list = [item["labels"] for item in batch if item is not None]
-        n_segments_list = [item["n_segments"] for item in batch if item is not None]
+        audio_length_list = [item["audio_length"] for item in batch if item is not None]
         
-        if self.target_length is not None:
-            audio_tensor = torch.vstack(audio_list)
-        else:
-            audio_list = [audio.squeeze(0) for audio in audio_list]
-            audio_tensor = torch.nn.utils.rnn.pad_sequence(audio_list, batch_first=True)
-        
+        audio_tensor = pad_sequence(audio_list, batch_first=True)
+        audio_length_tensor = torch.tensor(audio_length_list)
         label_tensor = torch.cat(label_list, dim=0)
+
+        split_count = round(audio_tensor.shape[-1] / self.target_length)
+
+        if audio_tensor.shape[-1] < self.target_length * split_count:
+            audio_tensor = torch.nn.functional.pad(audio_tensor, (0, self.target_length * split_count - audio_tensor.shape[-1], 0, 0))
+        elif audio_tensor.shape[-1] > self.target_length * split_count:
+            audio_tensor = audio_tensor[:, :self.target_length * split_count]
+
+        audio_tensor = rearrange(audio_tensor, 'b (n t) -> (b n) t', n=split_count, t=self.target_length)
+        label_tensor = repeat(label_tensor, 'b -> (b n)', n=split_count)
+
         return {
             "audio": audio_tensor,
             "labels": label_tensor,
-            "n_segments_list": n_segments_list
+            "audio_length": audio_length_tensor,
         }
+
+    
 
 class GTZANdataModule(pl.LightningDataModule):
     def __init__(

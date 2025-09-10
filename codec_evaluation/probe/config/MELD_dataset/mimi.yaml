@@ -1,12 +1,12 @@
 mode: quantized_emb
 sample_rate: 48000
-target_sec: 3
+target_sec: 8
 num_outputs: 7
 probe_ckpt_dir: ???
 seed: 666
 codec_name: mimi # 需要更改
 task: multiclass
-save_result: null #/home/wsy/project/Codec-Evaluation/codec_evaluation/probe/probe_result/vocalsound_dataset/dac/unquantized.json
+save_result: null 
 
 trainer:
   _target_: pytorch_lightning.Trainer

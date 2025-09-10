@@ -1,5 +1,4 @@
 import torch.nn as nn
-import torch
 
 class SEBlock(nn.Module):
     def __init__(self, channel, reduction):
@@ -16,8 +15,8 @@ class SEBlock(nn.Module):
         """
         feature: [B, T, D]
         B: batch size
-        T: 时间维度
-        D: 特征维度（即音频的通道数）
+        T: timestep
+        D: dim
         """
         B, T, _ = feature.shape  
         feature_avg = self.avg_pool(feature)    
@@ -48,7 +47,7 @@ class DSConv(nn.Module):
             groups=in_ch, 
             bias=False
         )
-        # 逐点卷积
+        # pointwise_conv
         self.pointwise_conv = nn.Conv1d(
             in_channels=in_ch,
             out_channels=out_ch,  
@@ -103,40 +102,25 @@ class MultilabelProber(nn.Module):
 
         self.output = nn.Linear(input_dim, self.num_outputs)
 
-    def group_mean(self, data, n_segment_list):
-        if sum(n_segment_list) != len(data):
-            raise ValueError("length error!")
-
-        groups = torch.split(data, n_segment_list)
-
-        result = []
-        for group in groups:
-            # 对每一列求均值，group.shape = [n_segments, num_columns]
-            group_means = group.float().mean(dim=0)  # 按列求均值
-            result.append(group_means)
-        output_tensor = torch.stack(result, dim=0) 
-        return output_tensor
-
-    def forward(self, x, truth_label, n_segment_list):    
+    def forward(self, x, truth_label, split_count):    
         """
-        x:[B*n_segments, D, T] 
-        n_segments: Number of audio segments
+        x:[B* split_count, D, T] 
+        split_count: Number of audio segments
+        [B* split_count, C]: 
+            C: the class number of label 
         """ 
         truth_label = truth_label.float()  
-        x = x.permute(0, 2, 1)  #[B*n_segments, T, D] 
+        x = x.permute(0, 2, 1)  #[B*split_count, T, D] 
         x_channel = self.channel_attention1(x)
         x_conv = self.dsconv1(x_channel)  
         x_channel = self.channel_attention2(x_conv)
-        x_conv = self.dsconv2(x_channel)    #[B*n_segments, T//4, D]
+        x_conv = self.dsconv2(x_channel)    #[B*split_count, T//4, D]
 
-        x_conv = self.linear(x_conv)      #[B*n_segments, T', D//16]
+        x_conv = self.linear(x_conv)      #[B*split_count, T', D//16]
 
-        x_flattened = x_conv.flatten(start_dim=1, end_dim=-1)    #[B*n_segments, input_dim=T' * D//16]
+        x_flattened = x_conv.flatten(start_dim=1, end_dim=-1)    #[B*split_count, input_dim=T' * D//16]
 
-        output = self.output(x_flattened)  #[B*n_segments, 2]
-        if output.shape[0] != truth_label.shape[0]:
-            output = self.group_mean(data=output, n_segment_list=n_segment_list) 
-        output = self.drop_out(output)
+        output = self.output(x_flattened)  #[B*split_count, C]
 
         loss_fn = nn.BCEWithLogitsLoss()
         loss = loss_fn(output, truth_label)

@@ -3,8 +3,9 @@ import torch
 import torchaudio
 from torch.utils.data import Dataset
 from datasets import load_from_disk
+from einops import rearrange, repeat
+from torch.nn.utils.rnn import pad_sequence
 from codec_evaluation.utils.logger import RankedLogger
-from codec_evaluation.utils.utils import cut_or_pad
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
@@ -63,7 +64,7 @@ class MTGMoodthemedataset(Dataset):
         audio_file = os.path.join(self.base_audio_dir, relative_audio_path)
         
         # 加载和处理音频
-        segments, pad_mask = self.load_audio(audio_file)
+        audio = self.load_audio(audio_file)
         
         # 构建标签
         label = torch.zeros(len(self.class2id))
@@ -71,10 +72,8 @@ class MTGMoodthemedataset(Dataset):
             if tag.strip() in self.class2id:
                 label[self.class2id[tag.strip()]] = 1
 
-        segments = torch.vstack(segments)
+        return {"audio": audio, "labels": label, "audio_length": audio.shape[1]}
 
-        return {"audio": segments, "labels": label, "n_segments": len(pad_mask)}
-    
     def load_audio(
         self, 
         audio_file
@@ -83,22 +82,19 @@ class MTGMoodthemedataset(Dataset):
         input:
             audio_file:one of audio_file path
         return:
-            waveform:[n,T]
+            waveform:[T]
         """
-        waveform, _ = torchaudio.load(audio_file)
-        
-        if waveform.shape[0] > 1 and self.is_mono:
-            waveform = torch.mean(waveform, dim=0, keepdim=True)
-        
-        if waveform.shape[1] > 150 * self.sample_rate:
-            waveform = waveform[:, :150 * self.sample_rate]
+        audio, _ = torchaudio.load(audio_file)
+        if audio.shape[0] > 1 and self.is_mono:
+            audio = torch.mean(audio, dim=0, keepdim=True)
 
-        waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length, task=self.task)
+        if audio.shape[1] > 150 * self.sample_rate:
+            audio = audio[:, :150 * self.sample_rate]
 
-        return waveform, pad_mask 
+        return audio
 
     def read_class2id(self):
-        """从.arrow数据集中构建class2id映射"""
+        """from .arrow dataset get class2id map"""
         class2id = {}
         
         # 只从训练集和验证集构建完整标签映射
@@ -114,17 +110,37 @@ class MTGMoodthemedataset(Dataset):
         return class2id
 
     def collate_fn(self, batch):
-        audio_list = [item["audio"] for item in batch if item is not None]
-        label_list = [item["labels"] for item in batch if item is not None]
-        n_segments_list = [item["n_segments"] for item in batch if item is not None]
 
-        audio_tensor = torch.vstack(audio_list)
+        """
+        return:
+            audio_tensor:(batch_size * split_count, target_length)
+            labels_tensor:(batch_size * split_count, C)
+                c: the class number of label 
+            audio_length_tensor: (batch_size * split_count)
+        """
+
+        audio_list = [item["audio"].squeeze(0) for item in batch if item is not None]
+        label_list = [item["labels"] for item in batch if item is not None]
+        audio_length_list = [item["audio_length"] for item in batch if item is not None]
+        
+        audio_tensor = pad_sequence(audio_list, batch_first=True)
+        audio_length_tensor = torch.tensor(audio_length_list)
         label_tensor = torch.vstack(label_list).long()
+
+        split_count = round(audio_tensor.shape[-1] / self.target_length)
+
+        if audio_tensor.shape[-1] < self.target_length * split_count:
+            audio_tensor = torch.nn.functional.pad(audio_tensor, (0, self.target_length * split_count - audio_tensor.shape[-1], 0, 0))
+        elif audio_tensor.shape[-1] > self.target_length * split_count:
+            audio_tensor = audio_tensor[:, :self.target_length * split_count]
+
+        audio_tensor = rearrange(audio_tensor, 'b (n t) -> (b n) t', n=split_count, t=self.target_length)
+        label_tensor = repeat(label_tensor, 'b c-> (b n) c', n=split_count)
 
         return {
             "audio": audio_tensor,
             "labels": label_tensor,
-            "n_segments_list": n_segments_list
+            "audio_length": audio_length_tensor,
         }
     
 class MTGMoodthemeModule(pl.LightningDataModule):

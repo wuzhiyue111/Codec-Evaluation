@@ -3,7 +3,7 @@ import torch
 import torchaudio
 from torch.utils.data import Dataset
 from datasets import load_from_disk
-from codec_evaluation.utils.utils import cut_or_pad
+from torch.nn.utils.rnn import pad_sequence
 from codec_evaluation.utils.logger import RankedLogger
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
@@ -22,17 +22,15 @@ class VocalSetSingerdataset(Dataset):
     ):
         """
         split: train/valid/test
-        dataset_path: .arrow数据集路径
-        base_audio_dir: 音频文件的绝对根目录（用于拼接相对路径）
+        dataset_path: .arrow dataset path
+        base_audio_dir: audio root path
         """
         self.split = split
         self.sample_rate = sample_rate
         self.target_sec = target_sec
-        self.target_length = self.target_sec * sample_rate if target_sec is not None else None
         self.is_mono = is_mono
-        self.base_audio_dir = base_audio_dir  # 绝对路径，如"/data/GTZAN/audio"
-        
-        # 加载.arrow数据集并根据split过滤（假设数据集中有"split"字段）
+        self.base_audio_dir = base_audio_dir  #root path like "/data/GTZAN/audio"
+    
         self.dataset = load_from_disk(dataset_path).filter(lambda x: x["split"] == split)
         
         self.class2id = {'f1':0, 'f2':1, 'f3':2, 'f4':3, 'f5':4, 'f6':5, 'f7':6, 'f8':7, 'f9':8, 'm1':9, 'm2':10, 'm3':11, 'm4':12, 'm5':13, 'm6':14, 'm7':15, 'm8':16, 'm9':17, 'm10':18, 'm11':19}
@@ -45,7 +43,7 @@ class VocalSetSingerdataset(Dataset):
         try:
             return self.get_item(index)
         except Exception as e:
-            audio_path = self.dataset[index]["audio_path"]  # 数据集中的相对路径
+            audio_path = self.dataset[index]["audio_path"] 
             full_path = os.path.join(self.base_audio_dir, audio_path)
             logger.error(f"Error loading {full_path}: {e}")
             return None  
@@ -53,22 +51,18 @@ class VocalSetSingerdataset(Dataset):
     def get_item(self, index):
         """
             return:
-                segments: [n_segments, segments_length]
-                labels: [n_segments, 10]
+                audio: [1, T]
+                labels: [1]
         """
         example = self.dataset[index]
-        audio_path = example["audio_path"]  # 数据集中的相对路径（如"blues/blues.00037.wav"）
-        audio_file = os.path.join(self.base_audio_dir, audio_path)  # 拼接绝对路径
-        segments, pad_mask = self.load_audio(audio_file)
+        audio_path = example["audio_path"]
+        audio_file = os.path.join(self.base_audio_dir, audio_path)
+        audio = self.load_audio(audio_file)
+        
         label = self.class2id[audio_path.split('/')[3].split('_')[0]]
-
-        labels = []
-        labels.extend([label] * len(pad_mask))
+        labels = torch.tensor([label])
         
-        labels = torch.tensor(labels)
-        segments = torch.vstack(segments)
-        
-        return {"audio": segments, "labels": labels, "n_segments": len(pad_mask)}
+        return {"audio": audio, "labels": labels, "audio_length": audio.shape[1]}
 
     def load_audio(
         self, 
@@ -78,28 +72,41 @@ class VocalSetSingerdataset(Dataset):
         input:
             audio_file:one of audio_file path
         return:
-            waveform:[T]
+            audio:[T]
+              T:audio timestep
         """
-        waveform, _ = torchaudio.load(audio_file)
-        if waveform.shape[0] > 1 and self.is_mono:
-            waveform = torch.mean(waveform, dim=0, keepdim=True)
-        
-        waveform, pad_mask = cut_or_pad(waveform, self.target_length)
+        audio, _ = torchaudio.load(audio_file)
+        if audio.shape[0] > 1 and self.is_mono:
+            audio = torch.mean(audio, dim=0, keepdim=True)
 
-        return waveform, pad_mask
+        return audio
 
     def collate_fn(self, batch):
-        audio_list = [item["audio"] for item in batch if item is not None]
+
+        """
+        return:
+            audio_tensor:(batch_size , target_length)
+            labels_tensor:(batch_size )
+            audio_length_tensor: (batch_size * split_count)
+        """
+
+        audio_list = [item["audio"].squeeze(0) for item in batch if item is not None]
         label_list = [item["labels"] for item in batch if item is not None]
-        n_segments_list = [item["n_segments"] for item in batch if item is not None]
+        audio_length_list = [item["audio_length"] for item in batch if item is not None]
         
-        audio_tensor = torch.vstack(audio_list)
+        audio_tensor = pad_sequence(audio_list, batch_first=True)
+        audio_length_tensor = torch.tensor(audio_length_list)
         label_tensor = torch.cat(label_list, dim=0)
 
+        if audio_tensor.shape[-1] < self.target_sec * self.sample_rate:
+            audio_tensor = torch.nn.functional.pad(audio_tensor, (0, self.target_sec * self.sample_rate - audio_tensor.shape[-1], 0, 0))
+        elif audio_tensor.shape[-1] > self.target_sec * self.sample_rate:
+            audio_tensor = audio_tensor[:, :self.target_sec * self.sample_rate]
+        
         return {
             "audio": audio_tensor,
             "labels": label_tensor,
-            "n_segments_list": n_segments_list
+            "audio_length": audio_length_tensor,
         }
 
 class VocalSetdataModule(pl.LightningDataModule):

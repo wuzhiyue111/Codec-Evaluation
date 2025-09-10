@@ -4,7 +4,8 @@ import torchaudio
 import numpy as np
 from torch.utils.data import Dataset
 from datasets import load_from_disk
-from codec_evaluation.utils.utils import cut_or_pad
+from einops import rearrange
+from torch.nn.utils.rnn import pad_sequence
 from codec_evaluation.utils.logger import RankedLogger
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
@@ -27,10 +28,10 @@ class EMOdataset(Dataset):
         self.target_length = self.target_sec * sample_rate
         self.is_mono = is_mono
         self.task = task
-        self.base_audio_dir = base_audio_dir  # 绝对路径，如音频文件根目录
+        self.base_audio_dir = base_audio_dir  # Audio files root directory
         self.dataset = load_from_disk(dataset_path)
         self.dataset = self.dataset.filter(lambda x: x["split"] == split)
-        self.classes = ["arousal", "valence"]  # 保持与原代码一致
+        self.classes = ["arousal", "valence"]  
         self.class2id = {c: i for i, c in enumerate(self.classes)}
 
     def __len__(self):
@@ -41,7 +42,7 @@ class EMOdataset(Dataset):
             return self.get_item(index)
         except Exception as e:
             example = self.dataset[index]
-            audio_path = example["wav"]  # 数据集中的相对音频路径
+            audio_path = example["wav"]  # Relative audio paths within the dataset
             audio_file = os.path.join(self.base_audio_dir, audio_path)
             logger.error(f"Error loading {audio_file}: {e}")
             return None
@@ -49,17 +50,12 @@ class EMOdataset(Dataset):
     def get_item(self, index):
         example = self.dataset[index]
         audio_path = example["wav"]  
-        audio_file = os.path.join(self.base_audio_dir, audio_path)  # 拼接绝对路径
+        audio_file = os.path.join(self.base_audio_dir, audio_path)  
         
-        segments, pad_mask = self.load_audio(audio_file)
-        labels = torch.from_numpy(np.array(example["y"], dtype=np.float32))  # 直接从数据集中获取标签
-        
-        segments = torch.vstack(segments)
-        return {
-            "audio": segments,
-            "labels": labels,
-            "n_segments": len(pad_mask)
-        }
+        audio = self.load_audio(audio_file)
+        label = torch.from_numpy(np.array(example["y"], dtype=np.float32))
+
+        return {"audio": audio, "labels": label, "audio_length": audio.shape[1]}
 
     def load_audio(
         self, 
@@ -69,41 +65,48 @@ class EMOdataset(Dataset):
         input:
             audio_file:one of audio_file path
         return:
-            waveform:[n,T]
+            audio:[T]
+              T:audio timestep
         """
-        waveform, _ = torchaudio.load(audio_file)
-        if waveform.shape[0] > 1 and self.is_mono:
-            waveform = torch.mean(waveform, dim=0, keepdim=True)
-        
-        waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length, task=self.task)
-        
-        return waveform, pad_mask
+        audio, _ = torchaudio.load(audio_file)
+        if audio.shape[0] > 1 and self.is_mono:
+            audio = torch.mean(audio, dim=0, keepdim=True)
+
+        return audio
 
     def collate_fn(self, batch):
         """
         return:
-            features_tensor:(batch_size * n_segments, length)
-            labels_tensor:(batch_size * n_segments, 2)
-            if codecname='semanticodec'
-                labels_tensor:(batch_size * n_segments * 2, 2)
+            features_tensor:(batch_size * split_count, target_length)
+            labels_tensor:(batch_size * split_count, 2)
         """
-        audio_list = [item["audio"] for item in batch if item is not None]
+        audio_list = [item["audio"].squeeze(0) for item in batch if item is not None]
         label_list = [item["labels"] for item in batch if item is not None]
-        n_segments_list = [item["n_segments"] for item in batch if item is not None]
+        audio_length_list = [item["audio_length"] for item in batch if item is not None]
         
-        audio_tensor = torch.vstack(audio_list)
+        audio_tensor = pad_sequence(audio_list, batch_first=True)
+        audio_length_tensor = torch.tensor(audio_length_list)
         label_tensor = torch.vstack(label_list)
-        
+
+        split_count = round(audio_tensor.shape[-1] / self.target_length)
+
+        if audio_tensor.shape[-1] < self.target_length * split_count:
+            audio_tensor = torch.nn.functional.pad(audio_tensor, (0, self.target_length * split_count - audio_tensor.shape[-1], 0, 0))
+        elif audio_tensor.shape[-1] > self.target_length * split_count:
+            audio_tensor = audio_tensor[:, :self.target_length * split_count]
+
+        audio_tensor = rearrange(audio_tensor, 'b (n t) -> (b n) t', n=split_count, t=self.target_length)
+
         return {
             "audio": audio_tensor,
             "labels": label_tensor,
-            "n_segments_list": n_segments_list
+            "audio_length": audio_length_tensor,
         }
 
 class EMOdataModule(pl.LightningDataModule):
     def __init__(
         self,
-        dataset_args,  # 包含dataset_path、base_audio_dir等参数
+        dataset_args,  # include parameters such as dataset_path、base_audio_dir
         codec_name,
         train_batch_size=16,
         val_batch_size=16,
