@@ -25,8 +25,8 @@
 
 
 # AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
-&emsp;&emsp;__AudioCodecBench__ evaluates audio codecs in terms of reconstruction quality and the adaptability of generated representations to large language model(LLM) modeling, by performing tasks such as reconstruction (adding noise to assess the codec’s ability to fit noise and to determine whether the codebook information tends to encode noise), audio offset (simulating phase shifts to evaluate noise fitting ability), mutual information (analyzing the correlation between codebook tokens before and after reconstruction to assess the stability of information representation), and downstream probe tasks (simulating large language model-style modeling).<br>
- <a href="">
+&emsp;&emsp;__AudioCodecBench__ allows for a comprehensive assessment of codecs' capabilities which evaluate across four dimensions: audio reconstruction metric, codebook index (ID) stability, decoder-only transformer perplexity, and performance on downstream probe tasks. Our results show the correctness of the provided suitable definitions and the correlation among reconstruction metrics, codebook ID stability, downstream probe tasks and perplexity.<br>
+ <a href="https://arxiv.org/pdf/2509.02349">
   <img src="https://camo.githubusercontent.com/a8d50b4cb0bebfa879fca60626080da8012c5a24a1fe3d3db641e19485b0851f/68747470733a2f2f7374617469632e61727869762e6f72672f7374617469632f62726f7773652f302e332e342f696d616765732f69636f6e732f66617669636f6e2d31367831362e706e67" alt="arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation">
   arXiv Paper: AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation
 </a>
@@ -49,12 +49,15 @@
 
 - [x] multi codec deploy
     - multi codec deploy reference: https://github.com/lucadellalib/audiocodecs
-- [ ] clean different dataset in marble benchmark
+- [x] clean different dataset in marble benchmark
     - add code to redeploy marble in our benchmark
     - add code in marble base to evaluate our index
     - package default behavior: load ckpt or dataset from default base dir (like: ~/.codec_evaluation) or os environment var (like CODEC_EVALUATION_DATA_DIR) rather than absolute path
-- [ ] define the evaluation metrics of codec, codebooks
+- [x] define the evaluation metrics of codec, codebooks
+    - test codec's reconstruction fidelity
     - test ID sensitive in same semantic
+    - test perplexity(ppl) of the different token sequences on the same LMs
+    - test token embeddings in downstream probe tasks
 
 ## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Compass/3D/compass_3d.png" alt="compass" width="30" height="30"> Env Build
 The following explains how to quickly create the required environment and install codec_evaluation for use.
@@ -229,7 +232,7 @@ The following will introduce how to conduct evaluations using codecs and downstr
 </table>
 
 ### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Bookmark%20tabs/3D/bookmark_tabs_3d.png" alt="bookmark" width="30" height="30">Probe Experiment
-#### Marble Probe (Music)
+#### Music Probe
 <table border="1" >
     
    <thead>
@@ -754,3 +757,15 @@ The following will introduce how to conduct evaluations using codecs and downstr
 | SemamiCodec    | 15.5  |  1.0    |  272.4  |    -    |    -    |    -    |    -    |    -    |    -    |
 
 
+## Citation
+```
+@misc{wang2025audiocodecbenchcomprehensivebenchmarkaudio,
+      title={AudioCodecBench: A Comprehensive Benchmark for Audio Codec Evaluation}, 
+      author={Lu Wang and Hao Chen and Siyu Wu and Zhiyue Wu and Hao Zhou and Chengfeng Zhang and Ting Wang and Haodi Zhang},
+      year={2025},
+      eprint={2509.02349},
+      archivePrefix={arXiv},
+      primaryClass={cs.SD},
+      url={https://arxiv.org/abs/2509.02349}, 
+}
+```
