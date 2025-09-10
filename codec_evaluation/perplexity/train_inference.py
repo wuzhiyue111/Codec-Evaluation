@@ -49,23 +49,59 @@ def main(config: DictConfig) -> None:
     )
     logger.info("training_finished")
 
-if __name__ == "__main__":
+def cli():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--codec_name", type=str, required=True)
-    parser.add_argument("--base_audio_dir", type=str, required=True)
-    parser.add_argument("--dataset_path", type=str, required=True)
-    parser.add_argument("--codec_ckpt_dir", type=str, required=True)
-    parser.add_argument("--ppl_ckpt_dir", type=str, required=True)
-    parser.add_argument("--tensorboard_save_dir", type=str, required=True)
+    parser.add_argument("--codec_name", 
+                        type=str, 
+                        required=True, 
+                        help="Name of the audio codec model to be used (e.g., 'encodec', 'dac').")
+    parser.add_argument('--devices',
+                        type=str,
+                        default="0,",
+                        help=f'Devices, e.g. "1" (gpu count), "0,1,2,3" (gpu ids)')
+    parser.add_argument("--train_batch_size", 
+                        type=int, 
+                        default=10,
+                        help="Batch size for training.")
+    parser.add_argument("--valid_batch_size", 
+                        type=int, 
+                        default=4,
+                        help="Batch size for validation.")
+    parser.add_argument("--base_audio_dir", 
+                        type=str, 
+                        required=True,
+                        help="The root directory where the raw audio files are stored.(Used to splice the complete audio path)")
+    parser.add_argument("--dataset_path", 
+                        type=str, 
+                        required=True,
+                        help="The huggingface dataset path obtained using the script.")
+    parser.add_argument("--codec_ckpt_dir", 
+                        type=str, 
+                        required=True,
+                        help="Path to the directory containing codec model checkpoints.")
+    parser.add_argument("--ppl_ckpt_dir", 
+                        type=str, 
+                        required=True,
+                        help="Path to the directory containing perplexity model checkpoints.")
+    parser.add_argument("--tensorboard_save_dir", 
+                        type=str, 
+                        required=True,
+                        help="Path to the directory where tensorboard logs will be saved.")
     args = parser.parse_args()
     config = OmegaConf.load(f"{codec_evaluation_root_path}/perplexity/config/{args.codec_name}_ppl.yaml")
     config.ppl_ckpt_dir = args.ppl_ckpt_dir
     config.tensorboard_save_dir = args.tensorboard_save_dir
     config.codec_name = args.codec_name
+    config.trainer.devices = args.devices
+    config.data.train_batch_size = args.train_batch_size
+    config.data.valid_batch_size = args.valid_batch_size
     config.data.base_audio_dir = args.base_audio_dir
     config.data.dataset_path = args.dataset_path
     config.codec_ckpt_dir = args.codec_ckpt_dir
     config.model.ppl_model_config.pretrained_model_name_or_path = os.path.join(codec_evaluation_root_path, config.model.ppl_model_config.pretrained_model_name_or_path)
 
     main(config)
+
+if __name__ == "__main__":
+    cli()
