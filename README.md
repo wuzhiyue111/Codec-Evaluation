@@ -419,7 +419,7 @@ The following will introduce how to conduct evaluations using codecs and downstr
     </tbody>
 </table>
 
-#### Marble Probe codebook0(Music)
+#### Music Probe codebook0
 <table border="1" >
     
    <thead>
