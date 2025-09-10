@@ -165,23 +165,25 @@ class CodecEvaluation:
         }
 
 
-def main():
+def cli():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--codec_name", type=str, default="dac", help="codec name")
-    parser.add_argument(
-        "--model_ckpt_dir",
-        type=str,
-        default="/sdb/model_weight/codec_evaluation/codec_ckpt",
-        help="/path/to/your/codec_ckpt_dir",
-    )
+    parser.add_argument("--codec_name", 
+                        type=str, 
+                        required=True, 
+                        help="Name of the audio codec model to be used (e.g., 'encodec', 'dac').")
+    parser.add_argument("--model_ckpt_dir",
+                        type=str,
+                        required=True, 
+                        help="Directory containing the pretrained checkpoint files for the specified audio codec.")
     parser.add_argument("--device", type=str, default="cuda:0")
-    parser.add_argument("--sample_rate", type=int, default=22050)
-    parser.add_argument(
-        "--dataset_path",
-        type=str,
-        default="/home/ch/Codec-Evaluation/codec_evaluation/huggingface_dataset/GTZAN/GTZAN_dataset/GTZAN_test_dataset",
-        help="/path/to/your/GTZAN/GTZAN_dataset/GTZAN_test_dataset",
-    )
+    parser.add_argument("--sample_rate", 
+                        type=int, 
+                        required=True,
+                        help="The sample rate of the dataset audio files.")
+    parser.add_argument("--dataset_path",
+                        type=str,
+                        required=True, 
+                        help="The huggingface dataset path obtained using the script.")
     parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument("--mode", type=str, default="reconstruct")
@@ -208,4 +210,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    cli()
