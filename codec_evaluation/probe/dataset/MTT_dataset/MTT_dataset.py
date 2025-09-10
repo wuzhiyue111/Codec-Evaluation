@@ -16,71 +16,46 @@ class MTTdataset(Dataset):
     def __init__(
         self,
         sample_rate,
-        target_sec,        
-        is_mono,
+        target_sec,
+        base_audio_dir,
         dataset_path,
-        base_audio_dir,  
-        task
     ):
         self.sample_rate = sample_rate
         self.target_sec = target_sec
         self.target_length = self.target_sec * self.sample_rate
-        self.is_mono = is_mono
         self.dataset_path = dataset_path
-        self.base_audio_dir = base_audio_dir  
-        self.task = task
-        
         self.dataset = load_from_disk(dataset_path)
-        
-        self.uuids = self.dataset["uuid"]
-        self.audio_paths = self.dataset["audio_path"]
         
         self.labels = np.load(os.path.join(base_audio_dir, 'MTT', 'binary_label.npy'))
 
+
+        
     def __len__(self):
-        return len(self.uuids)
+        return len(self.dataset)
 
     def __getitem__(self, index):
         try:
-            return self.getitem(index)
+            return self.get_item(index)
         except Exception as e:
-            audio_path = self.dataset[index]["audio_path"] 
-            full_path = os.path.join(self.base_audio_dir, audio_path)
-            logger.error(f"Error loading {full_path}: {e}")
-            return None  
+            example = self.dataset[index]
+            audio_path = example["audio_path"]
+            logger.error(f"Error loading {audio_path}: {e}")
+            return None
     
-    def getitem(self, index):
+    def get_item(self, index):
         """
             return:
                 audio: [1,T]
-                labels: [1]
+                labels: [1,]
         """
-        uuid = self.uuids[index]
-        audio_path = self.audio_paths[index]
-        audio_file = os.path.join(self.base_audio_dir, audio_path) 
-        audio = self.load_audio(audio_file)
-        label = torch.from_numpy(self.labels[uuid])
+        example = self.dataset[index]
+        audio = torch.from_numpy(example["audio"]["array"])
+        if audio.ndim > 1:
+            audio = audio.mean(axis=0)
+        audio = audio.float().unsqueeze(0)
+        label = torch.from_numpy(self.labels[example["uuid"]])
         
         return {"audio": audio, "labels": label, "audio_length": audio.shape[1]}
-
-    
-    def load_audio(
-        self, 
-        audio_file
-    ):
-        """
-        input:
-            audio_file:one of audio_file path
-        return:
-            audio:[T]
-              T:audio timestep
-        """
-        audio, _ = torchaudio.load(audio_file)
-
-        if audio.shape[0] > 1 and self.is_mono:
-            audio = torch.mean(audio, dim=0, keepdim=True)
-
-        return audio
 
     
     def collate_fn(self, batch):
@@ -124,7 +99,6 @@ class MTTdataModule(pl.LightningDataModule):
             train_audio_dir,
             val_audio_dir,
             test_audio_dir,
-            codec_name,
             train_batch_size=32,
             val_batch_size=2,
             test_batch_size=16,
@@ -140,7 +114,6 @@ class MTTdataModule(pl.LightningDataModule):
         self.train_batch_size = train_batch_size
         self.val_batch_size = val_batch_size
         self.test_batch_size = test_batch_size
-        self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.val_num_workers = val_num_workers
         self.test_num_workers = test_num_workers

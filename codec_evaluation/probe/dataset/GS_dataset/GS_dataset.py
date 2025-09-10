@@ -1,32 +1,27 @@
-from pathlib import Path
 import torch
-import torchaudio
 from torch.utils.data import Dataset 
 from einops import rearrange, repeat
 from datasets import load_from_disk
 from torch.nn.utils.rnn import pad_sequence
+from codec_evaluation.utils.logger import RankedLogger
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
+
+logger = RankedLogger(__name__, rank_zero_only=True)
 
 class GSdataset(Dataset):
     def __init__(
         self,
-        split,
         sample_rate,
         target_sec,
-        is_mono,
-        dataset_path,  
-        base_audio_dir=None,  
+        dataset_path
     ):
-        self.split = split
         self.sample_rate = sample_rate
         self.target_sec = target_sec
         self.target_length = self.target_sec * self.sample_rate
-        self.is_mono = is_mono
         self.dataset_path = dataset_path
-        self.base_audio_dir = base_audio_dir   
 
-        self.dataset = load_from_disk(dataset_path).filter(lambda x: x["split"] == split)
+        self.dataset = load_from_disk(dataset_path)
         
         # tag mapping
         self.classes = """C major, Db major, D major, Eb major, E major, F major, Gb major, G major, Ab major, A major, Bb major, B major, C minor, Db minor, D minor, Eb minor, E minor, F minor, Gb minor, G minor, Ab minor, A minor, Bb minor, B minor""".split(", ")
@@ -37,7 +32,13 @@ class GSdataset(Dataset):
         return len(self.dataset)
 
     def __getitem__(self, index):
-        return self.get_item(index)
+        try:
+            return self.get_item(index)
+        except Exception as e:
+            example = self.dataset[index]
+            audio_path = example["audio_path"]
+            logger.error(f"Error loading {audio_path}: {e}")
+            return None
 
     def get_item(self, index):
         """
@@ -46,32 +47,14 @@ class GSdataset(Dataset):
             label: [1]
         """
         example = self.dataset[index]
-        audio_path = example["wav"]   
-
-        if self.base_audio_dir:
-            audio_path = str(Path(self.base_audio_dir) / Path(audio_path))
-        
-        audio = self.load_audio(audio_path)
-        label = torch.tensor([self.class2id[example["y"]]]) 
+        audio = torch.from_numpy(example["audio"]["array"])
+        if audio.ndim > 1:
+            audio = audio.mean(axis=0)
+        audio = audio.float().unsqueeze(0)
+        label = torch.tensor([self.class2id[example["labels"]]]) 
         
         return {"audio": audio, "labels": label, "audio_length": audio.shape[1]}
 
-    def load_audio(
-        self, 
-        audio_file
-    ):
-        """
-        input:
-            audio_file:one of audio_file path
-        return:
-            audio:[T]
-              T:audio timestep
-        """
-        audio, _ = torchaudio.load(audio_file)
-        if audio.shape[0] > 1 and self.is_mono:
-            audio = torch.mean(audio, dim=0, keepdim=True)
-
-        return audio
 
     def collate_fn(self, batch):
     
@@ -111,7 +94,9 @@ class GSdataModule(pl.LightningDataModule):
     def __init__(
         self,
         dataset_args, 
-        codec_name,
+        train_audio_dir,
+        val_audio_dir,
+        test_audio_dir,
         train_batch_size=32,
         val_batch_size=2,
         test_batch_size=16,
@@ -121,22 +106,24 @@ class GSdataModule(pl.LightningDataModule):
     ):
         super().__init__()
         self.dataset_args = dataset_args
+        self.train_audio_dir = train_audio_dir
+        self.val_audio_dir = val_audio_dir
+        self.test_audio_dir = test_audio_dir
         self.train_batch_size = train_batch_size
         self.val_batch_size = val_batch_size
         self.test_batch_size = test_batch_size
-        self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.val_num_workers = val_num_workers
         self.test_num_workers = test_num_workers
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            self.train_dataset = GSdataset(split="train", **self.dataset_args)
-            self.val_dataset = GSdataset(split="valid", **self.dataset_args)
+            self.train_dataset = GSdataset(dataset_path=self.train_audio_dir, **self.dataset_args)
+            self.val_dataset = GSdataset(dataset_path=self.val_audio_dir, **self.dataset_args)
         if stage == "val":
-            self.val_dataset = GSdataset(split="valid", **self.dataset_args)
+            self.val_dataset = GSdataset(dataset_path=self.val_audio_dir, **self.dataset_args)
         if stage == "test":
-            self.test_dataset = GSdataset(split="test", **self.dataset_args)
+            self.test_dataset = GSdataset(dataset_path=self.test_audio_dir, **self.dataset_args)
 
     def train_dataloader(self):
         return DataLoader(

@@ -35,35 +35,6 @@ def find_audios(
                     audio_files.append(os.path.join(root, file))
         return audio_files
 
-def cut_or_pad(waveform, target_length, task=None, codecname = None):
-        """Cut or pad a waveform or a feature to a target length."""
-        
-        if codecname == 'semanticodec':
-            if waveform.dim() == 4:
-                waveform = waveform.permute(0, 3, 2, 1)  # [B, T, 2, D] -> [B, D, 2, T]
-            elif waveform.dim() == 3:
-                waveform = waveform.permute(0, 2, 1)  # [B, T, D] -> [B, D, T]
-    
-    # Get waveform length based on dimension
-        if waveform.dim() == 2:
-            waveform_length = waveform.shape[1]  # [B, T]
-        elif waveform.dim() == 3:
-            waveform_length = waveform.shape[2]  # [B, D, T]
-        elif waveform.dim() == 4:
-            waveform_length = waveform.shape[3]  # [B, D, 2, T]
-        else:
-            raise ValueError("Unsupported waveform dimension!")
-        
-        if waveform.dim() == 2: 
-
-            segments, pad_mask = split_audio(waveform = waveform, segment_length = target_length, task=task, pad_value=0)
-
-            return segments, pad_mask
-        else:
-            if waveform_length > target_length:
-                waveform = waveform[..., :target_length]
-        
-            return waveform
 
 def find_lastest_ckpt(directory):
     if directory is None:
@@ -78,42 +49,6 @@ def find_lastest_ckpt(directory):
     latest_ckpt_file = max(ckpt_file, key=os.path.getmtime)
     return latest_ckpt_file
 
-def split_audio(waveform, segment_length, task, pad_value=-100):
-    """
-    input:
-        waveform:[1,T];
-        n_segments: the number of segments per audio
-    return:
-        segments:[n_segments,segment_length]
-    """
-
-    total_length = waveform.shape[1]  # 音频的总长度
-    segments = []
-    pad_mask = []
-
-    if task != "regression" and task != 'multilabel':
-        for start in range(0, total_length, segment_length):
-            end = start + segment_length
-            if end <= total_length:  
-                segment = waveform[:, start:end] 
-                pad_mask.append(1) 
-            else:  
-                segment = waveform[:, start:] 
-                
-                padding_length = segment_length - segment.shape[1]
-                segment = F.pad(segment, (0, padding_length), value=pad_value)
-                pad_mask.append(0) 
-
-            segments.append(segment)
-    else:
-        for start in range(0, total_length, segment_length):
-            end = start + segment_length
-            if end <= total_length:  
-                segment = waveform[:, start:end] 
-                pad_mask.append(1) 
-                segments.append(segment)
-
-    return segments, pad_mask
 
 def plot_mrc_avg_same_id(avg_same_id_dict, codec_name, task):
         """Plot the average codebook same ID across 10 rounds for each codebook.

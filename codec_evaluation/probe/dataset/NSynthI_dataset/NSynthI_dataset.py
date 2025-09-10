@@ -14,15 +14,11 @@ class NSynthIdataset(Dataset):
     def __init__(
         self,        
         sample_rate,     
-        target_sec,      
-        is_mono,     
-        base_audio_dir,  
+        target_sec,    
         dataset_path,              
     ):
         self.sample_rate = sample_rate
         self.target_sec = target_sec
-        self.is_mono = is_mono
-        self.base_audio_dir = base_audio_dir  
         self.dataset = load_from_disk(dataset_path)
         self.class2id = {
             'bass': 0,
@@ -46,9 +42,9 @@ class NSynthIdataset(Dataset):
         try:
             return self.get_item(index)
         except Exception as e:
-            audio_path = self.dataset[index]["audio_path"] 
-            full_path = os.path.join(self.base_audio_dir, audio_path)
-            logger.error(f"Error loading {full_path}: {e}")
+            example = self.dataset[index]
+            audio_path = example["audio_path"]
+            logger.error(f"Error loading {audio_path}: {e}")
             return None
 
     def get_item(self, index):
@@ -57,14 +53,12 @@ class NSynthIdataset(Dataset):
                 audio: [1, T]
                 labels: [1]
         """
-        record = self.dataset[index]
-        relative_audio_path = record["audio_path"]
-        class_name = record["instrument_family_str"]           
-        audio_file = os.path.join(self.base_audio_dir, relative_audio_path)
-
-        audio = self.load_audio(audio_file)
-
-        label = torch.tensor([self.class2id[class_name]])
+        example = self.dataset[index]
+        audio = torch.from_numpy(example["audio"]["array"])
+        if audio.ndim > 1:
+            audio = audio.mean(axis=0)
+        audio = audio.float().unsqueeze(0)
+        label = torch.tensor([self.class2id[example["instrument_family_str"]]]) 
 
         return {"audio": audio, "labels": label, "audio_length": audio.shape[1]}
     
@@ -80,7 +74,7 @@ class NSynthIdataset(Dataset):
               T:audio timestep
         """
         audio, _ = torchaudio.load(audio_file)
-        if audio.shape[0] > 1 and self.is_mono:
+        if audio.shape[0] > 1:
             audio = torch.mean(audio, dim=0, keepdim=True)
 
         return audio
@@ -119,7 +113,6 @@ class NSynthIdataModule(pl.LightningDataModule):
             train_audio_dir,
             val_audio_dir,
             test_audio_dir, 
-            codec_name,
             train_batch_size=32,
             val_batch_size=2,
             test_batch_size=16,
@@ -135,7 +128,6 @@ class NSynthIdataModule(pl.LightningDataModule):
         self.train_batch_size = train_batch_size
         self.val_batch_size = val_batch_size
         self.test_batch_size = test_batch_size
-        self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.val_num_workers = val_num_workers
         self.test_num_workers = test_num_workers

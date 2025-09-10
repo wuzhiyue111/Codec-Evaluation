@@ -1,6 +1,4 @@
-import os
 import torch
-import torchaudio
 import numpy as np
 from torch.utils.data import Dataset
 from datasets import load_from_disk
@@ -14,23 +12,15 @@ logger = RankedLogger(__name__, rank_zero_only=True)
 
 class EMOdataset(Dataset):
     def __init__(
-        self,
-        split,              
+        self,    
         dataset_path,       
-        base_audio_dir,     
         sample_rate,
         target_sec,
-        is_mono,
-        task="regression",
     ):
         self.sample_rate = sample_rate
         self.target_sec = target_sec
         self.target_length = self.target_sec * sample_rate
-        self.is_mono = is_mono
-        self.task = task
-        self.base_audio_dir = base_audio_dir  # Audio files root directory
         self.dataset = load_from_disk(dataset_path)
-        self.dataset = self.dataset.filter(lambda x: x["split"] == split)
         self.classes = ["arousal", "valence"]  
         self.class2id = {c: i for i, c in enumerate(self.classes)}
 
@@ -42,37 +32,28 @@ class EMOdataset(Dataset):
             return self.get_item(index)
         except Exception as e:
             example = self.dataset[index]
-            audio_path = example["wav"]  # Relative audio paths within the dataset
-            audio_file = os.path.join(self.base_audio_dir, audio_path)
-            logger.error(f"Error loading {audio_file}: {e}")
+            audio_path = example["audio_path"]
+            logger.error(f"Error loading {audio_path}: {e}")
             return None
 
     def get_item(self, index):
+
+        """
+        return:
+            audio:[1,T]
+              T:audio timestep
+        """
         example = self.dataset[index]
-        audio_path = example["wav"]  
-        audio_file = os.path.join(self.base_audio_dir, audio_path)  
-        
-        audio = self.load_audio(audio_file)
-        label = torch.from_numpy(np.array(example["y"], dtype=np.float32))
+       
+        audio = torch.from_numpy(example["audio"]["array"])
+        if audio.ndim > 1:
+            audio = audio.mean(axis=0)
+        audio = audio.float().unsqueeze(0)
+
+        label = torch.from_numpy(np.array(example["labels"], dtype=np.float32))
 
         return {"audio": audio, "labels": label, "audio_length": audio.shape[1]}
 
-    def load_audio(
-        self, 
-        audio_file
-    ):
-        """
-        input:
-            audio_file:one of audio_file path
-        return:
-            audio:[T]
-              T:audio timestep
-        """
-        audio, _ = torchaudio.load(audio_file)
-        if audio.shape[0] > 1 and self.is_mono:
-            audio = torch.mean(audio, dim=0, keepdim=True)
-
-        return audio
 
     def collate_fn(self, batch):
         """
@@ -106,8 +87,10 @@ class EMOdataset(Dataset):
 class EMOdataModule(pl.LightningDataModule):
     def __init__(
         self,
-        dataset_args,  # include parameters such as dataset_path、base_audio_dir
-        codec_name,
+        dataset_args, 
+        train_audio_dir,
+        val_audio_dir,
+        test_audio_dir,
         train_batch_size=16,
         val_batch_size=16,
         test_batch_size=16,
@@ -117,22 +100,24 @@ class EMOdataModule(pl.LightningDataModule):
     ):
         super().__init__()
         self.dataset_args = dataset_args
+        self.train_audio_dir = train_audio_dir
+        self.val_audio_dir = val_audio_dir
+        self.test_audio_dir = test_audio_dir
         self.train_batch_size = train_batch_size
         self.val_batch_size = val_batch_size
         self.test_batch_size = test_batch_size
-        self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.val_num_workers = val_num_workers
         self.test_num_workers = test_num_workers
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            self.train_dataset = EMOdataset(split="train", **self.dataset_args)
-            self.val_dataset = EMOdataset(split="valid", **self.dataset_args)
+            self.train_dataset = EMOdataset(dataset_path=self.train_audio_dir, **self.dataset_args)
+            self.val_dataset = EMOdataset(dataset_path=self.val_audio_dir, **self.dataset_args)
         if stage == "val":
-            self.val_dataset = EMOdataset(split="valid", **self.dataset_args)
+            self.val_dataset = EMOdataset(dataset_path=self.val_audio_dir, **self.dataset_args)
         if stage == "test":
-            self.test_dataset = EMOdataset(split="test", **self.dataset_args)
+            self.test_dataset = EMOdataset(dataset_path=self.test_audio_dir, **self.dataset_args)
 
     def train_dataloader(self):
         return DataLoader(

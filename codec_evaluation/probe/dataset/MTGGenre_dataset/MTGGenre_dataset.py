@@ -14,24 +14,17 @@ logger = RankedLogger(__name__, rank_zero_only=True)
 class MTGGenredataset(Dataset):
     def __init__(
         self,
-        split,
         sample_rate,
         target_sec,
-        is_mono,
         base_audio_dir,  
         dataset_path,    
-        task,
     ):
-        self.split = split
         self.sample_rate = sample_rate
         self.target_sec = target_sec
         self.target_length = target_sec * sample_rate
-        self.is_mono = is_mono
         self.base_audio_dir = base_audio_dir
         self.dataset_path = dataset_path
-        self.task = task
 
-        dataset_path = os.path.join(dataset_path, f"MTGGenre_{split}_dataset")
         self.dataset = load_from_disk(dataset_path)
         
         self.class2id = self.read_class2id()
@@ -44,10 +37,11 @@ class MTGGenredataset(Dataset):
         try:
             return self.get_item(index)
         except Exception as e:
-            audio_path = self.dataset[index]["audio_path"] 
-            full_path = os.path.join(self.base_audio_dir, audio_path)
-            logger.error(f"Error loading {full_path}: {e}")
+            example = self.dataset[index]
+            audio_path = example["audio_path"]
+            logger.error(f"Error loading {audio_path}: {e}")
             return None  
+
 
     def get_item(self, index):
         """
@@ -55,9 +49,9 @@ class MTGGenredataset(Dataset):
             audio: [1, T]
             labels: [1, 87]
         """
-        record = self.dataset[index]
-        relative_audio_path = record["audio_path"]
-        tags = record["TAGS"].split()
+        example = self.dataset[index]
+        relative_audio_path = example["audio_path"]
+        tags = example["TAGS"].split() 
         
         audio_file = os.path.join(self.base_audio_dir, relative_audio_path)
         
@@ -82,7 +76,7 @@ class MTGGenredataset(Dataset):
               T:audio timestep
         """
         audio, _ = torchaudio.load(audio_file)
-        if audio.shape[0] > 1 and self.is_mono:
+        if audio.shape[0] > 1:
             audio = torch.mean(audio, dim=0, keepdim=True)
 
         if audio.shape[1] > 150 * self.sample_rate:
@@ -95,7 +89,7 @@ class MTGGenredataset(Dataset):
         class2id = {}
         
         for split in ['train', 'validation']:
-            dataset = load_from_disk(os.path.join(self.dataset_path, f"MTGGenre_{split}_dataset"))
+            dataset = load_from_disk(os.path.join(os.path.dirname(self.dataset_path), f"MTGGenre_{split}_dataset"))
             for record in dataset:
                 tags = record["TAGS"].split()  
                 for tag in tags:
@@ -140,7 +134,9 @@ class MTGGenredataset(Dataset):
 class MTGGenreModule(pl.LightningDataModule):
     def __init__(self,
             dataset_args, 
-            codec_name,
+            train_audio_dir,
+            val_audio_dir,
+            test_audio_dir,
             train_batch_size=32,
             val_batch_size=2,
             test_batch_size=16,
@@ -149,22 +145,24 @@ class MTGGenreModule(pl.LightningDataModule):
             test_num_workers=4):
         super().__init__()
         self.dataset_args = dataset_args
+        self.train_audio_dir = train_audio_dir
+        self.val_audio_dir = val_audio_dir
+        self.test_audio_dir = test_audio_dir
         self.train_batch_size = train_batch_size
         self.val_batch_size = val_batch_size
         self.test_batch_size = test_batch_size
-        self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.val_num_workers = val_num_workers
         self.test_num_workers = test_num_workers
 
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            self.train_dataset = MTGGenredataset(split="train", **self.dataset_args)
-            self.val_dataset = MTGGenredataset(split="validation", **self.dataset_args)
+            self.train_dataset = MTGGenredataset(dataset_path=self.train_audio_dir, **self.dataset_args)
+            self.val_dataset = MTGGenredataset(dataset_path=self.val_audio_dir, **self.dataset_args)
         if stage == "val":
-            self.val_dataset = MTGGenredataset(split="validation", **self.dataset_args)
+            self.val_dataset = MTGGenredataset(dataset_path=self.val_audio_dir, **self.dataset_args)
         if stage == "test":
-            self.test_dataset = MTGGenredataset(split="test", **self.dataset_args)
+            self.test_dataset = MTGGenredataset(dataset_path=self.test_audio_dir, **self.dataset_args)
 
     def train_dataloader(self):
         return DataLoader(
