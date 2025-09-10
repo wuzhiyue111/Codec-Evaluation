@@ -5,6 +5,7 @@ import codec_evaluation
 from codec_evaluation.utils.logger import RankedLogger
 from codec_evaluation.utils.print_config import print_config_tree
 from codec_evaluation.utils.utils import find_lastest_ckpt
+import os
 
 codec_evaluation_root_path = codec_evaluation.__path__[0]
 logger = RankedLogger(__name__, rank_zero_only=True)
@@ -51,7 +52,20 @@ def main(config: DictConfig) -> None:
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--codec_name", type=str, default="mimi")
+    parser.add_argument("--codec_name", type=str, required=True)
+    parser.add_argument("--base_audio_dir", type=str, required=True)
+    parser.add_argument("--dataset_path", type=str, required=True)
+    parser.add_argument("--codec_ckpt_dir", type=str, required=True)
+    parser.add_argument("--ppl_ckpt_dir", type=str, required=True)
+    parser.add_argument("--tensorboard_save_dir", type=str, required=True)
     args = parser.parse_args()
     config = OmegaConf.load(f"{codec_evaluation_root_path}/perplexity/config/{args.codec_name}_ppl.yaml")
+    config.ppl_ckpt_dir = args.ppl_ckpt_dir
+    config.tensorboard_save_dir = args.tensorboard_save_dir
+    config.codec_name = args.codec_name
+    config.data.base_audio_dir = args.base_audio_dir
+    config.data.dataset_path = args.dataset_path
+    config.codec_ckpt_dir = args.codec_ckpt_dir
+    config.model.ppl_model_config.pretrained_model_name_or_path = os.path.join(codec_evaluation_root_path, config.model.ppl_model_config.pretrained_model_name_or_path)
+
     main(config)

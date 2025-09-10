@@ -48,7 +48,7 @@ def create_arrow_from_tsv(meta_dir, output_dir, jsonl_output_dir=None):
     
     # Save in Arrow format
     output_path = os.path.join(output_dir, f'commonvoice_dataset')
-    dataset.save_to_disk(output_path)
+    dataset.save_to_disk(output_path, num_proc=16)
     print(f"Successfully saved Arrow dataset to: {output_path}")
     
     # Save in JSONL format (if output directory is specified)
@@ -62,9 +62,20 @@ def create_arrow_from_tsv(meta_dir, output_dir, jsonl_output_dir=None):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Create Commonvoice Arrow datasets from TSV files.")
-    parser.add_argument("--meta_dir", type=str, required= True, help="Directory containing TSV files.")
-    parser.add_argument("--output_dir", type=str, required=True, help="Directory to save Arrow dataset.")
-    parser.add_argument("--jsonl_output_dir", type=str, default=None, help="Directory to save JSONL dataset (optional).")
+    parser.add_argument("--meta_dir", 
+                        type=str, 
+                        required= True, 
+                        help="Directory containing TSV files.")
+
+    parser.add_argument("--output_dir", 
+                        type=str, 
+                        required=True, 
+                        help="Directory to save Arrow dataset.")
+
+    parser.add_argument("--jsonl_output_dir", 
+                        type=str, 
+                        default=None, 
+                        help="Directory to save JSONL dataset (optional).")
 
     args = parser.parse_args()
     dataset = create_arrow_from_tsv(args.meta_dir, args.output_dir, args.jsonl_output_dir)

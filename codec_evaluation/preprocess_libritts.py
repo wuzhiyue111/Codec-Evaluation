@@ -71,7 +71,8 @@ def convert_libritts_to_arrow(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert LibriTTS dataset to HuggingFace Dataset format.")
-    parser.add_argument("--audio_dir", type=str, required=True, help="Audio directory")
+    parser.add_argument("--audio_dir", 
+                        type=str, required=True, help="Audio directory")
     parser.add_argument("--output_path", type=str, required=True, help="Output path")
     parser.add_argument("--limit", type=int, default=-1, help="Limit the number of samples processed (-1 means all)")
     parser.add_argument("--verify", action="store_true", help="Verify that the text file exists")
