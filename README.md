@@ -41,23 +41,9 @@
 
 ## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Mountain/3D/mountain_3d.png" alt="mountain" width="30" height="30"> Purpose
 
-1. how to evaluate the quality of codebook
+1. how to evaluate the quality of codebook (for lm modeling)
 2. collect all existing metrics for reconstruction
 3. collect all existing metrics for Linear Probing (Music and Speech)
-
-## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/World%20map/3D/world_map_3d.png" alt="map" width="30" height="30"> Road Map
-
-- [x] multi codec deploy
-    - multi codec deploy reference: https://github.com/lucadellalib/audiocodecs
-- [x] clean different dataset in marble benchmark
-    - add code to redeploy marble in our benchmark
-    - add code in marble base to evaluate our index
-    - package default behavior: load ckpt or dataset from default base dir (like: ~/.codec_evaluation) or os environment var (like CODEC_EVALUATION_DATA_DIR) rather than absolute path
-- [x] define the evaluation metrics of codec, codebooks
-    - test codec's reconstruction fidelity
-    - test ID sensitive in same semantic
-    - test perplexity(ppl) of the different token sequences on the same LMs
-    - test token embeddings in downstream probe tasks
 
 ## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Compass/3D/compass_3d.png" alt="compass" width="30" height="30"> Env Build
 The following explains how to quickly create the required environment and install codec_evaluation for use.
