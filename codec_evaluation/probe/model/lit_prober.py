@@ -13,9 +13,11 @@ class Prober(pl.LightningModule):
         self.token_rate: The number of tokens per sec;
         self.in_ch: The number of channels for deep convolution;
         self.dim: The D dimension of the codec output;
-        
+        task : [multiclass, regression, multilabel]
         metrics:
-            r2、arousal_r2、 valence_r2
+            multiclass : acc, f1
+            regression : r2, arousal_r2, valence_r2
+            multilabel : ap, aucroc
     """
     def __init__(self, 
                  codec_name: str,
@@ -50,20 +52,23 @@ class Prober(pl.LightningModule):
         
         if codec_name == "semanticodec":
             self.dim = self.codec.dim * 2
-            self.token_rate = self.codec.token_rate /2
+            self.token_rate = self.codec.token_rate / 2
         else:
             self.dim = self.codec.dim  
             self.token_rate = self.codec.token_rate
-        if codec_name == "hubert":
-            self.target_T = int(self.token_rate * target_sec ) - 1
-        else:
-            self.target_T = int(self.token_rate * target_sec )
+
+        self.audio_length = target_sec * self.sample_rate  
+        self.feature_length = self.audio_length // self.codec.hop_length
+
+        if self.codec.orig_sample_rate != self.sample_rate:
+            self.feature_length = self.audio_length * (self.codec.orig_sample_rate / self.sample_rate) // self.codec.hop_length
         
-        self.audio_length = target_sec * self.sample_rate
+        if self.codec_name == "hubert":
+            self.feature_length = self.feature_length - 1
 
         self.probe_model = probe_model_builder(
             codec_dim = self.dim,
-            target_T = self.target_T)
+            target_T = int(self.feature_length))
         
         self.num_outputs = num_outputs
         self.task = task
@@ -76,7 +81,7 @@ class Prober(pl.LightningModule):
         """
             extract features from codec
             waveforms: [B, T]
-            return: [B*n_segments, D, T]
+            return: [B* split_count, D, T]
         """
         length = torch.ones(waveforms.shape[0])
         all_features = self.codec(waveforms, length)
@@ -119,20 +124,14 @@ class Prober(pl.LightningModule):
     def step(self, batch):
         audio = batch["audio"]
         labels = batch["labels"]
-        n_segments_list = batch["n_segments_list"]
+        total_audio_length = batch["audio_length"]
 
         batch_size = labels.shape[0]
-        if self.codec.orig_sample_rate != self.sample_rate:
-            feature_length = self.audio_length * (self.codec.orig_sample_rate / self.sample_rate) // self.codec.hop_length
-        else:
-            feature_length = self.audio_length // self.codec.hop_length
-            
-        if self.codec_name == "hubert":
-            feature_length = feature_length - 1
 
-        audio_features = self.extract_feature(audio, int(feature_length))
+        audio_features = self.extract_feature(audio, int(self.feature_length))
+        split_count = torch.round( max(total_audio_length) / self.audio_length).item()
 
-        loss, labels_pred = self.probe_model(audio_features, labels, n_segments_list)
+        loss, labels_pred = self.probe_model(audio_features, labels, split_count)
         return loss, batch_size, labels_pred, labels
 
 

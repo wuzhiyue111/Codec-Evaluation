@@ -14,14 +14,14 @@ logger = RankedLogger(__name__, rank_zero_only=True)
 class Common_voice_dataset(Dataset):
     def __init__(
         self,
-        dataset_path: str,       # .arrow文件路径
-        base_audio_dir: str,        # 音频文件根目录（用于拼接路径）
+        dataset_path: str,    
+        base_audio_dir: str,    
         target_samplerate=48000
         
     ):
         super().__init__()
-        self.dataset = load_from_disk(dataset_path)  # 加载.arrow数据集
-        self.base_audio_dir = base_audio_dir                # 音频根目录
+        self.dataset = load_from_disk(dataset_path)  
+        self.base_audio_dir = base_audio_dir         
         self.dataset_path = dataset_path
         self.target_samplerate = target_samplerate
         print(f"Found {len(self.dataset)} audio files in {base_audio_dir}")
@@ -37,10 +37,14 @@ class Common_voice_dataset(Dataset):
             return None
         
     def get_item(self, index):
-        sample = self.dataset[index]
-        audio_path = os.path.join(self.base_audio_dir, sample["audio_path"])  # 拼接完整路径
+
+        """
+            audio:[1,T]
             
-        # 加载音频
+        """
+        sample = self.dataset[index]
+        audio_path = os.path.join(self.base_audio_dir, sample["audio_path"]) 
+            
         waveform, samplerate = torchaudio.load(audio_path)
 
         if samplerate != self.target_samplerate:
@@ -51,7 +55,7 @@ class Common_voice_dataset(Dataset):
             waveform = resampler(waveform)
 
         if waveform.shape[0] > 1:
-            waveform = waveform.mean(dim=0, keepdim=True)  # 转单声道
+            waveform = waveform.mean(dim=0, keepdim=True) 
 
         if waveform.shape[1] > 20*48000:
             return None

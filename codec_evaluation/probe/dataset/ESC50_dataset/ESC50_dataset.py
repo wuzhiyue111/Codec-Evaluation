@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from torch.utils.data import random_split
 from datasets import load_from_disk
-from codec_evaluation.utils.utils import cut_or_pad
+from torch.nn.utils.rnn import pad_sequence
 from codec_evaluation.utils.logger import RankedLogger
 
 logger = RankedLogger(__name__, rank_zero_only=True)
@@ -17,20 +17,17 @@ class ESC50dataset(Dataset):
         sample_rate,
         target_sec,
         is_mono,
-        dataset_path,  # 修改：接收保存的数据集路径
+        dataset_path, 
         task,
-        base_audio_dir,  # 可选：如果使用相对路径，指定音频文件的基础目录
+        base_audio_dir, 
     ):
         self.sample_rate = sample_rate
         self.target_sec = target_sec
-        self.target_length = self.target_sec * self.sample_rate
         self.is_mono = is_mono
         self.task = task
         self.base_audio_dir = base_audio_dir
-        
-        # 加载保存的数据集
+
         self.dataset = load_from_disk(dataset_path)
-        # 假设数据集中包含 'wav' 列（音频路径）和 'id' 列（标签）
     
     def __len__(self):
         return len(self.dataset)
@@ -47,20 +44,19 @@ class ESC50dataset(Dataset):
     def get_item(self, index):
         """
         return:
-            segments: [n_segments, segments_length]
-            labels: [n_segments, 2]
+            audio: [1, T]
+            labels: [1]
         """
-        # 从数据集中获取音频路径和标签
+        # get audio paths and labels from the dataset
         example = self.dataset[index]
-        audio_path = example["audio_path"]  # 数据集中的相对路径（如"blues/blues.00037.wav"）
+        audio_path = example["audio_path"]  
         audio_file = os.path.join(self.base_audio_dir, audio_path)
         
-        segments, pad_mask = self.load_audio(audio_file)
+        audio = self.load_audio(audio_file)
         label = torch.tensor([example['target']], dtype=torch.int64)
 
-        segments = torch.vstack(segments)
 
-        return {"audio": segments, "labels": label, "n_segments": len(pad_mask)}
+        return {"audio": audio, "labels": label, "audio_length": audio.shape[1]}
 
     def load_audio(
         self, 
@@ -68,30 +64,40 @@ class ESC50dataset(Dataset):
     ):
         """
         input:
-            audio_file: one of audio_file path
+            audio_file:one of audio_file path
         return:
-            waveform: [T]
+            audio:[T]
+              T:audio timestep
         """
-        waveform, _ = torchaudio.load(audio_file)
+        audio, _ = torchaudio.load(audio_file)
+        if audio.shape[0] > 1 and self.is_mono:
+            audio = torch.mean(audio, dim=0, keepdim=True)
 
-        if waveform.shape[0] > 1 and self.is_mono:
-            waveform = torch.mean(waveform, dim=0, keepdim=True)
-
-        waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length, task=self.task)
-
-        return waveform, pad_mask 
+        return audio
 
     def collate_fn(self, batch):
-        audio_list = [item["audio"] for item in batch if item is not None]
+        """
+        return:
+            features_tensor:(batch_size , target_length)
+            labels_tensor:(batch_size)
+        """
+        audio_list = [item["audio"].squeeze(0) for item in batch if item is not None]
         label_list = [item["labels"] for item in batch if item is not None]
-        n_segments_list = [item["n_segments"] for item in batch if item is not None]
-        audio_tensor = torch.vstack(audio_list)
-        label_tensor = torch.vstack(label_list).squeeze(1)
+        audio_length_list = [item["audio_length"] for item in batch if item is not None]
+        
+        audio_tensor = pad_sequence(audio_list, batch_first=True)
+        audio_length_tensor = torch.tensor(audio_length_list)
+        label_tensor = torch.cat(label_list, dim=0)
 
+        if audio_tensor.shape[-1] < self.target_sec * self.sample_rate:
+            audio_tensor = torch.nn.functional.pad(audio_tensor, (0, self.target_sec * self.sample_rate - audio_tensor.shape[-1], 0, 0))
+        elif audio_tensor.shape[-1] > self.target_sec * self.sample_rate:
+            audio_tensor = audio_tensor[:, :self.target_sec * self.sample_rate]
+        
         return {
             "audio": audio_tensor,
             "labels": label_tensor,
-            "n_segments_list": n_segments_list
+            "audio_length": audio_length_tensor,
         }
 
 class ESC50dataModule(pl.LightningDataModule):

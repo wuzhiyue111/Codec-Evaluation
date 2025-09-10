@@ -1,6 +1,6 @@
 mode: quantized_emb
 sample_rate: 48000
-target_sec: 3
+target_sec: 8
 num_outputs: 7
 probe_ckpt_dir: ???
 seed: 666

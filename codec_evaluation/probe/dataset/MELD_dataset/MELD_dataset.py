@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from codec_evaluation.utils.logger import RankedLogger
-from codec_evaluation.utils.utils import cut_or_pad
+from torch.nn.utils.rnn import pad_sequence
 from datasets import load_from_disk
 
 logger = RankedLogger(__name__, rank_zero_only=True)
@@ -21,7 +21,6 @@ class MELDdataset(Dataset):
     ):
         self.sample_rate = sample_rate
         self.target_sec = target_sec
-        self.target_length = self.target_sec * self.sample_rate
         self.is_mono = is_mono
         self.base_audio_dir = base_audio_dir
 
@@ -45,46 +44,62 @@ class MELDdataset(Dataset):
     def get_item(self, index):
         """
         return:
-            segments: [1,T] 
+            audio: [1,T] 
             labels: [1]
         """
         record = self.dataset[index]  
         relative_audio_path = record["audio_path"]  
         full_audio_path = os.path.join(self.base_audio_dir, relative_audio_path)  
 
-        segments, pad_mask= self.load_audio(full_audio_path)
+        audio = self.load_audio(full_audio_path)
         label = torch.tensor([self.class2id[record["Emotion"]]], dtype=torch.int64)
-        segments = torch.vstack(segments)
 
-        return {"audio": segments, "labels":  label, "n_segments": len(pad_mask)}
-    
-    def load_audio(self, audio_path):
+
+        return {"audio": audio, "labels": label, "audio_length": audio.shape[1]}
+
+    def load_audio(
+        self, 
+        audio_file
+    ):
         """
         input:
-            audio_path: one of audio_file path
+            audio_file:one of audio_file path
         return:
-            waveform:[1,T]
+            audio:[T]
+              T:audio timestep
         """
-        waveform, _ = torchaudio.load(audio_path)
-        if waveform.shape[0] > 1 and self.is_mono:
-            waveform = torch.mean(waveform, dim=0, keepdim=True)
+        audio, _ = torchaudio.load(audio_file)
+        if audio.shape[0] > 1 and self.is_mono:
+            audio = torch.mean(audio, dim=0, keepdim=True)
 
-        waveform, pad_mask = cut_or_pad(waveform=waveform, target_length=self.target_length)
+        return audio
 
-        return waveform, pad_mask
-    
-    def collate_fn(self, batch):    
-        audio_list = [item["audio"] for item in batch if item is not None]
+    def collate_fn(self, batch):
+
+        """
+        return:
+            audio_tensor:(batch_size, target_length)
+            labels_tensor:(batch_size )
+            audio_length_tensor: (batch_size * split_count)
+        """
+
+        audio_list = [item["audio"].squeeze(0) for item in batch if item is not None]
         label_list = [item["labels"] for item in batch if item is not None]
-        n_segments_list = [item["n_segments"] for item in batch if item is not None]
+        audio_length_list = [item["audio_length"] for item in batch if item is not None]
         
-        audio_tensor = torch.vstack(audio_list)
-        label_tensor = torch.vstack(label_list).squeeze(1)
+        audio_tensor = pad_sequence(audio_list, batch_first=True)
+        audio_length_tensor = torch.tensor(audio_length_list)
+        label_tensor = torch.cat(label_list, dim=0)
 
+        if audio_tensor.shape[-1] < self.target_sec * self.sample_rate:
+            audio_tensor = torch.nn.functional.pad(audio_tensor, (0, self.target_sec * self.sample_rate - audio_tensor.shape[-1], 0, 0))
+        elif audio_tensor.shape[-1] > self.target_sec * self.sample_rate:
+            audio_tensor = audio_tensor[:, :self.target_sec * self.sample_rate]
+        
         return {
             "audio": audio_tensor,
             "labels": label_tensor,
-            "n_segments_list": n_segments_list
+            "audio_length": audio_length_tensor,
         }
     
 class MELDdataModule(pl.LightningDataModule):
