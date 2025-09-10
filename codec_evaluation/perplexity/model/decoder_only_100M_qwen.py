@@ -37,7 +37,7 @@ class PPL_100M_Qwen_Model(Qwen2Model):
                                return_dict = return_dict, **kwargs)
 
 class PPL_100M_ForCausalLM(nn.Module):
-    def __init__(self, config: Qwen2Config, lm_head_nums: int):
+    def __init__(self, config: Qwen2Config, lm_head_nums: int, num_items_in_batch: int):
         super().__init__()
         self.model = PPL_100M_Qwen_Model(config, lm_head_nums)
         self.lm_head_nums = lm_head_nums
@@ -46,7 +46,7 @@ class PPL_100M_ForCausalLM(nn.Module):
             self.lm_head_list.append(nn.Linear(config.hidden_size, config.vocab_size))
         self.lm_head = nn.ModuleList(self.lm_head_list)
         self.lm_input_proj = nn.Linear(config.hidden_size * lm_head_nums, config.hidden_size, bias = False)
-        self.loss_fn = partial(ForCausalLMLoss, vocab_size = config.vocab_size)
+        self.loss_fn = partial(ForCausalLMLoss, vocab_size = config.vocab_size, num_items_in_batch = torch.tensor(num_items_in_batch))
 
     def forward(self, 
                 input_ids,
