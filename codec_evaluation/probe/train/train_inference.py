@@ -178,7 +178,7 @@ def cli():
     parser.add_argument('--mode',
                         type=str,
                         required=True,
-                        choices=["unquantized_emb", "quantized_emb","encode"],
+                        choices=["unquantized_emb", "quantized_emb", "encode"],
                         help=f'Mode')
     
     args, _ = parser.parse_known_args()
@@ -191,12 +191,12 @@ def cli():
                         type=str,
                         default="0,",
                         help=f'Devices, e.g. "1" (gpu count), "0,1,2,3" (gpu ids)')
-    
+
     parser.add_argument('--weights_save_dir',
                         type=str,
                         default=f"codec_eval_probe/probe_ckpt/{dataset_name}/{args.config_name}/{args.mode}",
                         help=f'Weights save dir')
-    
+
     parser.add_argument("--tensorboard_save_dir",
                         type=str,
                         default=f"codec_eval_probe/probe_tb_log/{dataset_name}/{args.config_name}/{args.mode}",

@@ -1,6 +1,9 @@
 project: ppl_dac
 seed: 114514
 ppl_ckpt_dir: /path/to/your/codec_eval/ppl/ckpt/dac
+tensorboard_save_dir: /path/to/your/codec_eval/ppl/tb_log
+codec_name: dac
+codec_ckpt_dir: /path/to/your/codec_ckpt/dac
 
 trainer:
   _target_: pytorch_lightning.Trainer
@@ -41,11 +44,11 @@ model:
   _target_: codec_evaluation.perplexity.model.lit_modules.PPL_lit_modules
   ppl_model_config:
     _target_: transformers.models.qwen2.configuration_qwen2.Qwen2Config.from_pretrained
-    pretrained_model_name_or_path: /path/to/your/Codec-Evaluation/codec_evaluation/perplexity/config/ppl_model_config.json
+    pretrained_model_name_or_path: perplexity/config/ppl_model_config.json
 
   sample_rate: 24000    # audio sample rate
-  codec_name: dac
-  codec_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt
+  codec_name: ${codec_name}
+  codec_ckpt_dir: ${codec_ckpt_dir}
   lm_head_nums: 8
 
   optimizer_builder:
@@ -89,6 +92,6 @@ callbacks:
 
 tensorboard_logger:
   _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: /path/to/your/codec_eval/ppl/tb_log
+  save_dir: ${tensorboard_save_dir}
   name: ${project}
   log_graph: true
