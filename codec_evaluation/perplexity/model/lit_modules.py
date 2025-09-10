@@ -106,20 +106,20 @@ class PPL_lit_modules(pl.LightningModule):
             input_ids, labels, batch_size = self.data_process(input_ids, audio_lengths)
         logits_list, loss_list = self.model(input_ids = input_ids.clone(), labels = labels.clone()) # clone to avoid gradient vanishing
 
-        # calculate valid token number (labels != -100)
-        valid_tokens = (labels != -100).sum()
-        valid_tokens = valid_tokens.clamp_min(1).to(loss_list[0].dtype).to(loss_list[0].device)
+        # calculate valid token number (labels != -100, per codebook)
+        valid_tokens_list = [(labels[:, :, i] != -100).sum() for i in range(self.model.lm_head_nums)]
 
-        return logits_list, loss_list, labels, batch_size, valid_tokens
+        return logits_list, loss_list, labels, batch_size, valid_tokens_list
     
-    def log_loss_list(self, loss_list, stage, batch_size, valid_tokens):
+    def log_loss_list(self, loss_list, stage, batch_size, valid_tokens_list):
         loss = torch.stack(loss_list).mean()
-        normalized_loss_list = [codebook_loss.detach() * self.accumulate_grad_batches / valid_tokens for codebook_loss in loss_list]
+        valid_tokens_mean = sum(valid_tokens_list) / self.model.lm_head_nums
+        normalized_loss_list = [codebook_loss.detach() * self.accumulate_grad_batches / valid_tokens_list[i] for i, codebook_loss in enumerate(loss_list)]
 
         if stage == "train":
-            self.log(f"{stage}/loss_mean", loss.detach() / valid_tokens, on_step = True, on_epoch = True, prog_bar = True, logger = True, sync_dist=True, batch_size = batch_size)
+            self.log(f"{stage}/loss_mean", loss.detach() * self.accumulate_grad_batches / valid_tokens_mean, on_step = True, on_epoch = True, prog_bar = True, logger = True, sync_dist=True, batch_size = batch_size)
         else:
-            self.log(f"{stage}_loss_mean", loss.detach() / valid_tokens, on_step = False, on_epoch = True, prog_bar = True, logger = True, sync_dist=True, batch_size = batch_size)
+            self.log(f"{stage}_loss_mean", loss.detach() * self.accumulate_grad_batches / valid_tokens_mean, on_step = False, on_epoch = True, prog_bar = True, logger = True, sync_dist=True, batch_size = batch_size)
 
         for i, tmp_loss in enumerate(normalized_loss_list):
             tmp_log_loss = tmp_loss.detach()
@@ -175,50 +175,36 @@ class PPL_lit_modules(pl.LightningModule):
         
         for i in range(len(topk)):
             acc = torch.mean(torch.stack([accuracy_list[j][i] for j in range(self.model.lm_head_nums)]))
-            self.log(f"{stage}/id_acc_{topk[i]}", acc, on_step = True, on_epoch = True, prog_bar = True, logger = True, sync_dist=True, batch_size = batch_size)
+            if stage == "train":
+                self.log(f"{stage}/id_acc_{topk[i]}", acc, on_step = True, on_epoch = True, prog_bar = True, logger = True, sync_dist=True, batch_size = batch_size)
+            else:
+                self.log(f"{stage}_id_acc_{topk[i]}", acc, on_step = False, on_epoch = True, prog_bar = True, logger = True, sync_dist=True, batch_size = batch_size)
 
     def training_step(self, batch, batch_idx):
-        logits_list, loss_list, labels, batch_size, valid_tokens = self._step(batch, batch_idx)
+        logits_list, loss_list, labels, batch_size, valid_tokens_list = self._step(batch, batch_idx)
         self.calculate_and_log_acc(logits_list, labels, topk = [1, 5, 10, 50, 100, 200], stage = "train", batch_size = batch_size)
 
-        loss = self.log_loss_list(loss_list, "train", batch_size, valid_tokens)
+        loss = self.log_loss_list(loss_list, "train", batch_size, valid_tokens_list)
         return loss
     
     def validation_step(self, batch, batch_idx):
-        logits_list, loss_list, labels, batch_size, token_length = self._step(batch, batch_idx)
+        logits_list, loss_list, labels, batch_size, valid_tokens_list = self._step(batch, batch_idx)
         
-        loss = torch.stack(loss_list).mean()
-        ppl = torch.exp(loss)
-        
-        topk = [1, 5, 10, 50, 100, 200]
-        accuracy_list = []
-        for i in range(self.model.lm_head_nums):
-            accuracy_list.append(self.get_accuracy(logits_list[i], labels[:, :, i], topk=topk))
-            
-        outputs = {
-            "val_loss": loss,
-            "val_ppl": ppl,
-            "val_accuracy_list": accuracy_list
-        }
-        return outputs
+        self.calculate_and_log_acc(logits_list, labels, topk = [1, 5, 10, 50, 100, 200], stage = "val", batch_size = batch_size)
+
+        loss = self.log_loss_list(loss_list, "val", batch_size, valid_tokens_list)
+        ppl = self.log_ppl_list(loss_list, "val", batch_size)
+        return loss, ppl
 
     def test_step(self, batch, batch_idx):
-        logits_list, loss_list, labels, batch_size, token_length = self._step(batch, batch_idx)
-        
-        loss = torch.stack(loss_list).mean()
-        ppl = torch.exp(loss)
-        
-        topk = [1, 5, 10, 50, 100, 200]
-        accuracy_list = []
-        for i in range(self.model.lm_head_nums):
-            accuracy_list.append(self.get_accuracy(logits_list[i], labels[:, :, i], topk=topk))
+        logits_list, loss_list, labels, batch_size, valid_tokens_list = self._step(batch, batch_idx)
+
+        self.calculate_and_log_acc(logits_list, labels, topk = [1, 5, 10, 50, 100, 200], stage = "test", batch_size = batch_size)
+
+        loss = self.log_loss_list(loss_list, "test", batch_size, valid_tokens_list)
+        ppl = self.log_ppl_list(loss_list, "test", batch_size)
+        return loss, ppl
             
-        outputs = {
-            "test_loss": loss,
-            "test_ppl": ppl,
-            "test_accuracy_list": accuracy_list
-        }
-        return outputs
 
     def get_accuracy(
         self,
@@ -246,6 +232,3 @@ class PPL_lit_modules(pl.LightningModule):
             accuracy = correct / valid_mask.sum()
             accuracy_list.append(accuracy)
         return accuracy_list
-
-        
-        

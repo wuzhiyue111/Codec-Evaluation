@@ -1,7 +1,7 @@
 project: ppl_mimi
 seed: 114514
 ppl_ckpt_dir: /path/to/your/codec_eval/ppl/ckpt/mimi
-accumulate_grad_batches: 1
+accumulate_grad_batches: 1 # 1 means no accumulate grad batches
 
 trainer:
   _target_: pytorch_lightning.Trainer

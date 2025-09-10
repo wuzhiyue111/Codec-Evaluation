@@ -4,7 +4,7 @@ ppl_ckpt_dir: /path/to/your/codec_eval/ppl/ckpt/dac
 tensorboard_save_dir: /path/to/your/codec_eval/ppl/tb_log
 codec_name: dac
 codec_ckpt_dir: /path/to/your/codec_ckpt/dac
-accumulate_grad_batches: 1
+accumulate_grad_batches: 1 # 1 means no accumulate grad batches
 
 trainer:
   _target_: pytorch_lightning.Trainer
