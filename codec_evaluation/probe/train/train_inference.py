@@ -119,7 +119,7 @@ def cli():
     parser.add_argument('--dataset_name',
                         type=str,
                         required=True,
-                        help=f'Dataset name')
+                        help=f'Dataset name, (e.g., EMO, GS, ...)')
     
     parser.add_argument('--model_name',
                         type=str, 
