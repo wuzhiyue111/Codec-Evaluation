@@ -1,15 +1,15 @@
 project: ppl_yue
 seed: 114514
-ppl_ckpt_dir: /path/to/your/codec_eval/ppl/ckpt/yue
-accumulate_grad_batches: 1 # 1 means no accumulate grad batches
-tensorboard_save_dir: /path/to/your/codec_eval/ppl/tb_log
+ppl_ckpt_dir: ???
+tensorboard_save_dir: ???
 codec_name: yue
-codec_ckpt_dir: /path/to/your/codec_ckpt/yue
+codec_ckpt_dir: ???
+accumulate_grad_batches: 1 # 1 means no accumulate grad batches
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
-  devices: [0]  
+  devices: ???
   precision: bf16-mixed
   accumulate_grad_batches: ${accumulate_grad_batches}
   max_steps: 1000000
@@ -20,13 +20,25 @@ trainer:
   strategy: ddp_find_unused_parameters_true
   
 data:
+  # Emilia-en
   _target_: codec_evaluation.perplexity.dataset.emilia_en_dataset.Emilia_ppl_Module
-  base_audio_dir: /sdb/data1/speech/24kHz/Emilia/EN
-  dataset_path: /sdb/data1/codec_eval_data_arrow/Emilia_EN/Emilia_EN_dataset
-  train_batch_size: 10
-  valid_batch_size: 4
+  base_audio_dir: ???
+  dataset_path: ???
+  train_batch_size: ???
+  valid_batch_size: ???
   train_num_workers: 4
   valid_num_workers: 1
+
+  # MTG-Jamendo
+  #_target_: codec_evaluation.perplexity.dataset.mtg_jamendo_dataset.Jamendo_ppl_Module
+  #base_audio_dir: ???
+  #dataset_path: ???
+  #train_batch_size: ???
+  #valid_batch_size: ???
+  #train_num_workers: 4
+  #valid_num_workers: 1
+  #sample_rate: 44100
+  #target_sec: 15
 
 model:
   _target_: codec_evaluation.perplexity.model.lit_modules.PPL_lit_modules

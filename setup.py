@@ -24,6 +24,10 @@ setup(
     entry_points={
         "console_scripts": [
             "codec_eval_probe = codec_evaluation.probe.train.train_inference:cli",
+            "codec_eval_id_sensitive = codec_evaluation.id_sensitive.eval:cli",
+            "codec_eval_reconstruction_speech = codec_evaluation.reconstruction_eval.reconstruction_speech_eval:cli",
+            "codec_eval_reconstruction_music = codec_evaluation.reconstruction_eval.reconstruction_music_eval:cli",
+            "codec_eval_ppl = codec_evaluation.perplexity.train_inference:cli",
         ]
     },
 )

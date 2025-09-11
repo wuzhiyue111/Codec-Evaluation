@@ -11,7 +11,7 @@ logger = RankedLogger(__name__, rank_zero_only=True)
 class GTZANdataset(Dataset):
     def __init__(
         self,
-        dataset_path,  # .arrow数据集路径（如"/path/to/GTZAN_train_dataset"）
+        dataset_path,  # .arrow file path
     ):
         self.dataset = load_from_disk(dataset_path)
         
@@ -22,7 +22,7 @@ class GTZANdataset(Dataset):
         try:
             return self.get_item(index)
         except Exception as e:
-            audio_path = self.dataset[index]["audio_path"]  # 数据集中的相对路径
+            audio_path = self.dataset[index]["audio_path"]  
             logger.error(f"Error loading {audio_path}: {e}")
             return None  
 
@@ -35,7 +35,7 @@ class GTZANdataset(Dataset):
         waveform_np = torch.from_numpy(example["audio"]["array"])
         if waveform_np.ndim > 1:
             waveform_np = waveform_np.mean(axis=0)
-        waveform = waveform_np.float().unsqueeze(0)  # 转换为 [1, T] 形状
+        waveform = waveform_np.float().unsqueeze(0)  
         
         return {"audio": waveform}
 
