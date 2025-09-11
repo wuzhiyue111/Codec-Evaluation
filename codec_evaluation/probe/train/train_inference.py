@@ -18,66 +18,37 @@ root_path = codec_evaluation.__path__[0]
 logger = RankedLogger(__name__, rank_zero_only=True)
 logging.basicConfig(level=logging.INFO)
 
-IS_DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
-if IS_DEBUG:
-    logger.setLevel(logging.DEBUG)
 
+def main(config: DictConfig, output_file: str):
 
-def main(dataset_name: str,
-         config_name: str,
-         mode: str,
-         devices: str,
-         pretrained_model_dir: str,
-         weights_save_dir: str,
-         tensorboard_save_dir: str,
-         output_file: str):
-    with hydra.initialize_config_dir(
-        config_dir=f"{root_path}/probe/config/{dataset_name}",
-        version_base=None
-    ):
-        overrides = [
-                    f"mode={mode}",
-                    f"probe_ckpt_dir={weights_save_dir}",
-                    f"model.model_ckpt_dir={pretrained_model_dir}",
-                    f"tensorboard.save_dir={tensorboard_save_dir}",
-                ]
-        if IS_DEBUG:
-            overrides.append("trainer.max_epochs=1")
+    print_config_tree(config, resolve=True)
 
-        config: DictConfig = hydra.compose(config_name=config_name,
-                                           overrides=overrides)
+    pl.seed_everything(config.seed)
 
-        print_config_tree(config, resolve=True)
+    logger.info(f"Instantiating datamodule <{config.data._target_}>.")
+    datamodule = hydra.utils.instantiate(config.data, _convert_="partial")
 
-        pl.seed_everything(config.seed)
+    logger.info(f"Instantiating model <{config.model._target_}>.")
+    model = hydra.utils.instantiate(config.model, _convert_="partial")
 
-        logger.info(f"Instantiating datamodule <{config.data._target_}>.")
-        datamodule = hydra.utils.instantiate(config.data, _convert_="partial")
+    callbacks = []
+    if "callbacks" in config:
+        for _, cb_conf in config["callbacks"].items():
+            if "_target_" in cb_conf:
+                logger.info(f"Instantiating callback <{cb_conf._target_}>.")
+                callbacks.append(hydra.utils.instantiate(cb_conf, _convert_="partial"))
 
-        logger.info(f"Instantiating model <{config.model._target_}>.")
-        model = hydra.utils.instantiate(config.model, _convert_="partial")
+    logger.info("Instantiating tensorboard_logger...")
+    tensorboard_logger = hydra.utils.instantiate(config.tensorboard,
+                                                    _convert_="partial")
 
-        callbacks = []
-        if "callbacks" in config:
-            for _, cb_conf in config["callbacks"].items():
-                if "_target_" in cb_conf:
-                    logger.info(f"Instantiating callback <{cb_conf._target_}>.")
-                    callbacks.append(hydra.utils.instantiate(cb_conf, _convert_="partial"))
+    logger.info(f"Instantiating trainer <{config.trainer._target_}>.")
+    trainer = hydra.utils.instantiate(
+        config.trainer, 
+        callbacks=callbacks, 
+        logger=tensorboard_logger,
+        _convert_="partial")
 
-        logger.info("Instantiating tensorboard_logger...")
-        tensorboard_logger = hydra.utils.instantiate(config.tensorboard,
-                                                     _convert_="partial")
-
-        logger.info(f"Instantiating trainer <{config.trainer._target_}>.")
-        trainer = hydra.utils.instantiate(
-            config.trainer, 
-            callbacks=callbacks, 
-            logger=tensorboard_logger,
-            devices=devices,
-            _convert_="partial")
-
-    Path(weights_save_dir).mkdir(exist_ok=True, parents=True)
-    logger.info(f"Training start, weights_save_dir: {weights_save_dir}")
     trainer.fit(
         model=model,
         datamodule=datamodule,
@@ -88,7 +59,7 @@ def main(dataset_name: str,
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     
-    latest_ckpt_path = find_lastest_ckpt(weights_save_dir)
+    latest_ckpt_path = find_lastest_ckpt(config.probe_ckpt_dir)
     if latest_ckpt_path is None:
         logger.error("No checkpoint found for testing!")
         return
@@ -111,7 +82,7 @@ def main(dataset_name: str,
     )
     logger.info("Testing finished")
 
-    # 保存结果
+    # save results
     if output_file is not None:
         try:
             Path(output_file).parent.mkdir(parents=True, exist_ok=True)
@@ -124,12 +95,12 @@ def main(dataset_name: str,
                 if result is None:
                     raise ValueError("No result found in model.test_step_outputs")
 
-                # 将结果转换为 key: value 格式
+                # Convert the result to key: value format
                 if not isinstance(result, dict):
                     raise ValueError("Result is not a dictionary")
 
                 for key, value in result.items():
-                    # 如果是tensor，取出item
+                    # If it is a tensor, take out the item
                     if isinstance(value, torch.Tensor):
                         value = value.item()
                     cur_line = f"{key}: {value}"
@@ -142,89 +113,96 @@ def main(dataset_name: str,
             logger.error(f"Failed to save result to {output_file}: {e}")
 
 def cli():
-    # 获取所有数据集目录
-    dataset_choices = sorted([d.name.replace("_dataset", "") for d in (Path(root_path) / "probe" / "dataset").iterdir() if d.is_dir()])
-    
+
     parser = argparse.ArgumentParser()
 
-    # 第一步：只添加 dataset_name 参数
     parser.add_argument('--dataset_name',
                         type=str,
                         required=True,
-                        help=f'Dataset name', 
-                        choices=dataset_choices)
-
-    # 首先解析 dataset_name
-    args, _ = parser.parse_known_args()
-
-    dataset_name = args.dataset_name + "_dataset"
+                        help=f'Dataset name')
     
-    # 根据选择的数据集获取对应的配置文件选项
-    config_path = Path(root_path) / "probe" / "config" / dataset_name
-    config_choices = sorted([f.stem for f in config_path.glob("*.yaml")])  # 只获取 yaml 文件
-    
-    # 第二步：添加其他参数
-    if not config_choices:
-        raise ValueError(f"No config files found for dataset {dataset_name}")
-    
-    parser.add_argument('--config_name',
+    parser.add_argument('--model_name',
                         type=str, 
                         required=True,
-                        help=f'Config name',
-                        choices=config_choices)
-    
-    args, _ = parser.parse_known_args()
+                        help=f'Model name, such as "speechtokenizer"')
 
     parser.add_argument('--mode',
                         type=str,
-                        required=True,
+                        default="quantized_emb",
                         choices=["unquantized_emb", "quantized_emb", "encode"],
                         help=f'Mode')
-    
-    args, _ = parser.parse_known_args()
-    parser.add_argument("--pretrained_model_dir",
+
+    parser.add_argument("--codec_ckpt_dir",
                         type=str,
                         required=True,
-                        help=f'Pretrained model checkpoint dir')
+                        help=f'Codec checkpoint dir')
 
     parser.add_argument('--devices',
                         type=str,
                         default="0,",
                         help=f'Devices, e.g. "1" (gpu count), "0,1,2,3" (gpu ids)')
 
+    args, _ = parser.parse_known_args()
     parser.add_argument('--weights_save_dir',
                         type=str,
-                        default=f"codec_eval_probe/probe_ckpt/{dataset_name}/{args.config_name}/{args.mode}",
+                        default=os.path.join(root_path, 
+                                             "probe", 
+                                             f"codec_eval_probe_{args.model_name}_{args.mode}_{args.dataset_name}"),
                         help=f'Weights save dir')
 
     parser.add_argument("--tensorboard_save_dir",
                         type=str,
-                        default=f"codec_eval_probe/probe_tb_log/{dataset_name}/{args.config_name}/{args.mode}",
+                        default=os.path.join(root_path, 
+                                             "probe", 
+                                             f"codec_eval_probe_tb_log_{args.model_name}_{args.mode}_{args.dataset_name}"),
                         help=f'Tensorboard save dir')
+
+    parser.add_argument("--dataset_path",
+                        type=str,
+                        required=True,
+                        help=f'Dataset path')
     
-    default_output_file = f"codec_eval_probe/probe_result/{dataset_name}/{args.config_name}/{args.mode}_{time.strftime('%Y-%m-%d_%H-%M-%S')}.txt"
-    parser.add_argument('--output_file', 
+    parser.add_argument("--base_audio_dir",
+                        type=str,
+                        required=True,
+                        help=f'Base audio dir')
+
+    parser.add_argument('overrides',
+                        nargs='*',
+                        help='Any key=value arguments to override config values (e.g., model.tokenizer.pretrained_model_name_or_path=/sdb/model_weight/s2t-small-librispeech-asr).')
+
+    default_output_file = os.path.join(root_path, 
+                                       "probe", 
+                                       "probe_result", 
+                                       f"codec_eval_probe_result_{args.model_name}_{args.mode}_{args.dataset_name}_{time.strftime('%Y-%m-%d_%H-%M-%S')}.txt")
+
+    os.makedirs(args.weights_save_dir, exist_ok=True)
+    os.makedirs(args.tensorboard_save_dir, exist_ok=True)
+    os.makedirs(os.path.join(root_path, "probe", "probe_result"), exist_ok=True)
+
+    
+    parser.add_argument('--output_file',
                         type=str, 
                         default=default_output_file,
                         help=f'Output file, default: {default_output_file}')
     
-    # 解析所有参数
+    # Parse all parameters
     args = parser.parse_args()
     
-    # 打印选择的配置信息
-    logger.info(f"Selected dataset: {args.dataset_name}")
-    logger.info(f"Available configs for this dataset: {config_choices}")
-    logger.info(f"Selected config: {args.config_name}")
-    
-    main(dataset_name=dataset_name,
-         config_name=args.config_name,
-         mode=args.mode,
-         devices=args.devices,
-         pretrained_model_dir=args.pretrained_model_dir,
-         weights_save_dir=args.weights_save_dir,
-         tensorboard_save_dir=args.tensorboard_save_dir,
+    # Print selected configuration information
+    config_name = os.path.join(root_path, "probe", "config", args.dataset_name, f"{args.model_name}.yaml")
+    logger.info(f"Selected config: {config_name}")
+    config = OmegaConf.load(config_name)
+    config.probe_ckpt_dir = args.weights_save_dir
+    config.trainer.devices = [int(d) for d in args.devices.split(',') if d]
+    config.data.dataset_path = args.dataset_path
+    config.data.base_audio_dir = args.base_audio_dir
+    config.mode = args.mode
+    config.model.model_ckpt_dir = args.codec_ckpt_dir
+    config.tensorboard.save_dir = args.tensorboard_save_dir
+
+    main(config=config,
          output_file=args.output_file)
 
 if __name__ == "__main__":
     cli()
-# python /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/train/train_inference.py --dataset_name LibriTTS --config_name speechtokenizer_train --mode quantized_emb --pretrained_model_dir "/mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/speechtokenizer" --devices "1," 
