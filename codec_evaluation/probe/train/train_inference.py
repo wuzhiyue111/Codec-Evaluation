@@ -157,29 +157,33 @@ def cli():
                                              f"codec_eval_probe_tb_log_{args.model_name}_{args.mode}_{args.dataset_name}"),
                         help=f'Tensorboard save dir')
 
-    parser.add_argument("--dataset_path",
+    parser.add_argument("--train_audio_dir",
                         type=str,
                         required=True,
                         help=f'Path to the huggingface format dataset.(e.g., /sdb/data1/huggingface_dataset/GTZAN/GTZAN_dataset/GTZAN_train_dataset)')
-
-    parser.add_argument("--base_audio_dir",
+    
+    parser.add_argument("--val_audio_dir",
                         type=str,
                         required=True,
-                        help=f'The root directory where the raw audio files are stored.(Used to splice the complete audio path).')
+                        help=f'Path to the huggingface format dataset.(e.g., /sdb/data1/huggingface_dataset/GTZAN/GTZAN_dataset/GTZAN_validation_dataset)')
+    
+    parser.add_argument("--test_audio_dir",
+                        type=str,
+                        required=True,
+                        help=f'Path to the huggingface format dataset.(e.g., /sdb/data1/huggingface_dataset/GTZAN/GTZAN_dataset/GTZAN_test_dataset)')
+
+    # parser.add_argument("--base_audio_dir",
+    #                     type=str,
+    #                     help=f'The root directory where the raw audio files are stored.(Used to splice the complete audio path).')
 
     parser.add_argument('overrides',
                         nargs='*',
-                        help='Any key=value arguments to override config values (e.g., model.tokenizer.pretrained_model_name_or_path=/sdb/model_weight/s2t-small-librispeech-asr).')
+                        help='Any key=value arguments to override config values (e.g., model.tokenizer.pretrained_model_name_or_path=/sdb/model_weight/s2t-small-librispeech-asr; data.base_audio_dir=/root/path/for/audio).')
 
     default_output_file = os.path.join(root_path, 
                                        "probe", 
                                        "probe_result", 
                                        f"codec_eval_probe_result_{args.model_name}_{args.mode}_{args.dataset_name}_{time.strftime('%Y-%m-%d_%H-%M-%S')}.txt")
-
-    os.makedirs(args.weights_save_dir, exist_ok=True)
-    os.makedirs(args.tensorboard_save_dir, exist_ok=True)
-    os.makedirs(os.path.join(root_path, "probe", "probe_result"), exist_ok=True)
-
     
     parser.add_argument('--output_file',
                         type=str, 
@@ -189,14 +193,25 @@ def cli():
     # Parse all parameters
     args = parser.parse_args()
     
+    os.makedirs(args.weights_save_dir, exist_ok=True)
+    os.makedirs(args.tensorboard_save_dir, exist_ok=True)
+    os.makedirs(os.path.join(root_path, "probe", "probe_result"), exist_ok=True)
+
     # Print selected configuration information
     config_name = os.path.join(root_path, "probe", "config", args.dataset_name, f"{args.model_name}.yaml")
     logger.info(f"Selected config: {config_name}")
     config = OmegaConf.load(config_name)
+
+    #Merge the parsed overrides into the base config
+    if args.overrides:
+        overrides_config = OmegaConf.from_cli(args.overrides)
+        config = OmegaConf.merge(config, overrides_config)
+
     config.probe_ckpt_dir = args.weights_save_dir
     config.trainer.devices = [int(d) for d in args.devices.split(',') if d]
-    config.data.dataset_path = args.dataset_path
-    config.data.base_audio_dir = args.base_audio_dir
+    config.data.train_audio_dir = args.train_audio_dir
+    config.data.val_audio_dir = args.val_audio_dir
+    config.data.test_audio_dir = args.test_audio_dir
     config.mode = args.mode
     config.model.model_ckpt_dir = args.codec_ckpt_dir
     config.tensorboard.save_dir = args.tensorboard_save_dir

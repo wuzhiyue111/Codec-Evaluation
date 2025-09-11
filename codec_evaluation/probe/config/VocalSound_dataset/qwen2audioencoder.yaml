@@ -23,9 +23,9 @@ data:
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
-  train_audio_dir: /sdb/data1/huggingface_dataset/Vocalsound/Vocalsound_dataset/Vocalsound_train_dataset
-  val_audio_dir: /sdb/data1/huggingface_dataset/Vocalsound/Vocalsound_dataset/Vocalsound_validation_dataset
-  test_audio_dir: /sdb/data1/huggingface_dataset/Vocalsound/Vocalsound_dataset/Vocalsound_test_dataset
+  train_audio_dir: ???
+  val_audio_dir: ???
+  test_audio_dir: ???
   train_batch_size: 32
   val_batch_size: 2
   test_batch_size: 32
@@ -50,8 +50,8 @@ model:
     kernel_size: 3
     stride: 1
   target_sec: ${target_sec}
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/qwen2audioencoder
-  feature_extractor_config_path: /sdb/model_weight/whisper-large-v3/preprocessor_config.json
+  model_ckpt_dir: ???
+  feature_extractor_config_path: /path/for/whisper-large-v3/preprocessor_config.json
 
   optimizer_builder:
       _target_: torch.optim.AdamW

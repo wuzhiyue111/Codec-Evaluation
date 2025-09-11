@@ -1,6 +1,4 @@
-import os
 import torch
-import torchaudio
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
@@ -16,16 +14,10 @@ class ESC50dataset(Dataset):
         self,
         sample_rate,
         target_sec,
-        is_mono,
         dataset_path, 
-        task,
-        base_audio_dir, 
     ):
         self.sample_rate = sample_rate
         self.target_sec = target_sec
-        self.is_mono = is_mono
-        self.task = task
-        self.base_audio_dir = base_audio_dir
 
         self.dataset = load_from_disk(dataset_path)
     
@@ -36,9 +28,9 @@ class ESC50dataset(Dataset):
         try:
             return self.get_item(index)
         except Exception as e:
-            audio_path = self.dataset[index]["audio_path"]
-            full_path = os.path.join(self.base_audio_dir, audio_path)
-            logger.error(f"Error loading audio file {full_path}: {e}")
+            example = self.dataset[index]
+            audio_path = example["audio_path"]
+            logger.error(f"Error loading {audio_path}: {e}")
             return None
         
     def get_item(self, index):
@@ -49,31 +41,15 @@ class ESC50dataset(Dataset):
         """
         # get audio paths and labels from the dataset
         example = self.dataset[index]
-        audio_path = example["audio_path"]  
-        audio_file = os.path.join(self.base_audio_dir, audio_path)
-        
-        audio = self.load_audio(audio_file)
-        label = torch.tensor([example['target']], dtype=torch.int64)
+        audio = torch.from_numpy(example["audio"]["array"])
+        if audio.ndim > 1:
+            audio = audio.mean(axis=0)
+        audio = audio.float().unsqueeze(0)
+        label = torch.tensor([example['labels']], dtype=torch.int64)
 
 
         return {"audio": audio, "labels": label, "audio_length": audio.shape[1]}
 
-    def load_audio(
-        self, 
-        audio_file
-    ):
-        """
-        input:
-            audio_file:one of audio_file path
-        return:
-            audio:[T]
-              T:audio timestep
-        """
-        audio, _ = torchaudio.load(audio_file)
-        if audio.shape[0] > 1 and self.is_mono:
-            audio = torch.mean(audio, dim=0, keepdim=True)
-
-        return audio
 
     def collate_fn(self, batch):
         """
@@ -103,10 +79,10 @@ class ESC50dataset(Dataset):
 class ESC50dataModule(pl.LightningDataModule):
     def __init__(
         self,
-        dataset_args, 
-        codec_name,
-        train_split: 0.9,
-        test_split: 0.1,
+        dataset_args,
+        train_audio_dir,
+        val_audio_dir,
+        test_audio_dir,
         train_batch_size=16,
         val_batch_size=16,
         test_batch_size=16,
@@ -116,35 +92,41 @@ class ESC50dataModule(pl.LightningDataModule):
     ):
         super().__init__()
         self.dataset_args = dataset_args
-        self.train_split = train_split
-        self.test_split = test_split
+        self.train_audio_dir = train_audio_dir
+        self.val_audio_dir = val_audio_dir
+        self.test_audio_dir = test_audio_dir
         self.train_batch_size = train_batch_size
         self.val_batch_size = val_batch_size
         self.test_batch_size = test_batch_size
-        self.codec_name = codec_name
         self.train_num_workers = train_num_workers
         self.val_num_workers = val_num_workers
         self.test_num_workers = test_num_workers
-        self.dataset = ESC50dataset(**self.dataset_args)
-        self.train_size = int(len(self.dataset) * self.train_split)
-        self.test_size = len(self.dataset) - self.train_size
-        self.train_dataset, self.test_dataset = random_split(self.dataset, [self.train_size, self.test_size])
+
+    def setup(self, stage=None):
+        if stage == "fit" or stage is None:
+            self.train_dataset = ESC50dataset(dataset_path=self.train_audio_dir, **self.dataset_args)
+            self.val_dataset = ESC50dataset(dataset_path=self.val_audio_dir, **self.dataset_args)
+        if stage == "val":
+            self.val_dataset = ESC50dataset(dataset_path=self.val_audio_dir, **self.dataset_args)
+        if stage == "test":
+            self.test_dataset = ESC50dataset(dataset_path=self.test_audio_dir, **self.dataset_args)
+
 
     def train_dataloader(self):
         return DataLoader(
             dataset=self.train_dataset,
             batch_size=self.train_batch_size,
             shuffle=True,
-            collate_fn=self.dataset.collate_fn,
+            collate_fn=self.train_dataset.collate_fn,
             num_workers=self.train_num_workers,
         )
 
     def val_dataloader(self):
         return DataLoader(
-            dataset=self.test_dataset,
+            dataset=self.val_dataset,
             batch_size=self.val_batch_size,
             shuffle=False,
-            collate_fn=self.dataset.collate_fn,
+            collate_fn=self.val_dataset.collate_fn,
             num_workers=self.val_num_workers,
         )
     
@@ -153,6 +135,6 @@ class ESC50dataModule(pl.LightningDataModule):
             dataset=self.test_dataset,
             batch_size=self.test_batch_size,
             shuffle=False,
-            collate_fn=self.dataset.collate_fn,
+            collate_fn=self.test_dataset.collate_fn,
             num_workers=self.test_num_workers,
         )

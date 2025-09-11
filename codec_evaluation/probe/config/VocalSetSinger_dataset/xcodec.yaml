@@ -23,10 +23,9 @@ data:
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
-    is_mono: True
-    dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/VocalSetSinger_dataset/VocalSetSinger_dataset
-    base_audio_dir: /sdb/data1/music/mix_music/marble_dataset/data
-  codec_name: ${codec_name}
+  train_audio_dir: ???
+  val_audio_dir: ???
+  test_audio_dir: ???
   train_batch_size: 256
   val_batch_size: 4
   test_batch_size: 128
@@ -51,8 +50,8 @@ model:
     kernel_size: 3
     stride: 1
   target_sec: ${target_sec}
-  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/xcodec
-  teacher_ckpt_path: /sdb/model_weight/codec_evaluation/codec_ckpt/xcodec/hubert_base_general_audio
+  model_ckpt_dir: ???
+  teacher_ckpt_path: /codec_ckpt/path/for/xcodec/hubert_base_general_audio
 
   optimizer_builder:
       _target_: torch.optim.AdamW
