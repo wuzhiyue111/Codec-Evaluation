@@ -119,7 +119,7 @@ def cli():
     parser.add_argument('--dataset_name',
                         type=str,
                         required=True,
-                        help=f'Dataset name, (e.g., EMO_dataset, GS_dataset, ...)')
+                        help=f'The dataset name is the same as the folder name under codec_evaluation.probe.config, such as "EMO_dataset", "GS_dataset"')
     
     parser.add_argument('--model_name',
                         type=str, 
