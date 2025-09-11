@@ -285,16 +285,22 @@ def cli():
     parser.add_argument("--task", 
                         type=str, 
                         required=True, 
-                        choices=["MRC", "OS"])
+                        choices=["MRC", "OS"],
+                        help=" MRC: multi-round reconstruction, OS: offset")
     parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_workers", type=int, default=8)
-    parser.add_argument("--shift_time", type=int, default=2)
-    parser.add_argument("--subset_step", type=int, default=1200)
+    parser.add_argument("--shift_time", 
+                        type=int, 
+                        required=True,
+                        help="The time interval (in seconds) for audio offset.")
+    parser.add_argument("--subset_step", 
+                        type=int, 
+                        default=1200,
+                        help="Extract a subset from a dataset.")
     parser.add_argument("--dataset_path",
                         type=str,
                         required=True,
-                        help="The huggingface dataset path obtained using the script.",
-    )
+                        help="The huggingface dataset path obtained using the script.")
     parser.add_argument("--use_vocos", 
                         type=bool, 
                         default=False,

@@ -275,8 +275,14 @@ def cli():
     parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument("--mode", type=str, default="reconstruct")
-    parser.add_argument("--use_vocos", type=bool, default=False)
-    parser.add_argument("--vocos_ckpt_dir", type=Optional[str], default=None)
+    parser.add_argument("--use_vocos", 
+                        type=bool, 
+                        default=False,
+                        help="Whether to use Vocos to post-process the audio after decoding.")
+    parser.add_argument("--vocos_ckpt_dir", 
+                        type=Optional[str], 
+                        default=None,
+                        help="The directory containing the vocos checkpoint files.")
     parser.add_argument("--wav2vec_model_path_or_name", 
                         type=str, 
                         required=True, 

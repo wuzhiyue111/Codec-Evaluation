@@ -160,12 +160,12 @@ def cli():
     parser.add_argument("--dataset_path",
                         type=str,
                         required=True,
-                        help=f'Dataset path')
-    
+                        help=f'Path to the huggingface format dataset.(e.g., /sdb/data1/huggingface_dataset/GTZAN/GTZAN_dataset/GTZAN_train_dataset)')
+
     parser.add_argument("--base_audio_dir",
                         type=str,
                         required=True,
-                        help=f'Base audio dir')
+                        help=f'The root directory where the raw audio files are stored.(Used to splice the complete audio path).')
 
     parser.add_argument('overrides',
                         nargs='*',

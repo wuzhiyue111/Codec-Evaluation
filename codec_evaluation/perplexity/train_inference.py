@@ -88,11 +88,9 @@ def cli():
                         type=str, 
                         required=True,
                         help="Path to the directory where tensorboard logs will be saved.")
-    parser.add_argument("--overrides", 
-                        type=str, 
-                        nargs="*", 
-                        default=[],
-                        help="Override config values, e.g. data.train_num_workers=8 data.valid_num_workers=2")
+    parser.add_argument('overrides',
+                        nargs='*',
+                        help='Any key=value arguments to override config values (e.g., trainer.val_check_interval=500).')
     args = parser.parse_args()
     config = OmegaConf.load(f"{codec_evaluation_root_path}/perplexity/config/{args.codec_name}_ppl.yaml")
     config.ppl_ckpt_dir = args.ppl_ckpt_dir
@@ -108,10 +106,6 @@ def cli():
         codec_evaluation_root_path, 
         config.model.ppl_model_config.pretrained_model_name_or_path
     )
-    OmegaConf.set_struct(config, True)
-    if args.overrides:
-        override_conf = OmegaConf.from_dotlist(args.overrides)
-        config = OmegaConf.merge(config, override_conf)
 
     main(config)
 
