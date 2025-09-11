@@ -278,7 +278,10 @@ def cli():
                         type=int, 
                         required=True,
                         help="The number of codebooks used by the audio codec model.")
-    parser.add_argument("--need_resample", type=bool, default=True)
+    parser.add_argument("--need_resample", 
+                        type=bool, 
+                        default=True,
+                        help="Whether to resample the audio file to the original sampling rate.")
     parser.add_argument("--task", 
                         type=str, 
                         required=True, 
@@ -292,8 +295,14 @@ def cli():
                         required=True,
                         help="The huggingface dataset path obtained using the script.",
     )
-    parser.add_argument("--use_vocos", type=bool, default=False)
-    parser.add_argument("--vocos_ckpt_dir", type=Optional[str], default=None)
+    parser.add_argument("--use_vocos", 
+                        type=bool, 
+                        default=False,
+                        help="Whether to use Vocos to post-process the audio after decoding.")
+    parser.add_argument("--vocos_ckpt_dir", 
+                        type=Optional[str], 
+                        default=None,
+                        help="The directory containing the vocos checkpoint files.")
     args = parser.parse_args()
 
     codec_eval = IDSensitiveEvaluation(
