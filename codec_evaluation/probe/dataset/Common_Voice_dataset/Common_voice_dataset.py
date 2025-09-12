@@ -3,7 +3,6 @@ import os
 import torchaudio
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-from torch.utils.data import random_split
 import pytorch_lightning as pl
 from codec_evaluation.utils.logger import RankedLogger
 from torch.nn.utils.rnn import pad_sequence
@@ -33,37 +32,36 @@ class Common_voice_dataset(Dataset):
         try:
             return self.get_item(index)
         except Exception as e:
-            logger.error(f"Error loading audio file {self.dataset[index]['audio_path']}: {e}")
+            example = self.dataset[index]
+            audio_path = example["audio_path"]
+            logger.error(f"Error loading {audio_path}: {e}")
             return None
         
     def get_item(self, index):
 
         """
             audio:[1,T]
-            
         """
-        sample = self.dataset[index]
-        audio_path = os.path.join(self.base_audio_dir, sample["audio_path"]) 
+        example = self.dataset[index]
+        audio_path = os.path.join(self.base_audio_dir, example["audio_path"]) 
             
-        waveform, samplerate = torchaudio.load(audio_path)
+        audio, samplerate = torchaudio.load(audio_path)
 
         if samplerate != self.target_samplerate:
             resampler = torchaudio.transforms.Resample(
                 orig_freq=samplerate, 
                 new_freq=self.target_samplerate
             )
-            waveform = resampler(waveform)
+            audio = resampler(audio)
 
-        if waveform.shape[0] > 1:
-            waveform = waveform.mean(dim=0, keepdim=True) 
 
-        if waveform.shape[1] > 20*48000:
+        if audio.shape[1] > 20*48000:
             return None
         else:
             return {
-                "audio": waveform,
-                "text": sample["text"],
-                "audio_length": waveform.shape[1]
+                "audio": audio,
+                "text": example["text"],
+                "audio_length": audio.shape[1]
             }
 
     def collate_fn(self, batch):
@@ -88,12 +86,11 @@ class Common_voice_dataset(Dataset):
 class Common_voice_module(pl.LightningDataModule):
     def __init__(
         self,
-        dataset_path,
+        train_audio_dir,
+        val_audio_dir,
+        test_audio_dir,
         base_audio_dir,
         target_samplerate,
-        train_split: 0.98,
-        val_split:0.01,
-        test_split: 0.01,
         train_batch_size=16,
         val_batch_size=16,
         test_batch_size=1,
@@ -103,9 +100,10 @@ class Common_voice_module(pl.LightningDataModule):
         
     ):
         super().__init__()
-        self.train_split = train_split
-        self.val_split = val_split
-        self.test_split = test_split
+        self.base_audio_dir = base_audio_dir
+        self.train_audio_dir = train_audio_dir
+        self.val_audio_dir = val_audio_dir
+        self.test_audio_dir = test_audio_dir
         self.target_samplerate = target_samplerate
         self.train_batch_size = train_batch_size
         self.val_batch_size = val_batch_size
@@ -113,19 +111,23 @@ class Common_voice_module(pl.LightningDataModule):
         self.train_num_workers = train_num_workers
         self.val_num_workers = val_num_workers
         self.test_num_workers = test_num_workers
-        self.dataset = Common_voice_dataset(dataset_path, base_audio_dir, self.target_samplerate)
-        self.train_size = int(len(self.dataset) * self.train_split)
-        self.val_size = int(len(self.dataset) * self.val_split)
-        self.test_size = len(self.dataset) - self.val_size - self.train_size
-        self.train_dataset, self.val_dataset, self.test_dataset = random_split(self.dataset, 
-                                                                  [self.train_size, self.val_size, self.test_size])
+        
+    def setup(self, stage=None):
+        if stage == "fit" or stage is None:
+            self.train_dataset = Common_voice_dataset(dataset_path=self.train_audio_dir, base_audio_dir=self.base_audio_dir, target_samplerate=self.target_samplerate)
+            self.val_dataset = Common_voice_dataset(dataset_path=self.val_audio_dir, base_audio_dir=self.base_audio_dir, target_samplerate=self.target_samplerate)
+        if stage == "val":
+            self.val_dataset = Common_voice_dataset(dataset_path=self.val_audio_dir, base_audio_dir=self.base_audio_dir, target_samplerate=self.target_samplerate)
+        if stage == "test":
+            self.test_dataset = Common_voice_dataset(dataset_path=self.test_audio_dir, base_audio_dir=self.base_audio_dir, target_samplerate=self.target_samplerate)
 
+    
     def train_dataloader(self):
         return DataLoader(
             dataset=self.train_dataset,
             batch_size=self.train_batch_size,
             shuffle=True,
-            collate_fn=self.dataset.collate_fn,
+            collate_fn=self.train_dataset.collate_fn,
             num_workers=self.train_num_workers,
         )
 
@@ -134,7 +136,7 @@ class Common_voice_module(pl.LightningDataModule):
             dataset=self.val_dataset,
             batch_size=self.val_batch_size,
             shuffle=False,
-            collate_fn=self.dataset.collate_fn,
+            collate_fn=self.val_dataset.collate_fn,
             num_workers=self.val_num_workers,
         )
 
@@ -143,6 +145,6 @@ class Common_voice_module(pl.LightningDataModule):
             dataset=self.test_dataset,
             batch_size=self.test_batch_size,
             shuffle=False,
-            collate_fn=self.dataset.collate_fn,
+            collate_fn=self.test_dataset.collate_fn,
             num_workers=self.test_num_workers,
         )

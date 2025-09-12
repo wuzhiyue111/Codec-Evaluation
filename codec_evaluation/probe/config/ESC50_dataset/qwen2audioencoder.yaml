@@ -4,7 +4,7 @@ target_sec: 5
 num_outputs: 50
 probe_ckpt_dir: ???
 seed: 666
-codec_name: qwen2audioencoder # 需要更改
+codec_name: qwen2audioencoder 
 task: multiclass
 save_result: null 
 
@@ -23,13 +23,9 @@ data:
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
-    task: ${task}
-    is_mono: True
-    dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/ESC50_dataset/ESC50_dataset
-    base_audio_dir: /sdb/data1/sound
-  codec_name: ${codec_name}
-  train_split: 0.9
-  test_split: 0.1
+  train_audio_dir: ???
+  val_audio_dir: ???
+  test_audio_dir: ???
   train_batch_size: 128
   val_batch_size: 2
   test_batch_size: 128
@@ -54,8 +50,8 @@ model:
     kernel_size: 3
     stride: 1
   target_sec: ${target_sec}
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/qwen2audioencoder
-  feature_extractor_config_path: /sdb/model_weight/whisper-large-v3/preprocessor_config.json
+  model_ckpt_dir: ???
+  feature_extractor_config_path: /path/for/whisper-large-v3/preprocessor_config.json
 
   optimizer_builder:
       _target_: torch.optim.AdamW

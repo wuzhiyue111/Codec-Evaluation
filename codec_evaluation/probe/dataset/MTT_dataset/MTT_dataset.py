@@ -1,5 +1,3 @@
-import os
-import torchaudio
 import torch
 import pytorch_lightning as pl
 from torch.utils.data import Dataset
@@ -17,7 +15,6 @@ class MTTdataset(Dataset):
         self,
         sample_rate,
         target_sec,
-        base_audio_dir,
         dataset_path,
     ):
         self.sample_rate = sample_rate
@@ -25,9 +22,6 @@ class MTTdataset(Dataset):
         self.target_length = self.target_sec * self.sample_rate
         self.dataset_path = dataset_path
         self.dataset = load_from_disk(dataset_path)
-        
-        self.labels = np.load(os.path.join(base_audio_dir, 'MTT', 'binary_label.npy'))
-
 
         
     def __len__(self):
@@ -53,7 +47,7 @@ class MTTdataset(Dataset):
         if audio.ndim > 1:
             audio = audio.mean(axis=0)
         audio = audio.float().unsqueeze(0)
-        label = torch.from_numpy(self.labels[example["uuid"]])
+        label = torch.from_numpy(np.array(example["binary_label"]))
         
         return {"audio": audio, "labels": label, "audio_length": audio.shape[1]}
 

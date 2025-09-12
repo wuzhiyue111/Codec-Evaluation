@@ -24,10 +24,10 @@ data:
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
-    base_audio_dir: /sdb/data1/music/mix_music/marble_dataset/data
-  train_audio_dir: /sdb/data1/huggingface_dataset/MTG/MTG_dataset/MTGTop50_dataset/MTGTop50_train_dataset
-  val_audio_dir: /sdb/data1/huggingface_dataset/MTG/MTG_dataset/MTGTop50_dataset/MTGTop50_validation_dataset
-  test_audio_dir: /sdb/data1/huggingface_dataset/MTG/MTG_dataset/MTGTop50_dataset/MTGTop50_test_dataset
+    base_audio_dir: /root/path/for/audio
+  train_audio_dir: ???
+  val_audio_dir: ???
+  test_audio_dir: ???
   train_batch_size: 8
   val_batch_size: 2
   test_batch_size: 8
@@ -52,8 +52,8 @@ model:
     kernel_size: 3
     stride: 1
   target_sec: ${target_sec}
-  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/xcodec
-  teacher_ckpt_path: /sdb/model_weight/codec_evaluation/codec_ckpt/xcodec/hubert_base_general_audio
+  model_ckpt_dir: ???
+  teacher_ckpt_path: /codec_ckpt/path/for/xcodec/hubert_base_general_audio
 
   optimizer_builder:
       _target_: torch.optim.AdamW

@@ -17,11 +17,10 @@ trainer:
 data:
   _target_: codec_evaluation.probe.dataset.Common_Voice_dataset.Common_voice_dataset.Common_voice_module
   target_samplerate: ${sample_rate}
-  dataset_path: /home/wsy/project/Codec-Evaluation/codec_evaluation/probe/dataset/Common_Voice_dataset/common_voice/commonvoice_dataset/commonvoice_validated_dataset
-  base_audio_dir: /sdb/data1/speech/48kHz
-  train_split: 0.98
-  val_split: 0.01
-  test_split: 0.01
+  train_audio_dir: ???
+  val_audio_dir: ???
+  test_audio_dir: ???
+  base_audio_dir: /root/path/for/audio
   train_batch_size: 4
   val_batch_size: 4
   test_batch_size: 4
@@ -36,7 +35,7 @@ model:
   mode: ${mode}
   tokenizer:
     _target_: transformers.Speech2TextProcessor.from_pretrained
-    pretrained_model_name_or_path: /sdb/model_weight/s2t-small-librispeech-asr
+    pretrained_model_name_or_path: ???
   probe_model_builder:
     _target_: codec_evaluation.probe.model.ctc_model.Ctc_Probe
     _partial_: true
@@ -46,8 +45,8 @@ model:
     lm_head_nums: 8
     conformer_depth: 3
     conformer_heads: 8
-  model_ckpt_dir: /sdb/model_weight/codec_evaluation/codec_ckpt/xcodec
-  teacher_ckpt_path: /sdb/model_weight/codec_evaluation/codec_ckpt/xcodec/hubert_base_general_audio
+  model_ckpt_dir: ???
+  teacher_ckpt_path: /codec_ckpt/path/for/xcodec/hubert_base_general_audio
 
   optimizer_builder:
       _target_: torch.optim.AdamW

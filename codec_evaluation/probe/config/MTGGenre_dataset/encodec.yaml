@@ -24,10 +24,10 @@ data:
   dataset_args:
     sample_rate: ${sample_rate}
     target_sec: ${target_sec}
-    base_audio_dir: /sdb/data1/music/mix_music/marble_dataset/data
-  train_audio_dir: /sdb/data1/huggingface_dataset/MTG/MTG_dataset/MTGGenre_dataset/MTGGenre_train_dataset
-  val_audio_dir: /sdb/data1/huggingface_dataset/MTG/MTG_dataset/MTGGenre_dataset/MTGGenre_validation_dataset
-  test_audio_dir: /sdb/data1/huggingface_dataset/MTG/MTG_dataset/MTGGenre_dataset/MTGGenre_test_dataset
+    base_audio_dir: /root/path/for/audio
+  train_audio_dir: ???
+  val_audio_dir: ???
+  test_audio_dir: ???
   train_batch_size: 4
   val_batch_size: 1
   test_batch_size: 4
@@ -53,7 +53,7 @@ model:
     kernel_size: 3
     stride: 1
   target_sec: ${target_sec}
-  model_ckpt_dir: /mnt/sda/a6000/sdb/data1/model_weight/codec_evaluation/codec_ckpt/encodec/models--facebook--encodec_24khz
+  model_ckpt_dir: ???
 
   optimizer_builder:
       _target_: torch.optim.AdamW
