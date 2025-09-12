@@ -93,6 +93,8 @@ def cli():
                         help='Any key=value arguments to override config values (e.g., trainer.val_check_interval=500).')
     args = parser.parse_args()
     config = OmegaConf.load(f"{codec_evaluation_root_path}/perplexity/config/{args.codec_name}_ppl.yaml")
+    if args.overrides:
+        config = OmegaConf.merge(config, OmegaConf.from_dotlist(args.overrides))
     config.ppl_ckpt_dir = args.ppl_ckpt_dir
     config.tensorboard_save_dir = args.tensorboard_save_dir
     config.codec_name = args.codec_name
