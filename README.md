@@ -66,8 +66,12 @@ We strongly recommended to use conda for managing your Python environment.
 ## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Straight%20ruler/3D/straight_ruler_3d.png" alt="ruler" width="30" height="30"> Usage
 The following will introduce how to conduct evaluations using codecs and downstream tasks. For details, please refer to the instruction document. <a href="https://tcn29bn4ijcy.feishu.cn/wiki/U67rwNej8i2BGWkzwqQcuMGanj7?from=from_copylink">[EN]</a><a href="https://tcn29bn4ijcy.feishu.cn/wiki/ZO0dwidYti4UEgkK7BHcfXE8nnh?from=from_copylink">[ZH]</a>
 
+## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/World%20map/3D/world_map_3d.png" alt="map" width="30" height="30"> Dataset Download 
+Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/AudioCodecBench">AudioCodecBench-Dataset</a>
+
+
 ### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Toolbox/Flat/toolbox_flat.svg" alt="toolbox" width="30" height="30"> Probe 
-  
+
 ## <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Pen/3D/pen_3d.png" alt="pen" width="30" height="30">Probe task results
 ### <img src="https://github.com/microsoft/fluentui-emoji/blob/main/assets/Bookmark%20tabs/3D/bookmark_tabs_3d.png" alt="bookmark" width="30" height="30">Reconstruction Metric
 #### Speech
@@ -742,6 +746,8 @@ The following will introduce how to conduct evaluations using codecs and downstr
 | YuE            | 46.2  |  18.3   |  28.7   |  30.4   |  48.2   |  60.0   |  74.9   |  83.0   |  76.3   |                
 | SemamiCodec    | 15.5  |  1.0    |  272.4  |    -    |    -    |    -    |    -    |    -    |    -    |
 
+## Acknowledgement
+We would like to extend a special thanks to authors of <a href="https://github.com/lucadellalib/audiocodecs">https://github.com/lucadellalib/audiocodecs</a> and <a href="https://github.com/a43992899/MARBLE">Marble</a>. Their work has been a great source of inspiration for us.
 
 ## Citation
 ```
