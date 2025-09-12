@@ -172,13 +172,9 @@ def cli():
                         required=True,
                         help=f'Path to the huggingface format dataset.(e.g., /sdb/data1/huggingface_dataset/GTZAN/GTZAN_dataset/GTZAN_test_dataset)')
 
-    # parser.add_argument("--base_audio_dir",
-    #                     type=str,
-    #                     help=f'The root directory where the raw audio files are stored.(Used to splice the complete audio path).')
-
     parser.add_argument('overrides',
                         nargs='*',
-                        help='Any key=value arguments to override config values (e.g., model.tokenizer.pretrained_model_name_or_path=/sdb/model_weight/s2t-small-librispeech-asr; data.base_audio_dir=/root/path/for/audio).')
+                        help='Any key=value arguments to override config values (e.g., model.tokenizer.pretrained_model_name_or_path=/sdb/model_weight/s2t-small-librispeech-asr')
 
     default_output_file = os.path.join(root_path, 
                                        "probe", 
