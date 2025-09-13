@@ -94,13 +94,13 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
   <tbody>
     <tr>
       <td>DAC</td>
-      <td>3.69</td>
-      <td>0.965</td>
+      <td><strong>3.69<strong/></td>
+      <td><strong>0.965<strong/></td>
       <td>0.155</td>
       <td>0.202</td>
       <td>0.09</td>
       <td>0.125</td>
-      <td>0.94</td>
+      <td><strong>0.94<strong/></td>
     </tr>
     <tr>
       <td>Encodec</td>
@@ -157,9 +157,9 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
       <td>3.23</td>
       <td>0.942</td>
       <td>0.155</td>
-      <td>0.185</td>
+      <td><strong>0.185<strong/></td>
       <td>0.09</td>
-      <td>0.106</td>
+      <td><strong>0.106<strong/></td>
       <td>0.91</td>
     </tr>
     <tr>
@@ -190,8 +190,8 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
   <tbody>
     <tr>
       <td>DAC</td>
-      <td>2.66</td>
-      <td>0.86</td>
+      <td><strong>2.66<strong/></td>
+      <td><strong>0.86<strong/></td>
     </tr>
     <tr>
       <td>Encodec</td>
@@ -318,24 +318,24 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
             <td align=center>SemantiCodec</td>
             <td align=center>quantized_emb</td>
             <td align=center>0.507</td>
-            <td align=center>0.316</td>
-            <td align=center>0.703</td>
+            <td align=center><strong>0.316<strong/></td>
+            <td align=center><strong>0.703<strong/></td>
             <td align=center>0.318</td>
-            <td align=center>0.877</td>
-		    <td align=center>0.658</td>
+            <td align=center><strong>0.877<strong/></td>
+		    <td align=center><strong>0.658<strong/></td>
 		    <td align=center>0.764</td>
 		    <td align=center>0.344</td>
 		    <td align=center>0.451</td>
 		    <td align=center>0.343</td>
 		    <td align=center>0.578</td>
-		    <td align=center>0.035</td>
+		    <td align=center><strong>0.035<strong/></td>
 		    <td align=center>0.526</td>
 		    <td align=center>0.149</td>
-		    <td align=center>0.720</td>
+		    <td align=center><strong>0.720<strong/></td>
 			<td align=center>0.099</td>
-		    <td align=center>0.723</td>
-		    <td align=center>0.230</td>
-		    <td align=center>0.795</td>
+		    <td align=center><strong>0.723<strong/></td>
+		    <td align=center><strong>0.230<strong/></td>
+		    <td align=center><strong>0.795<strong/></td>
         </tr>
         <tr>
             <td align=center>WavTokenizer</td>
@@ -350,9 +350,9 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 		    <td align=center>0.130</td>
 		    <td align=center>0.287</td>
 		    <td align=center>0.093</td>
-            <td align=center>0.721</td>
+            <td align=center><strong>0.721<strong/></td>
 		    <td align=center>0.034</td>
-		    <td align=center>0.530</td>
+		    <td align=center><strong>0.530<strong/></td>
 		    <td align=center>0.107</td>
 		    <td align=center>0.635</td>
             <td align=center>0.056</td>
@@ -366,17 +366,17 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
             <td align=center>0.553</td>
             <td align=center>0.143</td>
             <td align=center>0.664</td>
-            <td align=center>0.323</td>
+            <td align=center><strong>0.323<strong/></td>
 		    <td align=center>0.873</td>
 		    <td align=center>0.640</td>
-		    <td align=center>0.905</td>
-		    <td align=center>0.537</td>
+		    <td align=center><strong>0.905<strong/></td>
+		    <td align=center><strong>0.537<strong/></td>
 		    <td align=center>0.570</td>
-            <td align=center>0.455</td>
+            <td align=center><strong>0.455<strong/></td>
 		    <td align=center>0.481</td>
 		    <td align=center>0.034</td>
 		    <td align=center>0.519</td>
-		    <td align=center>0.164</td>
+		    <td align=center><strong>0.164<strong/></td>
 		    <td align=center>0.707</td>
             <td align=center>0.101</td>
 		    <td align=center>0.710</td>
@@ -386,7 +386,7 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 	<tr>
             <td align=center>YuE</td>
             <td align=center>quantized_emb</td>
-            <td align=center>0.573</td>
+            <td align=center><strong>0.573<strong/></td>
             <td align=center>0.156</td>
             <td align=center>0.669</td>
             <td align=center>0.315</td>
@@ -394,14 +394,14 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 		    <td align=center>0.622</td>
 		    <td align=center>0.896</td>
 		    <td align=center>0.523</td>
-		    <td align=center>0.594</td>
+		    <td align=center><strong>0.594<strong/></td>
             <td align=center>0.454</td>
 		    <td align=center>0.463</td>
 		    <td align=center>0.034</td>
 		    <td align=center>0.517</td>
 		    <td align=center>0.133</td>
 		    <td align=center>0.700</td>
-            <td align=center>0.102</td>
+            <td align=center><strong>0.102<strong/></td>
 		    <td align=center>0.711</td>
 		    <td align=center>0.191</td>
 		    <td align=center>0.758</td>
@@ -462,7 +462,7 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
         </tr>
         <tr>
             <td align=center>Encodec</td>
-            <td align=center>0.465</td>
+            <td align=center><strong>0.465<strong/></td>
             <td align=center>0.092</td>
             <td align=center>0.543</td>
             <td align=center>0.119</td>
@@ -480,29 +480,29 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
             <td align=center>SemantiCodec</td>
             <td align=center>0.456</td>
             <td align=center>0.267</td>
-            <td align=center>0.629</td>
+            <td align=center><strong>0.629<strong/></td>
             <td align=center>0.227</td>
 		    <td align=center>0.825</td>
-		    <td align=center>0.625</td>
+		    <td align=center><strong>0.625<strong/></td>
 		    <td align=center>0.134</td>
 		    <td align=center>0.477</td>
             <td align=center>0.229</td>
-		    <td align=center>0.150</td>
-		    <td align=center>0.724</td>
-		    <td align=center>0.224</td>
-		    <td align=center>0.793</td>
+		    <td align=center><strong>0.150<strong/></td>
+		    <td align=center><strong>0.724<strong/></td>
+		    <td align=center><strong>0.224<strong/></td>
+		    <td align=center><strong>0.793<strong/></td>
         </tr>
         <tr>
             <td align=center>Xcodec</td>
             <td align=center>0.375</td>
-            <td align=center>0.461</td>
+            <td align=center><strong>0.461<strong/></td>
             <td align=center>0.628</td>
-            <td align=center>0.261</td>
-		    <td align=center>0.838</td>
+            <td align=center><strong>0.261<strong/></td>
+		    <td align=center><strong>0.838<strong/></td>
 		    <td align=center>0.611</td>
 		    <td align=center>0.320</td>
-		    <td align=center>0.488</td>
-			<td align=center>0.389</td>
+		    <td align=center><strong>0.488<strong/></td>
+			<td align=center><strong>0.389<strong/></td>
 		    <td align=center>0.140</td>
 		    <td align=center>0.669</td>
 		    <td align=center>0.191</td>
@@ -516,7 +516,7 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
             <td align=center>0.249</td>
 		    <td align=center>0.831</td>
 		    <td align=center>0.623</td>
-		    <td align=center>0.335</td>
+		    <td align=center><strong>0.335<strong/></td>
 		    <td align=center>0.475</td>
             <td align=center>0.346</td>
 		    <td align=center>0.133</td>
@@ -589,8 +589,8 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 	<tr>
 	    <td align=center>Mimi</td>
             <td align=center>quantized_emb</td>
-            <td align=center>0.442</td>
-            <td align=center>0.168</td>
+            <td align=center><strong>0.442<strong/></td>
+            <td align=center><strong>0.168<strong/></td>
             <td align=center>0.833</td>
             <td align=center>0.481</td>
 	   		<td align=center>0.335</td>
@@ -636,9 +636,9 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
             <td align=center>unquantized_emb</td>
             <td align=center>-</td>
             <td align=center>-</td>
-            <td align=center>0.953</td>
-            <td align=center>0.590</td>
-            <td align=center>0.975</td>
+            <td align=center><strong>0.953<strong/></td>
+            <td align=center><strong>0.590<strong/></td>
+            <td align=center><strong>0.975<strong/></td>
 	</tr>
         </tr>
     </tbody>
@@ -683,21 +683,21 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
         </tr>
 	<tr>
 	    <td align=center>Mimi</td>
-            <td align=center>0.794</td>
+            <td align=center><strong>0.794<strong/></td>
             <td align=center>0.481</td>
             <td align=center>0.265</td>
         </tr>
 	<tr>
 	    <td align=center>SpeechTokenizer</td>
             <td align=center>0.698</td>
-            <td align=center>0.489</td>
+            <td align=center><strong>0.489<strong/></td>
             <td align=center>0.420</td>
         </tr>
 	<tr>
 	    <td align=center>Xcodec</td>
             <td align=center>0.656</td>
             <td align=center>0.487</td>
-            <td align=center>0.525</td>
+            <td align=center><strong>0.525<strong/></td>
         </tr>
 	<tr>
 	    <td align=center>YuE</td>
@@ -717,10 +717,10 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 | Encodec        |  111.4 |  28.0    | 59.1    | 93.7    | 130.5   | 153.7   | 183.3   | 202.0   | 213.5   |         
 | WavTokenizer   |  317.1 |  317.1   |    -    |    -    |    -    |    -    |    -    |    -    |    -    |
 | X-Codec        |  56.2  |  20.6    | 24.9    | 37.8    | 57.3    | 77.3    | 92.0    | 103.0   | 126.3   |
-| YuE            |  52.7  |  18.3    | 29.6    | 37.7    | 52.6    | 74.3    | 89.8    | 95.3    | 90.3    |
-| SpeechTokenizer|  24.2  |  2.4     | 12.4    | 24.8    | 33.6    | 40.9    | 46.0    | 50.3    | 52.8    |
+| YuE            |  52.7  |  18.3    | 29.6    | 37.7   | 52.6    | 74.3    | 89.8    | 95.3    | 90.3    |
+| SpeechTokenizer|  24.2  |  2.4     | __12.4__    | __24.8__    | __33.6__    | __40.9__    | __46.0__    | __50.3__    | __52.8__    |
 | Mimi           |  269.6 |  32.9    | 189.3   | 334.7   | 383.3   | 424.2   | 431.7   | 456.9   | 459.7   |
-| SemamiCodec    |  14.8  |  1.2     | 191.0   |    -    |    -    |    -    |    -    |    -    |    -    |
+| SemamiCodec    |  __14.8__  |  __1.2__     | 191.0   |    -    |    -    |    -    |    -    |    -    |    -    |
 
 #### Emilia_EN(100ksteps)
 
@@ -731,9 +731,9 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 | WavTokenizer   | 104.7  |  104.7   |    -    |    -    |    -    |    -    |    -    |    -    |    -    |
 | X-Codec        | 30.3   |  10.0    |  12.7   |  20.2   |  30.6   |  41.9   |  50.7   |  61.6   |  71.4   |
 | YuE            | 29.0   |  9.3     |  16.0   |  19.9   |  29.3   |  38.7   |  51.0   |  55.2   |  54.1   |         
-| SpeechTokenizer| 13.5   |  1.9     |  5.5    |  12.1   |  18.3   |  22.3   |  25.1   |  28.6   |  30.8   |
+| SpeechTokenizer| 13.5   |  1.9     |  __5.5__    |  __12.1__   |  __18.3__   |  __22.3__   |  __25.1__   |  __28.6__   |  __30.8__   |
 | Mimi           | 126.9  |  9.1     |  58.2   |  148.0  |  185.0  |  228.7  |  256.6  |  278.9  |  298.5  |        
-| SemamiCodec    | 7.9    |  1.0     |  82.1   |    -    |    -    |    -    |    -    |    -    |    -    |
+| SemamiCodec    | __7.9__    |  __1.0__     |  82.1   |    -    |    -    |    -    |    -    |    -    |    -    |
 
 #### MTG-Jamendo(100ksteps)
 
@@ -742,9 +742,9 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 | DAC            | 194   |  28.6   |  122.8  |  152.4  |  212.8  |  270.7  |  352.9  |  413.4  |  473.5  |
 | Encodec        | 141.3 |  17.6   |  62.5   |  110.7  |  170    |  225.9  |  287    |  336.8  |  375.6  |
 | WavTokenizer   | 38.2  |  38.2   |    -    |    -    |    -    |    -    |    -    |    -    |    -    |
-| X-Codec        | 47.5  |  20.4   |  19.6   |  32.4   |  51.1   |  64.5   |  74.5   |  86.8   |  100.2  |
-| YuE            | 46.2  |  18.3   |  28.7   |  30.4   |  48.2   |  60.0   |  74.9   |  83.0   |  76.3   |                
-| SemamiCodec    | 15.5  |  1.0    |  272.4  |    -    |    -    |    -    |    -    |    -    |    -    |
+| X-Codec        | 47.5  |  20.4   |  __19.6__   |  32.4   |  51.1   |  64.5   |  __74.5__   |  86.8   |  100.2  |
+| YuE            | 46.2  |  18.3   |  28.7   |  __30.4__   |  __48.2__   |  __60.0__   |  74.9   |  __83.0__   |  __76.3__   |                
+| SemamiCodec    | __15.5__  |  __1.0__    |  272.4  |    -    |    -    |    -    |    -    |    -    |    -    |
 
 ## Acknowledgement
 We would like to extend a special thanks to authors of <a href="https://github.com/lucadellalib/audiocodecs">https://github.com/lucadellalib/audiocodecs</a> and <a href="https://github.com/a43992899/MARBLE">Marble</a>. Their work has been a great source of inspiration for us.
