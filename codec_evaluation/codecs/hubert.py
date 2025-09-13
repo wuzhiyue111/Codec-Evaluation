@@ -79,6 +79,7 @@ class Hubert(Codec):
             return_tensors="pt",
             padding=True,
         )
+        device = next(self.model.parameters()).device
         input_values = features["input_values"].squeeze(0).to(device)
         hidden_states = self.model(input_values).last_hidden_state    # [B, N, D]
         unquantized_emb = hidden_states.permute(0, 2, 1)  # [B, D, N]

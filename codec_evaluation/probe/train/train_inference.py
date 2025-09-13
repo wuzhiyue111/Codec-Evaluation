@@ -147,14 +147,18 @@ def cli():
                         type=str,
                         default=os.path.join(root_path, 
                                              "probe", 
-                                             f"codec_eval_probe_{args.model_name}_{args.mode}_{args.dataset_name}"),
+                                             "probe_result",
+                                             f"{args.dataset_name}",
+                                             f"codec_eval_probe_{args.model_name}_{args.mode}"),
                         help=f'Weights save dir')
 
     parser.add_argument("--tensorboard_save_dir",
                         type=str,
                         default=os.path.join(root_path, 
-                                             "probe", 
-                                             f"codec_eval_probe_tb_log_{args.model_name}_{args.mode}_{args.dataset_name}"),
+                                             "probe",
+                                             "probe_result", 
+                                             f"{args.dataset_name}",
+                                             f"codec_eval_probe_tb_log_{args.model_name}_{args.mode}"),
                         help=f'Tensorboard save dir')
 
     parser.add_argument("--train_audio_dir",
@@ -179,7 +183,8 @@ def cli():
     default_output_file = os.path.join(root_path, 
                                        "probe", 
                                        "probe_result", 
-                                       f"codec_eval_probe_result_{args.model_name}_{args.mode}_{args.dataset_name}_{time.strftime('%Y-%m-%d_%H-%M-%S')}.txt")
+                                       f"{args.dataset_name}",
+                                       f"codec_eval_probe_result_{args.model_name}_{args.mode}_{time.strftime('%Y-%m-%d_%H-%M-%S')}.txt")
     
     parser.add_argument('--output_file',
                         type=str, 
