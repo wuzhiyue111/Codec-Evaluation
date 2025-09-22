@@ -231,7 +231,7 @@ def cli():
     parser.add_argument("--visqol_mode", 
                         type=str, 
                         default="audio",
-                        help="Mode for VISQOL metric calculation, either 'speech' or 'audio'.")
+                        help="Mode for VISQOL metric calculation, music use 'audio', speech use 'speech'.")
     args = parser.parse_args()
     print(f"args: {args}")
     codec_eval = CodecEvaluation(
