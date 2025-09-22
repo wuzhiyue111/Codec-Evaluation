@@ -79,7 +79,7 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
   <thead>
     <tr>
       <th rowspan="2">Codec</th>
-      <th colspan="8">Metrics</th>
+      <th colspan="9">Metrics</th>
     </tr>
     <tr>
       <th>PESQ</th>
@@ -89,18 +89,22 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
       <th>CER_GT</th>
       <th>CER_REC</th>
       <th>STOI</th>
+      <th>VISQOL</th>
+      <th>Mel distance</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>DAC</td>
-      <td><strong>3.69<strong/></td>
-      <td><strong>0.965<strong/></td>
+      <td><strong>3.69</strong></td>
+      <td><strong>0.965</strong></td>
       <td>0.155</td>
       <td>0.202</td>
       <td>0.09</td>
       <td>0.125</td>
-      <td><strong>0.94<strong/></td>
+      <td><strong>0.94</strong></td>
+      <td><strong>4.51</strong></td>
+      <td><strong>0.21</strong></td>
     </tr>
     <tr>
       <td>Encodec</td>
@@ -110,7 +114,9 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
       <td>0.198</td>
       <td>0.09</td>
       <td>0.114</td>
-      <td>0.925</td>
+      <td>0.93</td>
+      <td>4.37</td>
+      <td>0.31</td>
     </tr>
     <tr>
       <td>Mimi</td>
@@ -121,6 +127,8 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
       <td>0.09</td>
       <td>0.173</td>
       <td>0.88</td>
+      <td>3.84</td>
+      <td>0.38</td>
     </tr>
     <tr>
       <td>SemantiCodec</td>
@@ -131,6 +139,8 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
       <td>0.09</td>
       <td>0.195</td>
       <td>0.86</td>
+      <td>4.04</td>
+      <td>0.32</td>
     </tr>
     <tr>
       <td>WavTokenizer</td>
@@ -141,6 +151,8 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
       <td>0.09</td>
       <td>0.325</td>
       <td>0.83</td>
+      <td>3.43</td>
+      <td>0.68</td>
     </tr>
     <tr>
       <td>SpeechTokenizer</td>
@@ -149,18 +161,22 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
       <td>0.155</td>
       <td>0.216</td>
       <td>0.09</td>
-      <td>0.12</td>
+      <td>0.120</td>
       <td>0.89</td>
+      <td>4.22</td>
+      <td>0.25</td>
     </tr>
     <tr>
       <td>XCodec</td>
       <td>3.23</td>
       <td>0.942</td>
       <td>0.155</td>
-      <td><strong>0.185<strong/></td>
+      <td><strong>0.185</strong></td>
       <td>0.09</td>
-      <td><strong>0.106<strong/></td>
+      <td><strong>0.106</strong></td>
       <td>0.91</td>
+      <td>4.34</td>
+      <td>0.24</td>
     </tr>
     <tr>
       <td>YuE</td>
@@ -171,9 +187,12 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
       <td>0.09</td>
       <td>0.113</td>
       <td>0.90</td>
+      <td>4.33</td>
+      <td>0.25</td>
     </tr>
   </tbody>
 </table>
+
 
 #### Music
 <table border="1" >
@@ -185,6 +204,8 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
     <tr>
       <th>PESQ</th>
       <th>STOI</th>
+      <th>VISQOL</th>
+      <th>Mel distance</th>
     </tr>
   </thead>
   <tbody>
@@ -192,31 +213,43 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
       <td>DAC</td>
       <td><strong>2.66<strong/></td>
       <td><strong>0.86<strong/></td>
+      <td><strong>4.40<strong/></td>
+      <td><strong>0.73</strong></td>
     </tr>
     <tr>
       <td>Encodec</td>
       <td>2.27</td>
       <td>0.85</td>
+      <td>4.25</td>
+      <td>0.78</td>
     </tr>
     <tr>
       <td>SemantiCodec</td>
       <td>1.32</td>
       <td>0.60</td>
+      <td>4.19</td>
+      <td>0.98</td>
     </tr>
     <tr>
       <td>WavTokenizer</td>
       <td>1.14</td>
       <td>0.49</td>
+      <td>3.84</td>
+      <td>1.15</td>
     </tr>
     <tr>
        <td>XCodec</td>
        <td>1.85</td>
        <td>0.76</td>
+       <td>4.35</td>
+       <td>0.91</td>
     </tr>
     <tr>
        <td>YuE</td>
        <td>1.84</td>
        <td>0.75</td>
+       <td>4.35</td>
+       <td>0.90</td>
     </tr>
   </tbody>
 </table>
@@ -240,7 +273,6 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 	    <th colspan="1">VocalSetSinger</th>
 	    <th colspan="1">VocalSetTech</th>
 	    <th colspan="1">GS</th>
-	    <th colspan="1">Muchin</th>
 	    <th colspan="2">MTGGenre</th>
 	    <th colspan="2">MTGInstrument</th>
 	    <th colspan="2">MTGMoodtheme</th>
@@ -257,7 +289,6 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 	    <td align=center>Acc</td>
 	    <td align=center>Acc</td>
 	    <td align=center>Acc</td>	   
-	    <td align=center>CER</td>
 	    <td align=center>AP</td>
 	    <td align=center>AUCROC</td>
 	    <td align=center>AP</td>
@@ -281,7 +312,6 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 		    <td align=center>0.419</td>
 		    <td align=center>0.376</td>
             <td align=center>0.088</td>
-		    <td align=center>0.579</td>
 		    <td align=center>0.0295</td>
 		    <td align=center>0.530</td>
 		    <td align=center>0.108</td>
@@ -304,7 +334,6 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 		    <td align=center>0.299</td>
 		    <td align=center>0.301</td>
 		    <td align=center>0.102</td>
-		    <td align=center>0.507</td>
 		    <td align=center>0.035</td>
 		    <td align=center>0.528</td>
 		    <td align=center>0.104</td>
@@ -327,7 +356,6 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 		    <td align=center>0.344</td>
 		    <td align=center>0.451</td>
 		    <td align=center>0.343</td>
-		    <td align=center>0.578</td>
 		    <td align=center><strong>0.035<strong/></td>
 		    <td align=center>0.526</td>
 		    <td align=center>0.149</td>
@@ -350,7 +378,6 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 		    <td align=center>0.130</td>
 		    <td align=center>0.287</td>
 		    <td align=center>0.093</td>
-            <td align=center><strong>0.721<strong/></td>
 		    <td align=center>0.034</td>
 		    <td align=center><strong>0.530<strong/></td>
 		    <td align=center>0.107</td>
@@ -373,7 +400,6 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 		    <td align=center><strong>0.537<strong/></td>
 		    <td align=center>0.570</td>
             <td align=center><strong>0.455<strong/></td>
-		    <td align=center>0.481</td>
 		    <td align=center>0.034</td>
 		    <td align=center>0.519</td>
 		    <td align=center><strong>0.164<strong/></td>
@@ -396,7 +422,6 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
 		    <td align=center>0.523</td>
 		    <td align=center><strong>0.594<strong/></td>
             <td align=center>0.454</td>
-		    <td align=center>0.463</td>
 		    <td align=center>0.034</td>
 		    <td align=center>0.517</td>
 		    <td align=center>0.133</td>
