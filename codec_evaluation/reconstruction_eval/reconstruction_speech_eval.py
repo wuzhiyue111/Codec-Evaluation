@@ -15,6 +15,8 @@ from codec_evaluation.reconstruction_eval.utils import (
     calculate_pesq,
     calculate_spk_sim,
     calculate_stoi,
+    calculate_visqol,
+    calculate_mel_distance,
     wer,
     cer,
 )
@@ -47,6 +49,7 @@ class CodecEvaluation:
         num_workers: int = 8,
         mode: str = "reconstruct",
         wav2vec_model_path_or_name: str = "speechbrain/spkrec-ecapa-voxceleb",
+        visqol_mode: str = "speech",
         **kwargs,
     ):
         """
@@ -75,6 +78,7 @@ class CodecEvaluation:
 
         self.codec_sample_rate = self.codec.orig_sample_rate
         self.sample_rate = sample_rate
+        self.visqol_mode = visqol_mode
 
         # wer model
         self.asr_processor = WhisperProcessor.from_pretrained(asr_model_path_or_name)
@@ -146,6 +150,8 @@ class CodecEvaluation:
         pesq_list = []
         speaker_sim_list = []
         usage_entropy_list = []
+        visqol_list = []
+        mel_distance_list = []
 
         data_length = len(gt_audio_list)
         for i in tqdm(range(0, data_length, 50), desc="compute metrics"):  # per 50 samples to compute metrics
@@ -218,6 +224,27 @@ class CodecEvaluation:
             )
             print(f"pesq: {pesq_list[-1]}")
 
+            # visqol
+            visqol_list.append(
+                calculate_visqol(
+                    gt_audio=tmp_gt_audio,
+                    rec_audio=tmp_rec_audio,
+                    sample_rate=self.codec_sample_rate,
+                    visqol_mode=self.visqol_mode,
+                )
+            )
+            print(f"visqol: {visqol_list[-1]}")
+
+            # mel_distance
+            mel_distance_list.append(
+                calculate_mel_distance(
+                    gt_audio=tmp_gt_audio,
+                    rec_audio=tmp_rec_audio,
+                    sample_rate=self.codec_sample_rate,
+                )
+            )
+            print(f"mel_distance: {mel_distance_list[-1]}")
+
         avg_wer_gt = sum(wer_gt_list) / len(wer_gt_list)
         avg_wer_rec = sum(wer_rec_list) / len(wer_rec_list)
         avg_cer_gt = sum(cer_gt_list) / len(cer_gt_list)
@@ -225,6 +252,8 @@ class CodecEvaluation:
         avg_stoi = sum(stoi_list) / len(stoi_list)
         avg_pesq = sum(pesq_list) / len(pesq_list)
         avg_speaker_sim = sum(speaker_sim_list) / len(speaker_sim_list)
+        avg_visqol = sum(visqol_list) / len(visqol_list)
+        avg_mel_distance = sum(mel_distance_list) / len(mel_distance_list)
         print(f"compute metrics done, now start to save results")
         print(f"speaker_sim: {avg_speaker_sim}")
         print(f"wer_gt: {avg_wer_gt}")
@@ -233,6 +262,8 @@ class CodecEvaluation:
         print(f"cer_rec: {avg_cer_rec}")
         print(f"stoi: {avg_stoi}")
         print(f"pesq: {avg_pesq}")
+        print(f"visqol: {avg_visqol}")
+        print(f"mel_distance: {avg_mel_distance}")
         return {
             "wer_gt": avg_wer_gt,
             "cer_gt": avg_cer_gt,
@@ -241,6 +272,8 @@ class CodecEvaluation:
             "cer_rec": avg_cer_rec,
             "stoi": avg_stoi,
             "pesq": avg_pesq,
+            "visqol": avg_visqol,
+            "mel_distance": avg_mel_distance,
             # "codebook_usage": np.mean(per_codebook_usage, axis=0) / np.log2(self.effective_codebook_num)
         }
 
@@ -287,6 +320,10 @@ def cli():
                         type=str, 
                         required=True, 
                         help="Path of the pre-trained wav2vec model to be used for evaluation.")
+    parser.add_argument("--visqol_mode", 
+                        type=str, 
+                        default="speech",
+                        help="Visqol mode, audio or speech.")
     args = parser.parse_args()
     print(f"args: {args}")
     codec_eval = CodecEvaluation(
@@ -303,6 +340,7 @@ def cli():
         use_vocos=args.use_vocos,
         vocos_ckpt_dir=args.vocos_ckpt_dir,
         wav2vec_model_path_or_name=args.wav2vec_model_path_or_name,
+        visqol_mode=args.visqol_mode,
     )
     result = codec_eval.evaluate()
     print(f"result: {result}")
