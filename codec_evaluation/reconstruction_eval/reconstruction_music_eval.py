@@ -12,6 +12,8 @@ from typing import Optional
 from codec_evaluation.reconstruction_eval.utils import (
     calculate_pesq,
     calculate_stoi,
+    calculate_visqol,
+    calculate_mel_distance,
 )
 
 def seed_all(seed):
@@ -37,6 +39,7 @@ class CodecEvaluation:
         batch_size: int = 32,
         num_workers: int = 8,
         mode: str = "reconstruct",
+        visqol_mode: str = "audio",
         **kwargs,
     ):
         """
@@ -62,6 +65,7 @@ class CodecEvaluation:
 
         self.codec_sample_rate = self.codec.orig_sample_rate
         self.sample_rate = sample_rate
+        self.visqol_mode = visqol_mode
 
         self.batch_size = batch_size
         self.device = device
@@ -114,6 +118,8 @@ class CodecEvaluation:
         # compute metrics
         stoi_list = []
         pesq_list = []
+        visqol_list = []
+        mel_distance_list = []
 
         data_length = len(gt_audio_list)
         for i in tqdm(
@@ -153,15 +159,42 @@ class CodecEvaluation:
             )
             print(f"pesq: {pesq_list[-1]}")
 
+            # visqol
+            visqol_list.append(
+                calculate_visqol(
+                    gt_audio=tmp_gt_audio,
+                    rec_audio=tmp_rec_audio,
+                    sample_rate=self.codec_sample_rate,
+                    visqol_mode=self.visqol_mode,
+                )
+            )
+            print(f"visqol: {visqol_list[-1]}")
+
+            # mel_distance
+            mel_distance_list.append(
+                calculate_mel_distance(
+                    gt_audio=tmp_gt_audio,
+                    rec_audio=tmp_rec_audio,
+                    sample_rate=self.codec_sample_rate,
+                )
+            )
+            print(f"mel_distance: {mel_distance_list[-1]}")
+
         avg_stoi = sum(stoi_list) / len(stoi_list)
         avg_pesq = sum(pesq_list) / len(pesq_list)
+        avg_visqol = sum(visqol_list) / len(visqol_list)
+        avg_mel_distance = sum(mel_distance_list) / len(mel_distance_list)
         print(f"compute metrics done, now start to save results")
 
         print(f"stoi: {avg_stoi}")
         print(f"pesq: {avg_pesq}")
+        print(f"visqol: {avg_visqol}")
+        print(f"mel_distance: {avg_mel_distance}")
         return {
             "stoi": avg_stoi,
             "pesq": avg_pesq,
+            "visqol": avg_visqol,
+            "mel_distance": avg_mel_distance,
         }
 
 
@@ -195,6 +228,10 @@ def cli():
                         type=Optional[str], 
                         default=None,
                         help="The directory containing the vocos checkpoint files.")
+    parser.add_argument("--visqol_mode", 
+                        type=str, 
+                        default="audio",
+                        help="Mode for VISQOL metric calculation, music use 'audio', speech use 'speech'.")
     args = parser.parse_args()
     print(f"args: {args}")
     codec_eval = CodecEvaluation(
@@ -208,6 +245,7 @@ def cli():
         mode=args.mode,
         use_vocos=args.use_vocos,
         vocos_ckpt_dir=args.vocos_ckpt_dir,
+        visqol_mode=args.visqol_mode,
     )
     result = codec_eval.evaluate()
     print(f"result: {result}")

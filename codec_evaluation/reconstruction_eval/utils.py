@@ -2,49 +2,54 @@ import jiwer
 import numpy as np
 import torch
 import torchaudio
+import os
 from torchmetrics.audio.pesq import PerceptualEvaluationSpeechQuality
 from torchmetrics.audio.stoi import ShortTimeObjectiveIntelligibility
-import torchaudio
 from speechbrain.inference.speaker import EncoderClassifier
+
+from visqol import visqol_lib_py
+from visqol.pb2 import visqol_config_pb2
+from visqol.pb2 import similarity_result_pb2
+import gc
 
 def transform_text_list_for_wer(text_list):
     """
-    处理文本列表，消除大小写和标点符号的影响
+    Process text lists to eliminate the effects of capitalization and punctuation.
 
     Args:
-        text_list: 文本列表
+        text_list: Text list
 
     Returns:
-        list: 处理后的文本列表
+        list: Processed text list
     """
     def clean_text(text):
-        # 转小写
+        # Convert to lower case
         text = text.lower()
-        # 移除标点符号 (可以根据需要添加更多标点符号)
+        # Remove punctuation (you can add more if needed)
         for punct in ',.!?;:""\'"()[]{}、，。！？；：""' "【】《》-":
             text = text.replace(punct, " ")
-        # 移除多余空格
+        # Remove extra spaces
         text = " ".join(text.split())
         return text
     return [clean_text(text) for text in text_list]
 
 def transform_text_list_for_cer(text_list):
     """
-    处理文本列表，消除大小写和标点符号的影响
+    Process text lists to eliminate the effects of capitalization and punctuation
 
     Args:
-        text_list: 文本列表
+        text_list: Text list
 
     Returns:
-        list: 处理后的文本列表, 每个字符之间都有一个空格
+        list: Processed text list, each character is separated by a space
     """
     def clean_text(text):
-        # 转小写
+        # Convert to lower case
         text = text.lower()
-        # 移除标点符号 (可以根据需要添加更多标点符号)
+        # Remove punctuation (you can add more if needed)
         for punct in ',.!?;:""\'"()[]{}、，。！？；：""' "【】《》-":
             text = text.replace(punct, " ")
-        # 移除多余空格
+        # Remove extra spaces
         text = "".join(text.split())
         return text
     return [clean_text(text) for text in text_list]
@@ -168,7 +173,7 @@ def calculate_pesq(gt_audio: torch.Tensor, rec_audio: torch.Tensor, sample_rate=
     # rec_audio: [B, T]
     pesq = PerceptualEvaluationSpeechQuality(16000, "wb")
 
-    # PESQ要求采样率为16k或8k
+    # PESQ requires a sampling rate of 16k or 8k
     if sample_rate != 16000:
         resampler = torchaudio.transforms.Resample(sample_rate, 16000).to(gt_audio.device)
         gt_audio = resampler(gt_audio)
@@ -186,3 +191,89 @@ def calculate_pesq(gt_audio: torch.Tensor, rec_audio: torch.Tensor, sample_rate=
             print(f"gt_audio.shape = {gt_audio_cal.shape}, rec_audio.shape = {rec_audio_cal.shape},")
             print(f"pesq error: {e}")
     return sum(pesq_list) / len(pesq_list)
+
+def calculate_visqol(gt_audio: torch.Tensor, rec_audio: torch.Tensor, sample_rate=24000, visqol_mode = "speech"):
+    # gt_audio: [B, T]
+    # rec_audio: [B, T]
+    # mode = "speech" or "audio", "audio" is for music, "speech" is for speech, audio sample rate is 48k, speech sample rate is 16k
+
+    assert visqol_mode in ["speech", "audio"], f"visqol_mode must be 'speech' or 'audio', but got {visqol_mode}"
+    config = visqol_config_pb2.VisqolConfig()
+    if visqol_mode == "audio":
+        config.audio.sample_rate = 48000
+        config.options.use_speech_scoring = False
+        svr_model_path = "libsvm_nu_svr_model.txt"
+    else:
+        config.audio.sample_rate = 16000
+        config.options.use_speech_scoring = True
+        svr_model_path = "lattice_tcditugenmeetpackhref_ls2_nl60_lr12_bs2048_learn.005_ep2400_train1_7_raw.tflite"
+
+    if sample_rate != config.audio.sample_rate:
+        resampler = torchaudio.transforms.Resample(sample_rate, config.audio.sample_rate).to(gt_audio.device)
+        gt_audio = resampler(gt_audio)
+        rec_audio = resampler(rec_audio)
+
+    config.options.svr_model_path = os.path.join(
+        os.path.dirname(visqol_lib_py.__file__), "model", svr_model_path
+    )
+
+    api = visqol_lib_py.VisqolApi()
+    api.Create(config)
+
+    visqol_scores = []
+
+    for i in range(gt_audio.shape[0]):
+        ref = gt_audio[i].cpu().numpy().astype(np.float64)
+        deg = rec_audio[i].cpu().numpy().astype(np.float64)
+        result = api.Measure(ref, deg)
+        visqol_scores.append(result.moslqo)
+
+    if len(visqol_scores) == 0:
+        return 0.0
+    return sum(visqol_scores) / len(visqol_scores)
+
+
+def calculate_mel_distance(gt_audio: torch.Tensor, rec_audio: torch.Tensor, sample_rate=24000):
+    """
+    gt_audio, rec_audio: [B, T]
+    """
+    # Reference dac
+    window_lengths = [32, 64, 128, 256, 512, 1024, 2048]
+    num_mels = [5, 10, 20, 40, 80, 160, 320]
+
+    # Pre-built MelSpectrograms of different scales
+    mel_transforms = [
+        torchaudio.transforms.MelSpectrogram(
+            sample_rate=sample_rate,
+            n_fft=n_fft,
+            hop_length=n_fft // 4,
+            n_mels=n_mels
+        ).to(gt_audio.device)
+        for n_fft, n_mels in zip(window_lengths, num_mels)
+    ]
+
+    B = gt_audio.shape[0]
+    msd_list = []
+
+    for b in range(B):
+        gt_wav  = gt_audio[b].unsqueeze(0)  # [1, T]
+        rec_wav = rec_audio[b].unsqueeze(0)
+
+        total_l1 = 0.0
+        num_scales = len(mel_transforms)
+        for mel_spec in mel_transforms:
+            # Convert waveform to Mel spectrum
+            gt_mel  = mel_spec(gt_wav)
+            rec_mel = mel_spec(rec_wav)
+
+            # First, clamp to ensure that the amplitude is not less than 1e-5 to avoid log(0).
+            # Then take the log and get the logarithmic power spectrum
+            gt_db = torch.log(torch.clamp(gt_mel, min=1e-5))
+            rec_db = torch.log(torch.clamp(rec_mel, min=1e-5))
+
+            total_l1 += torch.mean(torch.abs(gt_db - rec_db))
+
+        mean_l1 = (total_l1 / num_scales).item()
+        msd_list.append(mean_l1)
+
+    return sum(msd_list) / len(msd_list)
