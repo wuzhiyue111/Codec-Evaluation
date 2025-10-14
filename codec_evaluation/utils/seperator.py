@@ -105,15 +105,13 @@ class Separator(torch.nn.Module):
         return mix_audio, vocal_audio, bgm_audio
     
 if __name__ == "__main__":
-    separator = Separator(dm_model_path='/algo-intern/user/lipper/Codec-Evaluation-main/codec_evaluation/utils/demucs/ckpt/htdemucs.pth', 
-                          dm_config_path='/algo-intern/user/lipper/Codec-Evaluation-main/codec_evaluation/utils/demucs/ckpt/htdemucs.yaml', 
+    separator = Separator(dm_model_path='/codec_evaluation/utils/demucs/ckpt/htdemucs.pth', 
+                          dm_config_path='/codec_evaluation/utils/demucs/ckpt/htdemucs.yaml', 
                           gpu_id=0)
-    audio, sr = torchaudio.load("/algo-intern/user/zhiyuew/高音人声音频/王力宏 _ 就是现在 _ 20150123.flac")
+    audio, sr = torchaudio.load("王力宏 _ 就是现在 _ 20150123.flac")
     if sr != 24000:
         audio = torchaudio.functional.resample(audio, sr, 24000)
     if audio.shape[0] != 1:
         audio = audio.mean(dim=0).unsqueeze(0) # shape (1, T)
 
     mix_audio, vocal_audio, bgm_audio = separator.separate_from_mix(audio, sample_rate=24000)
-    torchaudio.save("/algo-intern/user/lipper/Codec-Evaluation-main/bgm.wav", bgm_audio.cpu(), 24000)
-    torchaudio.save("/algo-intern/user/lipper/Codec-Evaluation-main/vocal.wav", vocal_audio.cpu(), 24000)
