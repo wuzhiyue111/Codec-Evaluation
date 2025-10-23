@@ -185,3 +185,5 @@ lightning_logs/
 .conda
 .pypi
 codec_evaluation/probe/probe_tb_log/
+*.ckpt
+*.pth
