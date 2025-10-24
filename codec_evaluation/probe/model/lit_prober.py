@@ -1,6 +1,5 @@
 import torch
 import torchmetrics 
-import torch.nn.functional as F
 import pytorch_lightning as pl
 from einops import rearrange
 from codec_evaluation.codecs.init_codecs import init_codec
@@ -99,17 +98,16 @@ class Prober(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         """Training step."""
-        loss, batch_size, labels_pred, labels = self.step(batch)
+        loss, batch_size, _, _ = self.step(batch)
 
         self.log('train_loss', loss, batch_size=batch_size, on_epoch=True, prog_bar=True, logger=True, on_step=True, sync_dist=True)
-        self.update_metrics("train", labels, labels_pred)
         return loss
 
     def validation_step(self, batch, batch_idx):
         """Validation step."""
         loss, batch_size, labels_pred, labels = self.step(batch)
         self.log('val_loss', loss, batch_size=batch_size, on_epoch=True, prog_bar=True, logger=True, on_step=True, sync_dist=True)
-        self.update_metrics("val", labels, labels_pred)
+        self.update_and_log_metrics("val", labels_pred, labels)
 
         return loss
     
@@ -118,8 +116,7 @@ class Prober(pl.LightningModule):
         
         loss, batch_size, labels_pred, labels = self.step(batch)
 
-        self.log('test_loss', loss, batch_size=batch_size, on_epoch=True, prog_bar=True, logger=True, on_step=True, sync_dist=True)
-        self.update_metrics("test", labels, labels_pred)
+        self.update_and_log_metrics("test", labels_pred, labels)
     
     def step(self, batch):
         audio = batch["audio"]
@@ -153,142 +150,57 @@ class Prober(pl.LightningModule):
             metricd intialization
             check torchmetrics version == 1.4.1
         """
-        self.all_metrics = set()
         if self.task == 'multilabel':
-            for split in ['train', 'val', 'test']:
-                setattr(self, f"{split}_ap", torchmetrics.AveragePrecision(
-                                                            task=self.task,
-                                                            num_labels=self.num_outputs,
-                                                            ignore_index=-100))
-                self.all_metrics.add('ap')
-
-                setattr(self, f"{split}_aucroc", torchmetrics.AUROC(
-                                                            task=self.task,
-                                                            num_labels=self.num_outputs,
-                                                            ignore_index=-100))
-                self.all_metrics.add('aucroc')
+            self.val_ap = torchmetrics.AveragePrecision(task="multilabel", num_labels=self.num_outputs, ignore_index=-100)
+            self.val_aucroc = torchmetrics.AUROC(task="multilabel", num_labels=self.num_outputs, ignore_index=-100)
+            self.test_ap = torchmetrics.AveragePrecision(task="multilabel", num_labels=self.num_outputs, ignore_index=-100)
+            self.test_aucroc = torchmetrics.AUROC(task="multilabel", num_labels=self.num_outputs, ignore_index=-100)
        
-
         elif self.task == 'multiclass':
-            for split in ['train', 'val', 'test']:
-                setattr(self, f"{split}_acc", torchmetrics.Accuracy(
-                                                            task=self.task,
-                                                            num_classes=self.num_outputs,
-                                                            ignore_index=-100))
-                self.all_metrics.add('acc')
-                setattr(self, f"{split}_f1", torchmetrics.F1Score(
-                                                                    task=self.task,
-                                                                    num_classes=self.num_outputs,
-                                                                    average='macro',
-                                                                    ignore_index=-100))
-                self.all_metrics.add('f1')
+            self.val_acc = torchmetrics.Accuracy(task="multiclass", num_classes=self.num_outputs, ignore_index=-100)
+            self.val_f1 = torchmetrics.F1Score(task="multiclass", num_classes=self.num_outputs, average="macro", ignore_index=-100)
+            self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=self.num_outputs, ignore_index=-100)
+            self.test_f1 = torchmetrics.F1Score(task="multiclass", num_classes=self.num_outputs, average="macro", ignore_index=-100)
 
-        elif self.task == 'regression':        
-            for split in ['train', 'val', 'test']:
-                # r2 score
-                setattr(self, f"{split}_r2", torchmetrics.R2Score(num_outputs=2, multioutput='uniform_average'))
-                self.all_metrics.add('r2')
-                setattr(self, f"{split}_arousal_r2", torchmetrics.R2Score(num_outputs=1))
-                self.all_metrics.add('arousal_r2')
-                setattr(self, f"{split}_valence_r2", torchmetrics.R2Score(num_outputs=1))
-                self.all_metrics.add('valence_r2')
+        elif self.task == 'regression':   
+            self.val_r2 = torchmetrics.R2Score(num_outputs=2, multioutput='uniform_average')
+            self.test_r2 = torchmetrics.R2Score(num_outputs=2, multioutput='uniform_average')
+            self.val_arousal_r2 = torchmetrics.R2Score(num_outputs=1)
+            self.test_arousal_r2 = torchmetrics.R2Score(num_outputs=1)
+            self.val_valence_r2 = torchmetrics.R2Score(num_outputs=1)
+            self.test_valence_r2 = torchmetrics.R2Score(num_outputs=1)
+
 
     @torch.no_grad()
-    def update_metrics(self, split, y, y_pred):
+    def update_and_log_metrics(self, split, y_pred, y):
         """
             update metrics per step
         """
         if self.task == 'regression':
-            getattr(self, f"{split}_r2").update(y_pred, y)
-            getattr(self, f"{split}_arousal_r2").update(y_pred[:, 0], y[:, 0])
-            getattr(self, f"{split}_valence_r2").update(y_pred[:, 1], y[:, 1])
+            r2 = getattr(self, f"{split}_r2")
+            r2.update(y_pred, y)
+            self.log(f"{split}_r2", r2, on_epoch=True, prog_bar=True, sync_dist=True)
+            arousal_r2 = getattr(self, f"{split}_arousal_r2")
+            arousal_r2.update(y_pred[:, 0], y[:, 0])
+            self.log(f"{split}_arousal_r2", arousal_r2, on_epoch=True, prog_bar=True, sync_dist=True)
+            valence_r2 = getattr(self, f"{split}_valence_r2")
+            valence_r2.update(y_pred[:, 1], y[:, 1])
+            self.log(f"{split}_valence_r2", valence_r2, on_epoch=True, prog_bar=True, sync_dist=True)
+
         elif self.task == 'multiclass':
             y_pred = torch.softmax(y_pred, dim=1)
-            getattr(self, f"{split}_acc").update(y_pred, y)
-            getattr(self, f"{split}_f1").update(y_pred, y)
+            acc = getattr(self, f"{split}_acc")
+            acc.update(y_pred, y)
+            f1 = getattr(self, f"{split}_f1")
+            f1.update(y_pred, y)
+            self.log(f"{split}_acc", acc, on_epoch=True, prog_bar=True, sync_dist=True)
+            self.log(f"{split}_f1", f1, on_epoch=True, prog_bar=True, sync_dist=True)
+
         elif self.task == 'multilabel':
             y_pred = torch.sigmoid(y_pred)
-            getattr(self, f"{split}_ap").update(y_pred, y)
-            getattr(self, f"{split}_aucroc").update(y_pred, y)
-
-    @torch.no_grad()
-    def log_metrics(self, split):
-        """
-            log metrics at the end of epoch
-        """
-        if self.task == 'regression':
-            self.log(f"{split}_r2", getattr(self, f"{split}_r2").compute(), sync_dist=True)
-            getattr(self, f"{split}_r2").reset()
-            self.log(f"{split}_arousal_r2", getattr(self, f"{split}_arousal_r2").compute(), sync_dist=True)
-            getattr(self, f"{split}_arousal_r2").reset()
-            self.log(f"{split}_valence_r2", getattr(self, f"{split}_valence_r2").compute(), sync_dist=True)
-            getattr(self, f"{split}_valence_r2").reset()
-        elif self.task == 'multiclass':
-            self.log(f"{split}_acc", getattr(self, f"{split}_acc").compute(), sync_dist=True)
-            getattr(self, f"{split}_acc").reset()
-            self.log(f"{split}_f1", getattr(self, f"{split}_f1").compute(), sync_dist=True)
-            getattr(self, f"{split}_f1").reset()
-
-        elif self.task == 'multilabel':
-            self.log(f"{split}_ap", getattr(self, f"{split}_ap").compute(), sync_dist=True)
-            getattr(self, f"{split}_ap").reset()
-            self.log(f"{split}_aucroc", getattr(self, f"{split}_aucroc").compute(), sync_dist=True)
-            getattr(self, f"{split}_aucroc").reset()
-
-    def save_result(self):
-        if self.task == 'regression':
-            r2 = getattr(self, f"test_r2").compute()
-            arousal_r2 = getattr(self, f"test_arousal_r2").compute()
-            valence_r2 = getattr(self, f"test_valence_r2").compute()
-            self.test_step_outputs.append({"arousal_r2": arousal_r2, "valence_r2": valence_r2})
-
-            getattr(self, f"test_valence_r2").reset()
-            getattr(self, f"test_r2").reset()
-            getattr(self, f"test_arousal_r2").reset()
-        elif self.task == 'multiclass':
-            acc = getattr(self, f"test_acc").compute()
-            f1 = getattr(self, f"test_f1").compute()
-            self.test_step_outputs.append({"acc": acc, "f1": f1})
-            getattr(self, f"test_f1").reset()
-            getattr(self, f"test_acc").reset()
-        elif self.task == 'multilabel':
-            ap = getattr(self, f"test_ap").compute()
-            aucroc = getattr(self, f"test_aucroc").compute()
-            self.test_step_outputs.append({"ap": ap, "aucroc": aucroc})
-
-            getattr(self, f"test_aucroc").reset()
-            getattr(self, f"test_ap").reset()
-    def on_train_epoch_end(self, outputs = None):
-        self.log_metrics('train')
-    
-    def on_validation_epoch_end(self, outputs = None):        
-        self.log_metrics('val')
-
-    def on_test_epoch_end(self, outputs = None):
-        self.save_result()
-        list0 = []
-        list1 = []
-
-        if self.task == 'regression':
-            for output in self.test_step_outputs:
-                list0.append(output["arousal_r2"])
-                list1.append(output["valence_r2"])
-            avg_0 = sum(list0) / len(list0)
-            avg_1 = sum(list1) / len(list1)
-            self.test_step_outputs = {"arousal_r2": avg_0, "valence_r2": avg_1}
-        elif self.task == 'multiclass':
-            for output in self.test_step_outputs:
-                list0.append(output["acc"])
-                list1.append(output["f1"])
-            avg_0 = sum(list0) / len(list0)
-            avg_1 = sum(list1) / len(list1)
-            
-            self.test_step_outputs = {"acc": avg_0, "f1": avg_1}
-        elif self.task == 'multilabel':
-            for output in self.test_step_outputs:
-                list0.append(output["ap"])
-                list1.append(output["aucroc"])
-            avg_0 = sum(list0) / len(list0)
-            avg_1 = sum(list1) / len(list1)
-            
-            self.test_step_outputs = {"ap": avg_0, "aucroc": avg_1}
+            ap = getattr(self, f"{split}_ap")
+            ap.update(y_pred, y)
+            auc = getattr(self, f"{split}_aucroc")
+            auc.update(y_pred, y)
+            self.log(f"{split}_ap", ap, on_epoch=True, prog_bar=True, sync_dist=True)
+            self.log(f"{split}_auc", auc, on_epoch=True, prog_bar=True, sync_dist=True)
