@@ -40,7 +40,7 @@ class Separator(torch.nn.Module):
             output_path = os.path.join(output_dir, f"{name}_{stem}{ext}")
             if os.path.exists(output_path):
                 output_paths.append(output_path)
-        if len(output_paths) == 1:  # 4
+        if len(output_paths) == 1:
             vocal_path = output_paths[0]
         else:
             drums_path, bass_path, other_path, vocal_path = self.demucs_model.separate(audio_path, output_dir, device=self.device)
@@ -53,9 +53,78 @@ class Separator(torch.nn.Module):
 
     def separate_from_mix(self, mix_audio, sample_rate=24000):
         """
-        mix_audio: Tensor, (B, T)
+        mix_audio: Tensor, mono (B, T) or stereo (B, 2, T)
         sample_rate: input & output sample rate
-        return: mix_audio, vocal_audio, bgm_audio, Tensor, (B, T)
+        return: mix_audio, vocal_audio, bgm_audio, Tensor, (B, T) if mono, (B, 2, T) if stereo
+        """
+        mix_audio = mix_audio.to(self.device)
+        model_sr = getattr(self.demucs_model, 'samplerate', sample_rate)
+        target_channels = getattr(self.demucs_model, 'audio_channels', 1)
+
+        if len(mix_audio.shape) == 2 or mix_audio.shape[1] == 1:
+            is_mono = True
+        else:
+            is_mono = False
+
+        # to (B, C, T)
+        if len(mix_audio.shape) == 2:
+            mix = mix_audio.unsqueeze(1)
+        else:
+            mix = mix_audio
+        # match model sample rate
+        if sample_rate != model_sr:
+            mix = torchaudio.functional.resample(mix, sample_rate, model_sr)
+        # match model channels
+        if mix.shape[1] != target_channels:
+            mix = mix.repeat(1, target_channels, 1)
+
+        # normalize exactly as in BagOfModels.separate
+        ref = mix  # (B,2, T)
+        mix = mix - ref.mean(-1, keepdim=True)
+        mix = mix / ref.std(-1, keepdim=True)
+        with torch.no_grad():
+            sources = apply_model(
+                self.demucs_model,
+                mix,
+                shifts=1,
+                split=True,
+                overlap=0.25,
+                transition_power=1.0,
+                progress=True,
+                device=self.device,
+                num_workers=0,
+                segment=None,
+            )
+
+        # denormalize exactly as in BagOfModels.separate
+
+        # sources = sources * ref.std(-1, keepdim=True).view(-1, 1, 1, 1) + ref.mean(-1, keepdim=True).view(-1, 1, 1, 1)
+        sources = sources * ref.mean(1).std(-1, keepdim=True).view(-1, 1, 1, 1) + ref.mean(1).mean(-1, keepdim=True).view(-1, 1, 1, 1)
+
+        # pick vocals and downmix to mono (B, T)
+        v_idx = 3
+        vocal_audio = sources[:, v_idx]
+        vocal_audio = vocal_audio.contiguous()
+        # resample back to input sample rate
+        if sample_rate != model_sr:
+            vocal_audio = torchaudio.functional.resample(vocal_audio, model_sr, sample_rate)
+            vocal_audio = vocal_audio[:,:,:mix_audio.shape[-1]]
+
+        # bgm = mix - vocals at input sr
+        if is_mono:
+            vocal_audio = vocal_audio.mean(1)
+        bgm_audio = mix_audio - vocal_audio
+
+
+        return mix_audio, vocal_audio, bgm_audio
+    
+    def separate_from_mix_stft(self, mix_audio, sample_rate=24000, n_fft=2048, win_length=2048, hop_length=240):
+        """
+        Similar to `separate_from_mix`, but performs subtraction in the frequency domain:
+        bgm_audio = ISTFT(STFT(mix_audio) - STFT(vocal_audio))
+
+        mix_audio: (B, T)
+        return: mix_audio, vocal_audio, bgm_audio (B, T)
         """
         mix_audio = mix_audio.to(self.device)
         model_sr = getattr(self.demucs_model, 'samplerate', sample_rate)
@@ -100,8 +169,47 @@ class Separator(torch.nn.Module):
         if sample_rate != model_sr:
             vocal_audio = torchaudio.functional.resample(vocal_audio, model_sr, sample_rate)
 
-        # bgm = mix - vocals at input sr
-        bgm_audio = mix_audio - vocal_audio
+        # force length
+        B, T = mix_audio.shape
+        if vocal_audio.shape[-1] != T:
+            if vocal_audio.shape[-1] < T:
+                pad = T - vocal_audio.shape[-1]
+                vocal_audio = torch.nn.functional.pad(vocal_audio, (0, pad))
+            else:
+                vocal_audio = vocal_audio[..., :T]
+
+        # bgm = ISTFT(STFT(mix) - STFT(vocals))
+        window = torch.hann_window(win_length, device=self.device)
+        mix_stft = torch.stft(
+            mix_audio,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            win_length=win_length,
+            window=window,
+            center=True,
+            return_complex=True,
+        )
+        vocal_stft = torch.stft(
+            vocal_audio,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            win_length=win_length,
+            window=window,
+            center=True,
+            return_complex=True,
+        )
+        # complex domain subtraction
+        bgm_stft = mix_stft - vocal_stft
+
+        bgm_audio = torch.istft(
+            bgm_stft,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            win_length=win_length,
+            window=window,
+            center=True,
+            length=T,
+        )
         return mix_audio, vocal_audio, bgm_audio
     
 if __name__ == "__main__":
