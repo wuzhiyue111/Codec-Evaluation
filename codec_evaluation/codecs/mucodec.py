@@ -5,9 +5,6 @@ import os
 import sys
 import torch
 import codec_evaluation
-
-from omegaconf import OmegaConf
-
 from codec_evaluation.codecs.codec import Codec
 root_path = codec_evaluation.__path__[0]
 from codec_evaluation.utils.seperator import Separator
@@ -20,48 +17,43 @@ class MuCodec(Codec):
         self,
         sample_rate: int,
         mode="reconstruct",
+        num_codebooks=1,
         encoder_ckpt_path=None,
         content_vec_ckpt_path=None,
-        model_ckpt_path=None,
+        model_ckpt_dir=None,
         vae_model_path=None,
         vae_config_path=None,
-        separator_kwargs: dict | None = None
+        separator_kwargs: dict | None = None,
+        need_resample=True,
     ):
         # Workaround to avoid name collisions with installed modules
         root_dir = root_path
-        sys_path = [x for x in sys.path]
         sys.path = [x for x in sys.path if root_dir not in x]
-
-        # init model            
+           
         from codec_evaluation.codecs.levo_modules.audio_tokenizer import AudioTokenizer
         """Instantiate a compression model."""
         # https://github.com/tencent-ailab/SongGeneration/blob/b0d71f33609530309711feb7ebd7e990b49138f1/codeclm/models/builders.py#L31
-        
-        model_type = "Flow1dVAESeparate"
 
-        # name = "Flow1dVAESeparate_./ckpt/model_septoken/model_2.safetensors",   
-        # model_type = "Flow1dVAE1rvq"
-        model_sample_rate = 48000
-        super().__init__(sample_rate=sample_rate, orig_sample_rate=model_sample_rate, mode=mode)
+        super().__init__(sample_rate, 48000, mode)
 
         model: Flow1dVAESeparate = AudioTokenizer.get_pretrained(
-            model_type = model_type,
-            name = model_ckpt_path, 
+            model_type = "Flow1dVAESeparate",
+            name = model_ckpt_dir, 
             encoder_ckpt_path = encoder_ckpt_path,
             content_vec_ckpt_path = content_vec_ckpt_path,
             vae_config = vae_config_path, 
             vae_model = vae_model_path, 
-            mode="extract"
-            # mode="inference"
+            mode="extract",
         )
 
         self.model = model
+        self.need_resample = need_resample
         self.hop_length = int(960 * 2) # levo 在模型内做了 resample，因此需要乘 2
-        self.codec_dim = 1024
-        self.token_rate = model_sample_rate / self.hop_length
+        self.dim = 1024     # codec_dim
+        self.token_rate = self.orig_sample_rate / self.hop_length
         self.vocab_size = self.model.model.model.rvq_bestrq_bgm_emb.quantizers[0].codebook.weight.shape[0]
         # self.num_codebooks = [16384, 16384]
-        self.num_codebooks = 1
+        self.num_codebooks = num_codebooks
         self.separator = Separator(**(separator_kwargs or {})).eval()
         for param in self.separator.parameters():
             param.requires_grad = False
@@ -74,10 +66,26 @@ class MuCodec(Codec):
             self.model.model.bestrq = None
             self.model.model.rsq48tobestrq = None
 
-    # levo 要求传入 48khz 的音频，因此不需要 resample
-    # def process_audio(self, sig, length=None):
-    #     return sig, length
 
+    # override
+    @torch.no_grad()
+    def embs(self):
+        # H means the dimension of the embedding
+        # See https://github.com/zhenye234/xcodec/blob/main/quantization/core_vq.py#L356
+        device = next(iter(self.model.state_dict().values())).device
+        toks = torch.arange(self.vocab_size, device=device)
+        # toks = (toks[None, :, None].expand(self.num_codebooks, -1, -1).clone())  # [K, C, 1]
+        
+        # [B x N x T]
+        toks = toks[None, None,:, ]
+        rvq_bestrq_vocal_emb = self.model.model.model.rvq_bestrq_emb
+        vocal_embs, _, _ = rvq_bestrq_vocal_emb.from_codes(toks)
+        rvq_bestrq_bgm_emb = self.model.model.model.rvq_bestrq_bgm_emb
+        bgm_embs, _, _  = rvq_bestrq_bgm_emb.from_codes(toks)
+
+        return vocal_embs, bgm_embs
+
+    # override
     def _sig_to_unquantized_emb(self, sig, length = None):
         """
             sig: [B, T]
@@ -97,17 +105,13 @@ class MuCodec(Codec):
         input_audio_bgm_0 = self.model.model.preprocess_audio(input_audio_bgm_0)
         input_audio_bgm_1 = self.model.model.preprocess_audio(input_audio_bgm_1)
 
-
-        # bestrq_middle,bestrq_last = self.extract_bestrq_embeds(input_audios)
-        # bestrq_middle = bestrq_middle.detach()
-        # bestrq_last = bestrq_last.detach()
         bestrq_emb = self.model.model.model.extract_bestrq_embeds(input_audio_vocal_0,input_audio_vocal_1,self.model.model.layer_vocal)
-
         bestrq_emb_bgm = self.model.model.model.extract_bestrq_embeds(input_audio_bgm_0,input_audio_bgm_1,self.model.model.layer_bgm)
 
-        unquantized_emb = torch.cat([bestrq_emb, bestrq_emb_bgm], dim=1)
-        return unquantized_emb
+        unquantized_feats = torch.cat([bestrq_emb, bestrq_emb_bgm], dim=1)
+        return unquantized_feats
 
+    # override
     def _sig_to_quantized_emb(self, sig, length = None):
         # sig, vocal, instr [1, 4329323]
         _, input_audios_vocal, input_audios_bgm = self.separator.separate_from_mix(sig, sample_rate=self.orig_sample_rate)
@@ -122,26 +126,19 @@ class MuCodec(Codec):
         input_audio_bgm_0 = self.model.model.preprocess_audio(input_audio_bgm_0)
         input_audio_bgm_1 = self.model.model.preprocess_audio(input_audio_bgm_1)
 
-
-        # bestrq_middle,bestrq_last = self.extract_bestrq_embeds(input_audios)
-        # bestrq_middle = bestrq_middle.detach()
-        # bestrq_last = bestrq_last.detach()
         bestrq_emb = self.model.model.model.extract_bestrq_embeds(input_audio_vocal_0,input_audio_vocal_1,self.model.model.layer_vocal)
-
         bestrq_emb_bgm = self.model.model.model.extract_bestrq_embeds(input_audio_bgm_0,input_audio_bgm_1,self.model.model.layer_bgm)
         quantized_bestrq_emb, codes_bestrq_emb, *_ = self.model.model.model.rvq_bestrq_emb(bestrq_emb) # b,d,t
 
         quantized_bestrq_emb_bgm, codes_bestrq_emb_bgm, *_ =  self.model.model.model.rvq_bestrq_bgm_emb(bestrq_emb_bgm) # b,d,t
-        concat_quantized_emb = torch.cat([quantized_bestrq_emb, quantized_bestrq_emb_bgm], dim=1)
-        return concat_quantized_emb
+        quantized_feats = torch.cat([quantized_bestrq_emb, quantized_bestrq_emb_bgm], dim=1)
+        return quantized_feats
 
-
-    @torch.inference_mode()
+    # override
     def _sig_to_toks(self, audio, length): 
         # audio [B,2,T]
         B = audio.shape[0]
         _, vocal_audio, instr_audio = self.separator.separate_from_mix(audio, sample_rate=self.orig_sample_rate)
-
 
         [vocal_code, bgm_code], [vocal_bestrq_emb, bgm_bestrq_emb], _ = self.model.model.model.fetch_codes_batch(
             (vocal_audio), (instr_audio), additional_feats=[],
@@ -173,8 +170,7 @@ class MuCodec(Codec):
                 valid_mask = audio_mask.float()
         else:
             valid_mask = torch.ones(vocal_id.shape[0], vocal_id.shape[1], device=vocal_id.device)
-
-        return  concat_toks,valid_mask
+        return concat_toks, valid_mask
 
     # override
     def _toks_to_sig(self, toks, length, padding_mask=None):
@@ -187,63 +183,29 @@ class MuCodec(Codec):
         vocal_toks = vocal_toks.transpose(-1, -2)
         bgm_toks = bgm_toks.transpose(-1, -2)
         # vocal_toks,bgm_toks = toks.unbind(dim=-1)
-        codes = ( vocal_toks,bgm_toks)
-        wav = self.model.model.code2sound(codes, prompt_vocal=None, prompt_bgm=None, guidance_scale=1.5, num_steps=50, disable_progress=False, chunked=True, chunk_size=128) # [B,N,T] -> [B,T]
-        return wav
-
-   # override
-    @torch.no_grad()
-    def embs(self):
-        # H means the dimension of the embedding
-        # See https://github.com/zhenye234/xcodec/blob/main/quantization/core_vq.py#L356
-        device = next(iter(self.model.state_dict().values())).device
-        toks = torch.arange(self.vocab_size, device=device)
-        # toks = (toks[None, :, None].expand(self.num_codebooks, -1, -1).clone())  # [K, C, 1]
-        
-        # [B x N x T]
-        toks = toks[None, None,:, ]
-        rvq_bestrq_vocal_emb = self.model.model.model.rvq_bestrq_emb
-        vocal_embs,_,_ = rvq_bestrq_vocal_emb.from_codes(toks)
-        rvq_bestrq_bgm_emb  = self.model.model.model.rvq_bestrq_bgm_emb
-        bgm_embs,_,_  = rvq_bestrq_bgm_emb.from_codes(toks)
-
-        return vocal_embs,bgm_embs
-    
-
-    def _audio_to_ctc_logits(self, sig, length):
-        """
-        Convert audio to CTC logits.
-        """
-        pass
-
-        
-    def _audio_to_vocal(self, sig, length):
-        pass
-
-    
-    def _audio_to_instrument(self, sig, length):
-        pass
-
-    
-    def _tokens_to_audio(self, toks, length):
-        # toks: [B, N, K]
-        pass
-    
-    
-    def _audio_to_multilayer_unquantized_emb(self, sig, length):
-        # sig: [B, T]
-        pass
+        codes = (vocal_toks, bgm_toks)
+        sig = self.model.model.code2sound(
+            codes, 
+            prompt_vocal=None, 
+            prompt_bgm=None, 
+            guidance_scale=1.5, 
+            num_steps=50, 
+            disable_progress=False, 
+            chunked=True, 
+            chunk_size=128
+        ) # [B,N,T] -> [B,T]
+        return sig
 
 
 if __name__ == "__main__":
     import torchaudio
-
     use_cuda = torch.cuda.is_available()
     device = "cuda" if use_cuda else "cpu"
     # diffusion olny support bs=1, for bs > 1,using cycle to reconstrcut every
     batch_size = 1
+    num_codebooks = 1
 
-    sig, sample_rate = torchaudio.load(os.path.join(root_path, "codecs", "example.wav"))
+    sig, sample_rate = torchaudio.load(os.path.join(root_path, "codecs", "music.mp3"))
     # sig = sig[:,:sample_rate*10]
     if sig.shape[0] == 1:
         sig = torch.cat([sig, sig], dim=0)
@@ -253,8 +215,8 @@ if __name__ == "__main__":
         https://huggingface.co/tencent/SongGeneration/blob/main/third_party/demucs/ckpt/htdemucs.yaml
     '''
     separator_cfg = {
-        "dm_model_path": "/sdb/model_weight/codec_evaluation/codec_ckpt/demucs/htdemucs.pth",
-        "dm_config_path": "/sdb/model_weight/codec_evaluation/codec_ckpt/demucs/htdemucs.yaml",
+        "dm_model_path": "/sdb/model_weight/codec_evaluation/codec_ckpt/mucodec/demucs/htdemucs.pth",
+        "dm_config_path": "/sdb/model_weight/codec_evaluation/codec_ckpt/mucodec/demucs/htdemucs.yaml",
     }
 
     '''pretrained assets from the SongGeneration (Levo)
@@ -271,12 +233,14 @@ if __name__ == "__main__":
             MuCodec(
                 sample_rate = sample_rate, 
                 mode=mode,
+                num_codebooks=num_codebooks,
                 separator_kwargs=separator_cfg,
-                encoder_ckpt_path = "/sdb/model_weight/codec_evaluation/codec_ckpt/encode-s12k.pt",
-                content_vec_ckpt_path ="/sdb/model_weight/codec_evaluation/codec_ckpt/models--lengyue233--content-vec-best/snapshots/c0b9ba13db21beaa4053faae94c102ebe326fd68",
-                model_ckpt_path="/sdb/model_weight/codec_evaluation/codec_ckpt/Flow1dVAESeparate/model_2.safetensors",
-                vae_model_path="/sdb/model_weight/codec_evaluation/codec_ckpt/autoencoder_music_1320k.ckpt",
-                vae_config_path = os.path.join(root_path, "codecs", "levo_modules","stable_audio_1920_vae.json"),
+                encoder_ckpt_path = "/sdb/model_weight/codec_evaluation/codec_ckpt/mucodec/encode-s12k.pt",
+                content_vec_ckpt_path ="/sdb/model_weight/codec_evaluation/codec_ckpt/mucodec/models--lengyue233--content-vec-best/snapshots/c0b9ba13db21beaa4053faae94c102ebe326fd68",
+                model_ckpt_dir="/sdb/model_weight/codec_evaluation/codec_ckpt/mucodec/Flow1dVAESeparate/model_2.safetensors",
+                vae_model_path="/sdb/model_weight/codec_evaluation/codec_ckpt/mucodec/vae/autoencoder_music_1320k.ckpt",
+                vae_config_path = "/sdb/model_weight/codec_evaluation/codec_ckpt/mucodec/vae/stable_audio_1920_vae.json",
+                need_resample=False,
             )
             .eval()
             .to(device)
@@ -303,7 +267,7 @@ if __name__ == "__main__":
             torchaudio.save(
                 save_path,
                 output.cpu() if use_cuda else output,
-                sample_rate,
+                codec.orig_sample_rate,
             )
             print(f"{mode} mode has been saved to {save_path}")
         elif mode == "encode":
