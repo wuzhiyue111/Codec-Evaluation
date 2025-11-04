@@ -29,6 +29,8 @@ class MuCodec(Codec):
         # Workaround to avoid name collisions with installed modules
         root_dir = root_path
         sys.path = [x for x in sys.path if root_dir not in x]
+        
+        assert sample_rate == 48000, "MuCodec only supports 48kHz sample rate."
            
         from codec_evaluation.codecs.levo_modules.audio_tokenizer import AudioTokenizer
         """Instantiate a compression model."""
@@ -135,6 +137,7 @@ class MuCodec(Codec):
         return quantized_feats
 
     # override
+    @ torch.inference_mode()
     def _sig_to_toks(self, audio, length): 
         # audio [B,2,T]
         B = audio.shape[0]
