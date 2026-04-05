@@ -8,6 +8,8 @@ from codec_evaluation.codecs.x_codec import XCodec
 from codec_evaluation.codecs.qwen2audioencoder import Qwen2AudioEncoder
 from codec_evaluation.codecs.hubert import Hubert
 from codec_evaluation.codecs.yue import YuE
+from codec_evaluation.codecs.mucodec import MuCodec
+from codec_evaluation.codecs.mingtokaudio import MingTokAudio
 
 def init_codec(
         modelname: str, 
@@ -121,6 +123,26 @@ def init_codec(
             sample_rate=sample_rate,
             mode=mode,
             num_codebooks=num_codebooks,
+            model_ckpt_dir=model_ckpt_dir,
+            need_resample=need_resample
+        ).to(device)
+    elif modelname == "mucodec":
+        model = MuCodec(
+            sample_rate=sample_rate,
+            mode=mode,
+            num_codebooks=num_codebooks,
+            model_ckpt_dir=model_ckpt_dir,
+            need_resample=need_resample,
+            separator_kwargs=kwargs.get("separator_kwargs", None),
+            encoder_ckpt_path=kwargs.get("encoder_ckpt_path", None),
+            content_vec_ckpt_path=kwargs.get("content_vec_ckpt_path", None),
+            vae_model_path=kwargs.get("vae_model_path", None),
+            vae_config_path=kwargs.get("vae_config_path", None),
+        ).to(device)
+    elif modelname == "mingtokaudio":
+        model = MingTokAudio(
+            sample_rate=sample_rate,
+            mode=mode,
             model_ckpt_dir=model_ckpt_dir,
             need_resample=need_resample
         ).to(device)
