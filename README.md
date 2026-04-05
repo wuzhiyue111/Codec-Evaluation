@@ -96,15 +96,15 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
   <tbody>
     <tr>
       <td>DAC</td>
-      <td><strong>3.69</strong></td>
-      <td><strong>0.965</strong></td>
+      <td>3.69</td>
+      <td>0.965</td>
       <td>0.155</td>
       <td>0.202</td>
       <td>0.09</td>
       <td>0.125</td>
-      <td><strong>0.94</strong></td>
-      <td><strong>4.51</strong></td>
-      <td><strong>0.21</strong></td>
+      <td>0.94</td>
+      <td>4.51</td>
+      <td>0.21</td>
     </tr>
     <tr>
       <td>Encodec</td>
@@ -189,6 +189,18 @@ Dataset download address: <a href="https://huggingface.co/datasets/LeBeGut/Audio
       <td>0.90</td>
       <td>4.33</td>
       <td>0.25</td>
+    </tr>
+  <tr>
+      <td>MingTokAudio</td>
+      <td><strong>4.21</strong></td>
+      <td><strong>0.974</strong></td>
+      <td>0.155</td>
+      <td>0.191</td>
+      <td>0.09</td>
+      <td>0.110</td>
+      <td><strong>0.98</strong></td>
+      <td><strong>4.79</strong></td>
+      <td><strong>0.13</strong></td>
     </tr>
   </tbody>
 </table>
